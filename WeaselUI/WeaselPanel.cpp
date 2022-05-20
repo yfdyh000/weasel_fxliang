@@ -214,33 +214,37 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	CRect rc;
 	GetClientRect(&rc);
 	// background
-	{
+	//{
+		SIZE sz = { rc.right - rc.left, rc.bottom - rc.top };
+		HDC hdc = ::GetDC(m_hWnd);
+		HDC memDC = ::CreateCompatibleDC(hdc);
+		HBITMAP memBitmap = ::CreateCompatibleBitmap(hdc, sz.cx, sz.cy);
+		::SelectObject(memDC, memBitmap);
+
+		// --------------------------------------------------------------------
 		CRgn rgn;
 		CPoint point(m_style.round_corner, m_style.round_corner);
-		dc.FillRect(&rc, m_style.border_color);
-
-		Graphics gBack(dc);
+		//Graphics gBack(dc);
+		Graphics gBack(memDC);
 		gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
 		GraphicsRoundRectPath bgPath;
-		
 		// 坐标修正，起点要-1，终点要+1
 		bgPath.AddRoundRect(rc.left+m_style.border/2 - 1, rc.top+m_style.border/2 - 1, rc.Width()-m_style.border+1, rc.Height()-m_style.border+1, m_style.round_corner, m_style.round_corner);
-
 		Color border_color(GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
 		Color back_color(GetRValue(m_style.back_color), GetGValue(m_style.back_color), GetBValue(m_style.back_color));
 		SolidBrush gBrBack(back_color);
 		Pen gPenBorder(border_color, m_style.border);
-
 		gBack.DrawPath(&gPenBorder, &bgPath);
 		gBack.FillPath(&gBrBack, &bgPath);
-
+		// --------------------------------------------------------------------
 		// 坐标修正
-		rgn.CreateRoundRectRgn(rc.left, rc.top,
-				rc.right+1, rc.bottom+1, point.x*2+1, point.y*2+1);
-		::SetWindowRgn(m_hWnd, rgn, true);
+		//rgn.CreateRoundRectRgn(rc.left, rc.top, rc.right+1, rc.bottom+1, point.x*2+1, point.y*2+1);
+		//::SetWindowRgn(m_hWnd, rgn, true);
 		rgn.DeleteObject();
-	}
+	//}
 
+
+#if 1
 	long height = -MulDiv(m_style.font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
 
 	CFont font;
@@ -275,8 +279,24 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	/* Nothing drawn, hide candidate window */
 	if (!drawn)
 		ShowWindow(SW_HIDE);
-
 	dc.SelectFont(oldFont);	
+#endif
+
+		HDC screenDC = ::GetDC(NULL);
+		CRect rect;
+		GetWindowRect(&rect);
+		POINT ptSrc = { rect.left, rect.top };
+		POINT ptDest = { rc.left, rc.top };
+
+		BLENDFUNCTION bf;
+		bf.AlphaFormat = AC_SRC_ALPHA;
+		bf.BlendFlags = 0;
+		bf.BlendOp = AC_SRC_OVER;
+		bf.SourceConstantAlpha = 220;
+		::UpdateLayeredWindow(m_hWnd, screenDC, &ptSrc, &sz, memDC, &ptDest, 0, &bf, 2);
+		::DeleteDC(memDC);
+		::DeleteObject(memBitmap);
+		ReleaseDC(screenDC);
 }
 
 LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -289,7 +309,7 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	LONG t = ::GetWindowLong(m_hWnd, GWL_EXSTYLE);
 	t |= WS_EX_LAYERED;
 	::SetWindowLong(m_hWnd, GWL_EXSTYLE, t);
-	SetLayeredWindowAttributes(m_hWnd, RGB(0,0,0), 220, LWA_ALPHA);
+	//SetLayeredWindowAttributes(m_hWnd, RGB(255,255,255), 220, LWA_ALPHA );
 	return TRUE;
 }
 
