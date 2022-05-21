@@ -10,7 +10,6 @@
 // for IDI_ZH, IDI_EN
 #include <resource.h>
 
-using namespace Gdiplus;
 using namespace weasel;
 
 WeaselPanel::WeaselPanel(weasel::UI &ui)
@@ -100,6 +99,18 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color)
 		//gBack.DrawPath(&gPenBorder, &bgPath);
 		gBack.FillPath(&gBrBack, &bgPath);
 	}
+}
+
+void WeaselPanel::_HighlightText(Graphics *g, CRect rc, COLORREF color)
+{
+	rc.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
+	g->SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
+	GraphicsRoundRectPath bgPath;
+	bgPath.AddRoundRect(rc.left, rc.top, rc.Width(), rc.Height(), m_style.round_corner, m_style.round_corner);
+	Color back_color(GetRValue(color), GetGValue(color), GetBValue(color));
+	SolidBrush gBrBack(back_color);
+	Pen gPenBorder(back_color, 0);
+	g->FillPath(&gBrBack, &bgPath);
 }
 
 bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
@@ -208,6 +219,95 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 	return drawn;
 }
 
+bool WeaselPanel::_DrawCandidates(Graphics *g)
+{
+	bool drawn = false;
+	const std::vector<Text> &candidates(m_ctx.cinfo.candies);
+	const std::vector<Text> &comments(m_ctx.cinfo.comments);
+	const std::vector<Text> &labels(m_ctx.cinfo.labels);
+	Color _textColor;
+	FontFamily ftFamily(m_style.font_face.c_str());
+	//long height = -MulDiv(m_style.font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
+	Font font(&ftFamily, m_style.font_point * 2, FontStyleRegular, UnitPixel);
+
+	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
+	{
+		CRect rect;
+		if (i == m_ctx.cinfo.highlighted)
+		{
+			_HighlightText(g, m_layout->GetHighlightRect(), m_style.hilited_candidate_back_color);
+			_textColor = Color::MakeARGB(255, GetRValue(m_style.hilited_label_text_color),
+				GetGValue(m_style.hilited_label_text_color),
+				GetBValue(m_style.hilited_label_text_color));
+		}
+		else
+		{ 
+			_textColor = Color::MakeARGB(255, GetRValue(m_style.label_text_color),
+				GetGValue(m_style.label_text_color),
+				GetBValue(m_style.label_text_color));
+		}
+		// draw label
+		std::wstring label = m_layout->GetLabelText(labels, i, m_style.label_text_format.c_str());
+		CString label_cstring = label.c_str();
+		rect = m_layout->GetCandidateLabelRect(i);
+		SolidBrush txtBr(_textColor);
+		PointF pointf(rect.left, rect.top);
+		g->DrawString(label_cstring, -1, &font, pointf, &txtBr);
+
+		// draw text
+		std::wstring text = candidates.at(i).str;
+		CString text_cstring = text.c_str();
+		if (i == m_ctx.cinfo.highlighted)
+			_textColor = Color::MakeARGB(255, GetRValue(m_style.hilited_candidate_text_color),
+				GetGValue(m_style.hilited_candidate_text_color),
+				GetBValue(m_style.hilited_candidate_text_color));
+		else
+			_textColor = Color::MakeARGB(255, GetRValue(m_style.candidate_text_color),
+				GetGValue(m_style.candidate_text_color),
+				GetBValue(m_style.candidate_text_color));
+		rect = m_layout->GetCandidateTextRect(i);
+		pointf.X = rect.left;
+		pointf.Y = rect.top;
+		txtBr.SetColor(_textColor);
+		g->DrawString(text_cstring, -1, &font, pointf, &txtBr);
+		// Draw comment
+		std::wstring comment = comments.at(i).str;
+		CString comment_cstring = comment.c_str();
+		if (!comment.empty())
+		{
+			if (i == m_ctx.cinfo.highlighted)
+				_textColor = Color::MakeARGB(255, GetRValue(m_style.hilited_comment_text_color),
+						GetGValue(m_style.hilited_comment_text_color),
+						GetBValue(m_style.hilited_comment_text_color));
+			else
+				_textColor = Color::MakeARGB(255, GetRValue(m_style.comment_text_color),
+						GetGValue(m_style.comment_text_color),
+						GetBValue(m_style.comment_text_color));
+			rect = m_layout->GetCandidateCommentRect(i);
+			pointf.X = rect.left;
+			pointf.Y = rect.top;
+			txtBr.SetColor(_textColor);
+			g->DrawString(comment_cstring, -1, &font, pointf, &txtBr);
+		}
+	/*
+		
+		// Draw comment
+		std::wstring comment = comments.at(i).str;
+		if (!comment.empty())
+		{
+			if (i == m_ctx.cinfo.highlighted)
+				dc.SetTextColor(m_style.hilited_comment_text_color);
+			else
+				dc.SetTextColor(m_style.comment_text_color);
+			rect = m_layout->GetCandidateCommentRect(i);
+			_TextOut(dc, rect.left, rect.top, rect, comment.c_str(), comment.length());
+		}
+	*/
+		drawn = true;
+	}
+	return false;
+}
+
 //draw client area
 void WeaselPanel::DoPaint(CDCHandle dc)
 {
@@ -216,15 +316,13 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	// background
 	//{
 		SIZE sz = { rc.right - rc.left, rc.bottom - rc.top };
-		HDC hdc = ::GetDC(m_hWnd);
-		HDC memDC = ::CreateCompatibleDC(hdc);
+		CDCHandle hdc = ::GetDC(m_hWnd);
+		CDCHandle memDC = ::CreateCompatibleDC(hdc);
 		HBITMAP memBitmap = ::CreateCompatibleBitmap(hdc, sz.cx, sz.cy);
 		::SelectObject(memDC, memBitmap);
 
 		// --------------------------------------------------------------------
-		CRgn rgn;
 		CPoint point(m_style.round_corner, m_style.round_corner);
-		//Graphics gBack(dc);
 		Graphics gBack(memDC);
 		gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
 		GraphicsRoundRectPath bgPath;
@@ -236,67 +334,63 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		Pen gPenBorder(border_color, m_style.border);
 		gBack.DrawPath(&gPenBorder, &bgPath);
 		gBack.FillPath(&gBrBack, &bgPath);
-		// --------------------------------------------------------------------
-		// 坐标修正
-		//rgn.CreateRoundRectRgn(rc.left, rc.top, rc.right+1, rc.bottom+1, point.x*2+1, point.y*2+1);
-		//::SetWindowRgn(m_hWnd, rgn, true);
-		rgn.DeleteObject();
 	//}
 
 
-#if 1
+	bool drawn = false;
+#if 0
 	long height = -MulDiv(m_style.font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
 
 	CFont font;
 	font.CreateFontW(height, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, m_style.font_face.c_str());
-	CFontHandle oldFont = dc.SelectFont(font);
+	CFontHandle oldFont = memDC.SelectFont(font);
 
-	dc.SetTextColor(m_style.text_color);
-	dc.SetBkColor(m_style.back_color);
-	dc.SetBkMode(TRANSPARENT);
+	memDC.SetTextColor(m_style.text_color);
+	memDC.SetBkColor(m_style.back_color);
+	memDC.SetBkMode(TRANSPARENT);
 	
-	bool drawn = false;
 
 	// draw preedit string
 	if (!m_layout->IsInlinePreedit())
-		drawn |= _DrawPreedit(m_ctx.preedit, dc, m_layout->GetPreeditRect());
+		drawn |= _DrawPreedit(m_ctx.preedit, memDC, m_layout->GetPreeditRect());
 	
 	// draw auxiliary string
-	drawn |= _DrawPreedit(m_ctx.aux, dc, m_layout->GetAuxiliaryRect());
+	drawn |= _DrawPreedit(m_ctx.aux, memDC, m_layout->GetAuxiliaryRect());
 
 	// status icon (I guess Metro IME stole my idea :)
 	if (m_layout->ShouldDisplayStatusIcon())
 	{
 		const CRect iconRect(m_layout->GetStatusIconRect());
 		CIcon& icon(m_status.disabled ? m_iconDisabled : m_status.ascii_mode ? m_iconAlpha : m_iconEnabled);
-		dc.DrawIconEx(iconRect.left, iconRect.top, icon, 0, 0);
+		memDC.DrawIconEx(iconRect.left, iconRect.top, icon, 0, 0);
 		drawn = true;
 	}
-
-	// draw candidates
-	drawn |= _DrawCandidates(dc);
 
 	/* Nothing drawn, hide candidate window */
 	if (!drawn)
 		ShowWindow(SW_HIDE);
-	dc.SelectFont(oldFont);	
+	memDC.SelectFont(oldFont);	
 #endif
+	// draw candidates
+	drawn |= _DrawCandidates(&gBack);
 
-		HDC screenDC = ::GetDC(NULL);
-		CRect rect;
-		GetWindowRect(&rect);
-		POINT ptSrc = { rect.left, rect.top };
-		POINT ptDest = { rc.left, rc.top };
 
-		BLENDFUNCTION bf;
-		bf.AlphaFormat = AC_SRC_ALPHA;
-		bf.BlendFlags = 0;
-		bf.BlendOp = AC_SRC_OVER;
-		bf.SourceConstantAlpha = 220;
-		::UpdateLayeredWindow(m_hWnd, screenDC, &ptSrc, &sz, memDC, &ptDest, 0, &bf, 2);
-		::DeleteDC(memDC);
-		::DeleteObject(memBitmap);
-		ReleaseDC(screenDC);
+	HDC screenDC = ::GetDC(NULL);
+	CRect rect;
+	GetWindowRect(&rect);
+	POINT ptSrc = { rect.left, rect.top };
+	POINT ptDest = { rc.left, rc.top };
+
+	BLENDFUNCTION bf;
+	bf.AlphaFormat = AC_SRC_ALPHA;
+	//bf.AlphaFormat = 0;
+	bf.BlendFlags = 0;
+	bf.BlendOp = AC_SRC_OVER;
+	bf.SourceConstantAlpha = 225;
+	::UpdateLayeredWindow(m_hWnd, screenDC, &ptSrc, &sz, memDC, &ptDest, 0, &bf, 2);
+	::DeleteDC(memDC);
+	::DeleteObject(memBitmap);
+	ReleaseDC(screenDC);
 }
 
 LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)

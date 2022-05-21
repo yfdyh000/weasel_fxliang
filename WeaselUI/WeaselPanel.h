@@ -5,6 +5,7 @@
 
 #include <gdiplus.h>
 #pragma comment(lib, "gdiplus.lib")
+using namespace Gdiplus;
 
 typedef CWinTraits<WS_POPUP|WS_CLIPSIBLINGS|WS_DISABLED, WS_EX_TOOLWINDOW|WS_EX_TOPMOST> CWeaselPanelTraits;
 
@@ -38,7 +39,9 @@ private:
 	void _RepositionWindow();
 	bool _DrawPreedit(weasel::Text const& text, CDCHandle dc, CRect const& rc);
 	bool _DrawCandidates(CDCHandle dc);
+	bool _DrawCandidates(Graphics *g);
 	void _HighlightText(CDCHandle dc, CRect rc, COLORREF color);
+	void _HighlightText(Graphics *g, CRect rc, COLORREF color);
 	void _TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch);
 
 	weasel::Layout *m_layout;
