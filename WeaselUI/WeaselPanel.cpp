@@ -170,6 +170,76 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 	return drawn;
 }
 
+bool WeaselPanel::_DrawPreedit(weasel::Text const& text, Graphics* g, CRect const& rc)
+{
+	bool drawn = false;
+	std::wstring const& t = text.str;
+	CString t_cstring = t.c_str();
+
+	Color _textColor(GetRValue(m_style.text_color),
+		GetGValue(m_style.text_color),
+		GetBValue(m_style.text_color));
+	FontFamily ftFamily(m_style.font_face.c_str());
+	Font font(&ftFamily, 2*m_style.font_point, FontStyleRegular, UnitPixel);
+	SolidBrush txtBr(_textColor);
+
+	if (!t.empty())
+	{
+		weasel::TextRange range;
+		std::vector<weasel::TextAttribute> const& attrs = text.attributes;
+		for (size_t j = 0; j < attrs.size(); ++j)
+			if (attrs[j].type == weasel::HIGHLIGHTED)
+				range = attrs[j].range;
+
+		if (range.start < range.end)
+		{
+			/*
+			CSize selStart, selEnd;
+			dc.GetTextExtent(t.c_str(), range.start, &selStart);
+			dc.GetTextExtent(t.c_str(), range.end, &selEnd);
+			int x = rc.left;
+			if (range.start > 0)
+			{
+				// zzz
+				std::wstring str_before(t.substr(0, range.start));
+				CRect rc_before(x, rc.top, rc.left + selStart.cx, rc.bottom);
+				_TextOut(dc, x, rc.top, rc_before, str_before.c_str(), str_before.length());
+				x += selStart.cx + m_style.hilite_spacing;
+			}
+			{
+				// zzz[yyy]
+				std::wstring str_highlight(t.substr(range.start, range.end - range.start));
+				CRect rc_hi(x, rc.top, x + (selEnd.cx - selStart.cx), rc.bottom);
+				_HighlightText(dc, rc_hi, m_style.hilited_back_color);
+				dc.SetTextColor(m_style.hilited_text_color);
+				dc.SetBkColor(m_style.hilited_back_color);
+				_TextOut(dc, x, rc.top, rc_hi, str_highlight.c_str(), str_highlight.length());
+				dc.SetTextColor(m_style.text_color);
+				dc.SetBkColor(m_style.back_color);
+				x += (selEnd.cx - selStart.cx);
+			}
+			if (range.end < static_cast<int>(t.length()))
+			{
+				// zzz[yyy]xxx
+				x += m_style.hilite_spacing;
+				std::wstring str_after(t.substr(range.end));
+				CRect rc_after(x, rc.top, rc.right, rc.bottom);
+				_TextOut(dc, x, rc.top, rc_after, str_after.c_str(), str_after.length());
+			}
+			*/
+		}
+		else
+		{
+			PointF pointf(rc.left, rc.top);
+			CRect rcText(rc.left, rc.top, rc.right, rc.bottom);
+			//_TextOut(dc, rc.left, rc.top, rcText, t.c_str(), t.length());
+			g->DrawString(t_cstring, -1, &font, pointf, &txtBr);
+		}
+		drawn = true;
+	}
+	return drawn;
+}
+
 bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 {
 	bool drawn = false;
@@ -228,7 +298,9 @@ bool WeaselPanel::_DrawCandidates(Graphics *g)
 	Color _textColor;
 	FontFamily ftFamily(m_style.font_face.c_str());
 	//long height = -MulDiv(m_style.font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
-	Font font(&ftFamily, m_style.font_point * 2, FontStyleRegular, UnitPixel);
+	
+	//Font font(&ftFamily, m_style.font_point * 1.5, FontStyleRegular, UnitPixel);
+	Font font(&ftFamily, m_style.font_point, FontStyleRegular, UnitPoint);
 
 	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
 	{
@@ -289,20 +361,6 @@ bool WeaselPanel::_DrawCandidates(Graphics *g)
 			txtBr.SetColor(_textColor);
 			g->DrawString(comment_cstring, -1, &font, pointf, &txtBr);
 		}
-	/*
-		
-		// Draw comment
-		std::wstring comment = comments.at(i).str;
-		if (!comment.empty())
-		{
-			if (i == m_ctx.cinfo.highlighted)
-				dc.SetTextColor(m_style.hilited_comment_text_color);
-			else
-				dc.SetTextColor(m_style.comment_text_color);
-			rect = m_layout->GetCandidateCommentRect(i);
-			_TextOut(dc, rect.left, rect.top, rect, comment.c_str(), comment.length());
-		}
-	*/
 		drawn = true;
 	}
 	return false;
@@ -338,11 +396,13 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 
 
 	bool drawn = false;
-#if 0
-	long height = -MulDiv(m_style.font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
 
+#if 0
 	CFont font;
+	long height = -MulDiv(m_style.font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
 	font.CreateFontW(height, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, m_style.font_face.c_str());
+	Font candFont(dc, font);
+
 	CFontHandle oldFont = memDC.SelectFont(font);
 
 	memDC.SetTextColor(m_style.text_color);
@@ -371,6 +431,9 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		ShowWindow(SW_HIDE);
 	memDC.SelectFont(oldFont);	
 #endif
+	// draw preedit string
+	if (!m_layout->IsInlinePreedit())
+		drawn |= _DrawPreedit(m_ctx.preedit, &gBack, m_layout->GetPreeditRect());
 	// draw candidates
 	drawn |= _DrawCandidates(&gBack);
 
@@ -381,12 +444,13 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	POINT ptSrc = { rect.left, rect.top };
 	POINT ptDest = { rc.left, rc.top };
 
+	int alpha = ((m_style.back_color >> 24) & 255) > 0 ? ((m_style.back_color >> 24) & 255) : 255;
 	BLENDFUNCTION bf;
 	bf.AlphaFormat = AC_SRC_ALPHA;
 	//bf.AlphaFormat = 0;
 	bf.BlendFlags = 0;
 	bf.BlendOp = AC_SRC_OVER;
-	bf.SourceConstantAlpha = 225;
+	bf.SourceConstantAlpha = alpha;
 	::UpdateLayeredWindow(m_hWnd, screenDC, &ptSrc, &sz, memDC, &ptDest, 0, &bf, 2);
 	::DeleteDC(memDC);
 	::DeleteObject(memBitmap);

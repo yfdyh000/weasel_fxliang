@@ -38,6 +38,7 @@ private:
 	void _ResizeWindow();
 	void _RepositionWindow();
 	bool _DrawPreedit(weasel::Text const& text, CDCHandle dc, CRect const& rc);
+	bool _DrawPreedit(weasel::Text const& text, Graphics* g, CRect const& rc);
 	bool _DrawCandidates(CDCHandle dc);
 	bool _DrawCandidates(Graphics *g);
 	void _HighlightText(CDCHandle dc, CRect rc, COLORREF color);
