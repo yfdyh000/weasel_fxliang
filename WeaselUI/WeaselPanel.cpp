@@ -529,8 +529,10 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				// zzz
 				std::wstring str_before(t.substr(0, range.start));
 				CRect rc_before(x, rc.top, rc.left + selStart.cx, rc.bottom);
+				dc.SetTextColor(m_style.text_color);
+				dc.SetBkColor(m_style.back_color);
 				_TextOut(dc, x, rc.top, rc_before, str_before.c_str(), str_before.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace);
-				x += selStart.cx + m_style.hilite_spacing;
+				x += selStart.cx + m_style.hilite_spacing + m_style.hilite_padding;
 			}
 			{
 				// zzz[yyy]
