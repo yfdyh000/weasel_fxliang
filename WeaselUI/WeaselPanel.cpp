@@ -532,14 +532,14 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				dc.SetTextColor(m_style.text_color);
 				dc.SetBkColor(m_style.back_color);
 				_TextOut(dc, x, rc.top, rc_before, str_before.c_str(), str_before.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace);
-				x += selStart.cx + m_style.hilite_spacing + m_style.hilite_padding;
+				x += selStart.cx + m_style.hilite_spacing;
 			}
 			{
 				// zzz[yyy]
 				std::wstring str_highlight(t.substr(range.start, range.end - range.start));
 				CRect rc_hi(x, rc.top, x + (selEnd.cx - selStart.cx), rc.bottom);
 				rc_hi.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
-				OffsetRect(rc_hi, -m_style.hilite_padding, 0);
+				//OffsetRect(rc_hi, -m_style.hilite_padding, 0);
 				_HighlightTextEx(dc, rc_hi, m_style.hilited_back_color, m_style.hilited_shadow_color, 
 					(m_style.margin_x-m_style.hilite_padding), (m_style.margin_y - m_style.hilite_padding), m_style.round_corner);
 				dc.SetTextColor(m_style.hilited_text_color);
