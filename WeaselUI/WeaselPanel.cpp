@@ -667,8 +667,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	bool hide_candidates = false;
 	if (m_style.hide_candidates_when_single == True 
 		&& m_style.inline_preedit == True 
-		&& candidates.size() == 1 
-		&& m_style.preedit_type == UIStyle::PreeditType::PREVIEW)
+		&& candidates.size() == 1 )
 		hide_candidates = True;
 
 	CRect trc;
