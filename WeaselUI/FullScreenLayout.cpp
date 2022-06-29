@@ -91,16 +91,16 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 		}
 	}
 
-	int fontPoint = _style.font_point;
+	//int fontPoint = _style.font_point;
 	int step = 32;
 	do {
 		m_layout->DoLayout(dc, pDWR);
 	}
 	while (AdjustFontPoint(dc, workArea, pDWR, step));
 
-	if (fontPoint < 4) fontPoint = 4;
-	else if (fontPoint > 2048) fontPoint = 2048;
-	const_cast<UIStyle*>(&_style)->font_point = fontPoint;
+	//if (fontPoint < 4) fontPoint = 4;
+	//else if (fontPoint > 2048) fontPoint = 2048;
+	//const_cast<UIStyle*>(&_style)->font_point = fontPoint;
 
 	int offsetX = (workArea.Width() - m_layout->GetContentSize().cx) / 2;
 	int offsetY = (workArea.Height() - m_layout->GetContentSize().cy) / 2;
@@ -142,6 +142,9 @@ bool FullScreenLayout::AdjustFontPoint(CDCHandle dc, const CRect& workArea, Dire
 		fontPoint += step* pDWR->dpiScaleX_;
 		fontPointLabel += step* pDWR->dpiScaleX_;
 		fontPointComment += step* pDWR->dpiScaleX_;
+		if(fontPoint < 4) fontPoint = 4; 
+		if(fontPointLabel < 4) fontPointLabel = 4; 
+		if(fontPointComment < 4) fontPointComment = 4; 
 		pDWR->pDWFactory->CreateTextFormat(_style.font_face.c_str(), NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 
 				fontPoint, L"", &pDWR->pTextFormat);
 		pDWR->pDWFactory->CreateTextFormat(_style.label_font_face.c_str(), NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 
@@ -168,6 +171,9 @@ bool FullScreenLayout::AdjustFontPoint(CDCHandle dc, const CRect& workArea, Dire
 		fontPoint += step* pDWR->dpiScaleX_;
 		fontPointLabel += step* pDWR->dpiScaleX_;
 		fontPointComment += step* pDWR->dpiScaleX_;
+		if(fontPoint < 4) fontPoint = 4; 
+		if(fontPointLabel < 4) fontPointLabel = 4; 
+		if(fontPointComment < 4) fontPointComment = 4; 
 		pDWR->pDWFactory->CreateTextFormat(_style.font_face.c_str(), NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 
 				fontPoint, L"", &pDWR->pTextFormat);
 		pDWR->pDWFactory->CreateTextFormat(_style.label_font_face.c_str(), NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 

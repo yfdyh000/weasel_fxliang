@@ -381,11 +381,11 @@ void WeaselPanel::_ResizeWindow()
 	CDCHandle dc = GetDC();
 	CSize size = m_layout->GetContentSize();
 	if (m_style.shadow_offset_x)
-		size.cx += abs(m_style.shadow_offset_x * 4) ;
+		size.cx += abs(m_style.shadow_offset_x) * 2 ;
 	if (m_style.shadow_offset_y)
-		size.cy += abs(m_style.shadow_offset_y * 4) ;
-	size.cx += m_style.shadow_radius * 4;
-	size.cy += m_style.shadow_radius * 4;
+		size.cy += abs(m_style.shadow_offset_y) * 2 ;
+	size.cx += m_style.shadow_radius * 2;
+	size.cy += m_style.shadow_radius * 2;
 	SetWindowPos(NULL, 0, 0, size.cx, size.cy, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
 	ReleaseDC(dc);
 }
@@ -539,7 +539,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				std::wstring str_highlight(t.substr(range.start, range.end - range.start));
 				CRect rc_hi(x, rc.top, x + (selEnd.cx - selStart.cx), rc.bottom);
 				rc_hi.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
-				//OffsetRect(rc_hi, -m_style.hilite_padding, 0);
+				OffsetRect(rc_hi, -m_style.hilite_padding, 0);
 				_HighlightTextEx(dc, rc_hi, m_style.hilited_back_color, m_style.hilited_shadow_color, 
 					(m_style.margin_x-m_style.hilite_padding), (m_style.margin_y - m_style.hilite_padding), m_style.round_corner);
 				dc.SetTextColor(m_style.hilited_text_color);
@@ -575,10 +575,16 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 	const std::vector<Text> &comments(m_ctx.cinfo.comments);
 	const std::vector<Text> &labels(m_ctx.cinfo.labels);
 
-	int ox = abs(m_style.shadow_offset_x)*2 + m_style.shadow_radius*2;
-	int oy = abs(m_style.shadow_offset_y)*2 + m_style.shadow_radius*2;
-	int bkx = abs((m_style.margin_x - m_style.hilite_padding)) + max(abs(m_style.shadow_offset_x), abs(m_style.shadow_offset_y)) * 2;
-	int bky = abs((m_style.margin_y - m_style.hilite_padding)) + max(abs(m_style.shadow_offset_x), abs(m_style.shadow_offset_y)) * 2;
+	int ox = 0;
+	int oy = 0;
+	//if(m_style.shadow_color & 0xff000000)
+	{
+		ox = abs(m_style.shadow_offset_x) + m_style.shadow_radius;
+		oy = abs(m_style.shadow_offset_y) + m_style.shadow_radius;
+	}
+
+	int bkx = abs((m_style.margin_x - m_style.hilite_padding)) + max(abs(m_style.shadow_offset_x), abs(m_style.shadow_offset_y));
+	int bky = abs((m_style.margin_y - m_style.hilite_padding)) + max(abs(m_style.shadow_offset_x), abs(m_style.shadow_offset_y));
 
 	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
 	{
@@ -659,8 +665,13 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	HBITMAP memBitmap = ::CreateCompatibleBitmap(hdc, sz.cx, sz.cy);
 	::SelectObject(memDC, memBitmap);
 	
-	int ox = abs(m_style.shadow_offset_x)*2 + m_style.shadow_radius*2;
-	int oy = abs(m_style.shadow_offset_y)*2 + m_style.shadow_radius*2;
+	int ox = 0;
+	int oy = 0;
+	//if(m_style.shadow_color & 0xff000000)
+	{
+		ox = abs(m_style.shadow_offset_x) + m_style.shadow_radius;
+		oy = abs(m_style.shadow_offset_y) + m_style.shadow_radius;
+	}
 
 	/* inline_preedit and candidate size 1 and preedit_type preview, and hide_candidates_when_single is set */
 	const std::vector<Text> &candidates(m_ctx.cinfo.candies);
@@ -883,8 +894,8 @@ void WeaselPanel::_RepositionWindow()
 	// memorize adjusted position (to avoid window bouncing on height change)
 	if (m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN || m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
 	{
-		x -= (abs(m_style.shadow_offset_x) + m_style.shadow_radius) * 2;
-		y -= (abs(m_style.shadow_offset_y) + m_style.shadow_radius) * 2;
+		x -= (abs(m_style.shadow_offset_x) + m_style.shadow_radius);
+		y -= (abs(m_style.shadow_offset_y) + m_style.shadow_radius);
 	}
 	m_inputPos.bottom = y;
 	SetWindowPos(HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE|SWP_NOACTIVATE);
