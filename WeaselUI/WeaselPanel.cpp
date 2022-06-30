@@ -389,10 +389,11 @@ void WeaselPanel::_ResizeWindow()
 	{
 		ox = abs(m_style.shadow_offset_x) + m_style.shadow_radius;
 		oy = abs(m_style.shadow_offset_y) + m_style.shadow_radius;
-		if(!m_style.shadow_offset_x)
+		if((!m_style.shadow_offset_x) && (!m_style.shadow_offset_y))
+		{
 			ox *= 2;
-		if(!m_style.shadow_offset_y)
 			oy *= 2;
+		}
 	}
 	size.cx += ox*2;
 	size.cy += oy*2;
@@ -591,10 +592,11 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 	{
 		ox = abs(m_style.shadow_offset_x) + m_style.shadow_radius;
 		oy = abs(m_style.shadow_offset_y) + m_style.shadow_radius;
-		if(!m_style.shadow_offset_x)
+		if((!m_style.shadow_offset_x) && (!m_style.shadow_offset_y))
+		{
 			ox *= 2;
-		if(!m_style.shadow_offset_y)
 			oy *= 2;
+		}
 	}
 
 	int bkx = abs((m_style.margin_x - m_style.hilite_padding)) + max(abs(m_style.shadow_offset_x), abs(m_style.shadow_offset_y));
@@ -685,10 +687,11 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	{
 		ox = abs(m_style.shadow_offset_x) + m_style.shadow_radius;
 		oy = abs(m_style.shadow_offset_y) + m_style.shadow_radius;
-		if(!m_style.shadow_offset_x)
+		if((!m_style.shadow_offset_x) && (!m_style.shadow_offset_y))
+		{
 			ox *= 2;
-		if(!m_style.shadow_offset_y)
 			oy *= 2;
+		}
 	}
 
 	/* inline_preedit and candidate size 1 and preedit_type preview, and hide_candidates_when_single is set */
@@ -701,8 +704,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 
 	CRect trc;
 	/* (candidate not empty or (input not empty and not inline_preedit)) and not hide_candidates */
-	if(
-		(!(candidates.size()==0) 
+	if( (!(candidates.size()==0) 
 			|| ((!m_ctx.aux.str.empty() || !m_ctx.preedit.str.empty()) && !m_style.inline_preedit)) 
 		&& !hide_candidates)
 	{
@@ -743,7 +745,6 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	}
 	
 	// draw auxiliary string
-	trc = OffsetRect(m_layout->GetAuxiliaryRect(), ox, oy);
 	drawn |= _DrawPreedit(m_ctx.aux, memDC, m_layout->GetAuxiliaryRect());
 
 	// status icon (I guess Metro IME stole my idea :)
@@ -931,9 +932,6 @@ void WeaselPanel::_RepositionWindow()
 	if (y < rcWorkArea.top)
 		y = rcWorkArea.top;
 	// memorize adjusted position (to avoid window bouncing on height change)
-#if 1
-	int ox = 0;
-	int oy = 0;
 	if (m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN || m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
 	{
 		if(m_style.shadow_color & 0xff000000 && m_style.shadow_radius != 0)
@@ -944,15 +942,27 @@ void WeaselPanel::_RepositionWindow()
 	}
 	else 
 	{
+		int ox = 0;
+		int oy = 0;
 		if(m_style.shadow_color & 0xff000000 && m_style.shadow_radius != 0)
 		{
-			ox = abs(m_style.shadow_offset_x) + m_style.shadow_radius;
-			oy = abs(m_style.shadow_offset_y) + m_style.shadow_radius;
+			if(!m_style.inline_preedit)
+			{
+				if(m_style.shadow_offset_x == 0 && m_style.shadow_offset_y == 0)
+				{
+					ox = oy = m_style.shadow_radius;
+				}
+				else
+				{
+					ox = (m_style.shadow_offset_x < 0) ? m_style.shadow_radius : (m_style.shadow_offset_x + m_style.shadow_radius);
+					oy = (m_style.shadow_offset_y < 0) ? m_style.shadow_radius : (m_style.shadow_offset_y + m_style.shadow_radius);
+				}
+			}
+			x -= ox;
+			y -= oy;
 		}
-		x -= ox;
-		y -= oy;
 	}
-#endif
+
 	m_inputPos.bottom = y;
 	SetWindowPos(HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE|SWP_NOACTIVATE);
 }
