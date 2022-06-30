@@ -4,6 +4,7 @@
 #include <vector>
 #include <fstream>
 #include <string>
+#include <dwmapi.h>
 
 #include "VerticalLayout.h"
 #include "HorizontalLayout.h"
@@ -11,6 +12,8 @@
 
 // for IDI_ZH, IDI_EN
 #include <resource.h>
+
+#pragma comment( lib, "dwmapi" )
 
 using namespace Gdiplus;
 using namespace weasel;
@@ -380,19 +383,16 @@ void WeaselPanel::_ResizeWindow()
 {
 	CDCHandle dc = GetDC();
 	CSize size = m_layout->GetContentSize();
-	//if (m_style.shadow_offset_x)
-	//	size.cx += abs(m_style.shadow_offset_x) * 2 ;
-	//if (m_style.shadow_offset_y)
-	//	size.cy += abs(m_style.shadow_offset_y) * 2 ;
-	//size.cx += m_style.shadow_radius * 2;
-	//size.cy += m_style.shadow_radius * 2;
-
 	int ox = 0;
 	int oy = 0;
-	if(m_style.shadow_color & 0xff000000 || m_style.shadow_radius != 0)
+	if(m_style.shadow_color & 0xff000000 && m_style.shadow_radius != 0)
 	{
 		ox = abs(m_style.shadow_offset_x) + m_style.shadow_radius;
 		oy = abs(m_style.shadow_offset_y) + m_style.shadow_radius;
+		if(!m_style.shadow_offset_x)
+			ox *= 2;
+		if(!m_style.shadow_offset_y)
+			oy *= 2;
 	}
 	size.cx += ox*2;
 	size.cy += oy*2;
@@ -480,7 +480,7 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 			CRect rcShadowEx = rect;
 			for (int i = 0; i < m_style.shadow_radius; i++)
 			{
-				GraphicsRoundRectPath path(rcShadowEx, radius + i);
+				GraphicsRoundRectPath path(rcShadowEx, radius + 1 + i);
 				gg.DrawPath(&penShadow, &path);
 				scolor = Color::MakeARGB(alpha - i * step, GetRValue(shadowColor), GetGValue(shadowColor), GetBValue(shadowColor));
 				penShadow.SetColor(scolor);
@@ -587,10 +587,14 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 
 	int ox = 0;
 	int oy = 0;
-	if(m_style.shadow_color & 0xff000000 || m_style.shadow_radius != 0)
+	if(m_style.shadow_color & 0xff000000 && m_style.shadow_radius != 0)
 	{
 		ox = abs(m_style.shadow_offset_x) + m_style.shadow_radius;
 		oy = abs(m_style.shadow_offset_y) + m_style.shadow_radius;
+		if(!m_style.shadow_offset_x)
+			ox *= 2;
+		if(!m_style.shadow_offset_y)
+			oy *= 2;
 	}
 
 	int bkx = abs((m_style.margin_x - m_style.hilite_padding)) + max(abs(m_style.shadow_offset_x), abs(m_style.shadow_offset_y));
@@ -677,10 +681,14 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	
 	int ox = 0;
 	int oy = 0;
-	if(m_style.shadow_color & 0xff000000 || m_style.shadow_radius != 0)
+	if(m_style.shadow_color & 0xff000000 && m_style.shadow_radius != 0)
 	{
 		ox = abs(m_style.shadow_offset_x) + m_style.shadow_radius;
 		oy = abs(m_style.shadow_offset_y) + m_style.shadow_radius;
+		if(!m_style.shadow_offset_x)
+			ox *= 2;
+		if(!m_style.shadow_offset_y)
+			oy *= 2;
 	}
 
 	/* inline_preedit and candidate size 1 and preedit_type preview, and hide_candidates_when_single is set */
@@ -778,12 +786,33 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	ReleaseDC(screenDC);
 
 }
+#if 0
+LRESULT WeaselPanel::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+	MARGINS m{ 0,0,0,-1 };
+	DwmExtendFrameIntoClientArea(m_hWnd, &m);
+	SetWindowPos(m_hWnd, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
+	return TRUE;
+}
+
+LRESULT WeaselPanel::OnNcCalcSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+	if (wParam == TRUE)
+	{
+		SetWindowLong(0, 0);
+		return TRUE;
+	}
+	return FALSE;
+}
+#endif
 
 LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 	LONG t = ::GetWindowLong(m_hWnd, GWL_EXSTYLE);
 	t |= WS_EX_LAYERED;
 	::SetWindowLong(m_hWnd, GWL_EXSTYLE, t);
+	//ULONG_PTR cNewStyle = GetClassLongPtr(m_hWnd, GCL_STYLE) | CS_DROPSHADOW;
+	//SetClassLongPtr(m_hWnd, GCL_STYLE, cNewStyle);
 	//CenterWindow();
 	GdiplusStartup(&_m_gdiplusToken, &_m_gdiplusStartupInput, NULL);
 	GetWindowRect(&m_inputPos);
@@ -902,11 +931,20 @@ void WeaselPanel::_RepositionWindow()
 	if (y < rcWorkArea.top)
 		y = rcWorkArea.top;
 	// memorize adjusted position (to avoid window bouncing on height change)
-	//if (m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN || m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
+#if 1
+	int ox = 0;
+	int oy = 0;
+	if (m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN || m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
 	{
-		int ox = 0;
-		int oy = 0;
-		if(m_style.shadow_color & 0xff000000 || m_style.shadow_radius != 0)
+		if(m_style.shadow_color & 0xff000000 && m_style.shadow_radius != 0)
+		{
+			x -= abs(m_style.shadow_offset_x) + m_style.shadow_radius;
+			y -= abs(m_style.shadow_offset_y) + m_style.shadow_radius;
+		}
+	}
+	else 
+	{
+		if(m_style.shadow_color & 0xff000000 && m_style.shadow_radius != 0)
 		{
 			ox = abs(m_style.shadow_offset_x) + m_style.shadow_radius;
 			oy = abs(m_style.shadow_offset_y) + m_style.shadow_radius;
@@ -914,6 +952,7 @@ void WeaselPanel::_RepositionWindow()
 		x -= ox;
 		y -= oy;
 	}
+#endif
 	m_inputPos.bottom = y;
 	SetWindowPos(HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE|SWP_NOACTIVATE);
 }
@@ -1404,4 +1443,3 @@ void GraphicsRoundRectPath::AddRoundRect(int left, int top, int width, int heigh
 		AddRectangle(rc);
 	}
 }
-
