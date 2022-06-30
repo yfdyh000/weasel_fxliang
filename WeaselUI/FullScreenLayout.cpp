@@ -35,16 +35,11 @@ void FullScreenLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts)
 		}
 	}
 
-	int fontPoint = _style.font_point;
 	int step = 32;
 	do {
 		m_layout->DoLayout(dc, pFonts);
 	}
 	while (AdjustFontPoint(dc, workArea, pFonts, step));
-
-	if (fontPoint < 4) fontPoint = 4;
-	else if (fontPoint > 2048) fontPoint = 2048;
-	const_cast<UIStyle*>(&_style)->font_point = fontPoint;
 
 	int offsetX = (workArea.Width() - m_layout->GetContentSize().cx) / 2;
 	int offsetY = (workArea.Height() - m_layout->GetContentSize().cy) / 2;
@@ -91,16 +86,11 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 		}
 	}
 
-	//int fontPoint = _style.font_point;
 	int step = 32;
 	do {
 		m_layout->DoLayout(dc, pDWR);
 	}
 	while (AdjustFontPoint(dc, workArea, pDWR, step));
-
-	//if (fontPoint < 4) fontPoint = 4;
-	//else if (fontPoint > 2048) fontPoint = 2048;
-	//const_cast<UIStyle*>(&_style)->font_point = fontPoint;
 
 	int offsetX = (workArea.Width() - m_layout->GetContentSize().cx) / 2;
 	int offsetY = (workArea.Height() - m_layout->GetContentSize().cy) / 2;

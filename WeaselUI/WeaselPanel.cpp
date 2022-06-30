@@ -380,12 +380,22 @@ void WeaselPanel::_ResizeWindow()
 {
 	CDCHandle dc = GetDC();
 	CSize size = m_layout->GetContentSize();
-	if (m_style.shadow_offset_x)
-		size.cx += abs(m_style.shadow_offset_x) * 2 ;
-	if (m_style.shadow_offset_y)
-		size.cy += abs(m_style.shadow_offset_y) * 2 ;
-	size.cx += m_style.shadow_radius * 2;
-	size.cy += m_style.shadow_radius * 2;
+	//if (m_style.shadow_offset_x)
+	//	size.cx += abs(m_style.shadow_offset_x) * 2 ;
+	//if (m_style.shadow_offset_y)
+	//	size.cy += abs(m_style.shadow_offset_y) * 2 ;
+	//size.cx += m_style.shadow_radius * 2;
+	//size.cy += m_style.shadow_radius * 2;
+
+	int ox = 0;
+	int oy = 0;
+	if(m_style.shadow_color & 0xff000000 || m_style.shadow_radius != 0)
+	{
+		ox = abs(m_style.shadow_offset_x) + m_style.shadow_radius;
+		oy = abs(m_style.shadow_offset_y) + m_style.shadow_radius;
+	}
+	size.cx += ox*2;
+	size.cy += oy*2;
 	SetWindowPos(NULL, 0, 0, size.cx, size.cy, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
 	ReleaseDC(dc);
 }
@@ -577,7 +587,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 
 	int ox = 0;
 	int oy = 0;
-	//if(m_style.shadow_color & 0xff000000)
+	if(m_style.shadow_color & 0xff000000 || m_style.shadow_radius != 0)
 	{
 		ox = abs(m_style.shadow_offset_x) + m_style.shadow_radius;
 		oy = abs(m_style.shadow_offset_y) + m_style.shadow_radius;
@@ -667,7 +677,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	
 	int ox = 0;
 	int oy = 0;
-	//if(m_style.shadow_color & 0xff000000)
+	if(m_style.shadow_color & 0xff000000 || m_style.shadow_radius != 0)
 	{
 		ox = abs(m_style.shadow_offset_x) + m_style.shadow_radius;
 		oy = abs(m_style.shadow_offset_y) + m_style.shadow_radius;
@@ -892,10 +902,17 @@ void WeaselPanel::_RepositionWindow()
 	if (y < rcWorkArea.top)
 		y = rcWorkArea.top;
 	// memorize adjusted position (to avoid window bouncing on height change)
-	if (m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN || m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
+	//if (m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN || m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
 	{
-		x -= (abs(m_style.shadow_offset_x) + m_style.shadow_radius);
-		y -= (abs(m_style.shadow_offset_y) + m_style.shadow_radius);
+		int ox = 0;
+		int oy = 0;
+		if(m_style.shadow_color & 0xff000000 || m_style.shadow_radius != 0)
+		{
+			ox = abs(m_style.shadow_offset_x) + m_style.shadow_radius;
+			oy = abs(m_style.shadow_offset_y) + m_style.shadow_radius;
+		}
+		x -= ox;
+		y -= oy;
 	}
 	m_inputPos.bottom = y;
 	SetWindowPos(HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE|SWP_NOACTIVATE);
