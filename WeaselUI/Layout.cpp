@@ -17,22 +17,6 @@ DirectWriteResources::DirectWriteResources() :
 	pLabelTextFormat(NULL),
 	pCommentTextFormat(NULL)
 {
-}
-
-DirectWriteResources::~DirectWriteResources()
-{
-	SafeRelease(&pTextFormat);
-	SafeRelease(&pLabelTextFormat);
-	SafeRelease(&pCommentTextFormat);
-	SafeRelease(&pRenderTarget);
-	SafeRelease(&pDWFactory);
-	SafeRelease(&pD2d1Factory);
-}
-
-HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int label_font_point,
-	std::wstring font_face, int font_point,
-	std::wstring comment_font_face, int comment_font_point) 
-{
 	// prepare d2d1 resources
 	HRESULT hResult = S_OK;
 	// create factory
@@ -52,8 +36,25 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	pD2d1Factory->GetDesktopDpi(&dpiScaleX_, &dpiScaleY_);
 	dpiScaleX_ /= 72.0f;
 	dpiScaleY_ /= 72.0f;
-	if(pTextFormat == NULL)
-		hResult = pDWFactory->CreateTextFormat(font_face.c_str(), NULL,
+}
+
+DirectWriteResources::~DirectWriteResources()
+{
+	SafeRelease(&pTextFormat);
+	SafeRelease(&pLabelTextFormat);
+	SafeRelease(&pCommentTextFormat);
+	SafeRelease(&pRenderTarget);
+	SafeRelease(&pDWFactory);
+	SafeRelease(&pD2d1Factory);
+}
+
+HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int label_font_point,
+	std::wstring font_face, int font_point,
+	std::wstring comment_font_face, int comment_font_point) 
+{
+	// prepare d2d1 resources
+	HRESULT hResult = S_OK;
+	hResult = pDWFactory->CreateTextFormat(font_face.c_str(), NULL,
 			DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL,
 			font_point * dpiScaleX_, L"", &pTextFormat);
 	if( pTextFormat != NULL)
@@ -62,8 +63,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 		pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 		pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 	}
-	if(pLabelTextFormat == NULL)
-		hResult = pDWFactory->CreateTextFormat(label_font_face.c_str(), NULL,
+	hResult = pDWFactory->CreateTextFormat(label_font_face.c_str(), NULL,
 			DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL,
 			label_font_point * dpiScaleX_, L"", &pLabelTextFormat);
 	if( pLabelTextFormat != NULL)
@@ -72,8 +72,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 		pLabelTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 		pLabelTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 	}
-	if(pCommentTextFormat == NULL)
-		hResult = pDWFactory->CreateTextFormat(comment_font_face.c_str(), NULL,
+	hResult = pDWFactory->CreateTextFormat(comment_font_face.c_str(), NULL,
 			DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL,
 			comment_font_point * dpiScaleX_, L"", &pCommentTextFormat);
 	if( pCommentTextFormat != NULL)

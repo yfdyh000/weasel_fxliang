@@ -57,7 +57,6 @@ private:
 
 	Gdiplus::GdiplusStartupInput _m_gdiplusStartupInput;
 	ULONG_PTR _m_gdiplusToken;
-	bool _isVistaSp2OrGrater;
 	
 	DirectWriteResources* pDWR = NULL;
 	GDIFonts* pFonts = NULL;

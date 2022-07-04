@@ -361,10 +361,7 @@ static CRect OffsetRect(const CRect rc, int offsetx, int offsety)
 	  m_ctx(ui.ctx()), 
 	  m_status(ui.status()), 
 	  m_style(ui.style()),
-	  _isVistaSp2OrGrater(false),
 	  _m_gdiplusToken(0)
-	  //dpiScaleX_(0.0f),
-	  //dpiScaleY_(0.0f)
 {
 	m_iconDisabled.LoadIconW(IDI_RELOAD, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 	m_iconEnabled.LoadIconW(IDI_ZH, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
@@ -790,11 +787,11 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	GdiplusStartup(&_m_gdiplusToken, &_m_gdiplusStartupInput, NULL);
 	GetWindowRect(&m_inputPos);
 
-	_isVistaSp2OrGrater = IsWindowsVistaSP2OrGreater();
-
 	pDWR = new DirectWriteResources();
 	// prepare d2d1 resources
-	pDWR->InitResources(m_style.label_font_face, m_style.label_font_point, m_style.font_face, m_style.font_point, m_style.comment_font_face, m_style.comment_font_point);
+	pDWR->InitResources(m_style.label_font_face, m_style.label_font_point,
+			m_style.font_face, m_style.font_point,
+			m_style.comment_font_face, m_style.comment_font_point);
 	pFonts = new GDIFonts(m_style.label_font_face, m_style.label_font_point,
 		m_style.font_face, m_style.font_point,
 		m_style.comment_font_face, m_style.comment_font_point);
@@ -1285,7 +1282,7 @@ static std::vector<std::wstring> ws_split(const std::wstring& in, const std::wst
 }
 void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch, IDWriteTextFormat* pTextFormat, int font_point, std::wstring font_face)
 {
-	if (_isVistaSp2OrGrater && m_style.color_font )
+	if (m_style.color_font )
 	{
 		_TextOutWithFallback_D2D(dc, rc, psz, cch, dc.GetTextColor(), pTextFormat);
 	}
