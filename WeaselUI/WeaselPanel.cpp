@@ -716,13 +716,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		int alpha = ((m_style.border_color >> 24) & 255);
 		Color border_color = Color::MakeARGB(alpha, GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
 		Pen gPenBorder(border_color, (Gdiplus::REAL)m_style.border);
-		if (m_style.shadow_radius && (m_style.shadow_color & 0xff000000))
-			_HighlightTextEx(memDC, trc, m_style.back_color, m_style.shadow_color, ox*2, oy*2, m_style.round_corner_ex);
-		else
-		{
-			Color back_color = Color::MakeARGB((m_style.back_color>>24), GetRValue(m_style.back_color), GetGValue(m_style.back_color), GetBValue(m_style.back_color));
-			gBack.FillPath(new SolidBrush(back_color), &bgPath);
-		}
+		_HighlightTextEx(memDC, trc, m_style.back_color, m_style.shadow_color, ox * 2, oy * 2, m_style.round_corner_ex);
 		gBack.DrawPath(&gPenBorder, &bgPath);
 		gBack.ReleaseHDC(memDC);
 	}
@@ -787,34 +781,12 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	ReleaseDC(screenDC);
 
 }
-#if 0
-LRESULT WeaselPanel::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-	MARGINS m{ 0,0,0,-1 };
-	DwmExtendFrameIntoClientArea(m_hWnd, &m);
-	SetWindowPos(m_hWnd, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
-	return TRUE;
-}
-
-LRESULT WeaselPanel::OnNcCalcSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-	if (wParam == TRUE)
-	{
-		SetWindowLong(0, 0);
-		return TRUE;
-	}
-	return FALSE;
-}
-#endif
 
 LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 	LONG t = ::GetWindowLong(m_hWnd, GWL_EXSTYLE);
 	t |= WS_EX_LAYERED;
 	::SetWindowLong(m_hWnd, GWL_EXSTYLE, t);
-	//ULONG_PTR cNewStyle = GetClassLongPtr(m_hWnd, GCL_STYLE) | CS_DROPSHADOW;
-	//SetClassLongPtr(m_hWnd, GCL_STYLE, cNewStyle);
-	//CenterWindow();
 	GdiplusStartup(&_m_gdiplusToken, &_m_gdiplusStartupInput, NULL);
 	GetWindowRect(&m_inputPos);
 
@@ -822,54 +794,7 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 
 	pDWR = new DirectWriteResources();
 	// prepare d2d1 resources
-	HRESULT hResult = S_OK;
-	// create factory
-	if(pDWR->pD2d1Factory == NULL)
-		hResult = ::D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED, &pDWR->pD2d1Factory);
-	// create IDWriteFactory
-	if(pDWR->pDWFactory == NULL)
-		hResult = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), reinterpret_cast<IUnknown**>(&pDWR->pDWFactory));
-	/* ID2D1HwndRenderTarget */
-	if (pDWR->pRenderTarget == NULL)
-	{
-		const D2D1_PIXEL_FORMAT format = D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED);
-		const D2D1_RENDER_TARGET_PROPERTIES properties = D2D1::RenderTargetProperties( D2D1_RENDER_TARGET_TYPE_DEFAULT, format);
-		pDWR->pD2d1Factory->CreateDCRenderTarget(&properties, &pDWR->pRenderTarget);
-	}
-	pDWR->pD2d1Factory->GetDesktopDpi(&pDWR->dpiScaleX_, &pDWR->dpiScaleY_);
-	pDWR->dpiScaleX_ /= 72.0f;
-	pDWR->dpiScaleY_ /= 72.0f;
-	//CDCHandle dc = GetDC();
-	//pDWR->dpiScaleX_ = dc.GetDeviceCaps(LOGPIXELSX) / 72;
-	//pDWR->dpiScaleY_ = dc.GetDeviceCaps(LOGPIXELSY) / 72;
-	//ReleaseDC(dc);
-	if(pDWR->pTextFormat == NULL)
-		hResult = pDWR->pDWFactory->CreateTextFormat(m_style.font_face.c_str(), NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 
-				m_style.font_point * pDWR->dpiScaleX_, L"", &pDWR->pTextFormat);
-	if( pDWR->pTextFormat != NULL)
-	{
-		pDWR->pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
-		pDWR->pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
-		pDWR->pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
-	}
-	if(pDWR->pLabelTextFormat == NULL)
-		hResult = pDWR->pDWFactory->CreateTextFormat(m_style.label_font_face.c_str(), NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 
-				m_style.label_font_point * pDWR->dpiScaleX_, L"", &pDWR->pLabelTextFormat);
-	if( pDWR->pLabelTextFormat != NULL)
-	{
-		pDWR->pLabelTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
-		pDWR->pLabelTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
-		pDWR->pLabelTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
-	}
-	if(pDWR->pCommentTextFormat == NULL)
-		hResult = pDWR->pDWFactory->CreateTextFormat(m_style.comment_font_face.c_str(), NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 
-				m_style.comment_font_point * pDWR->dpiScaleX_, L"", &pDWR->pCommentTextFormat);
-	if( pDWR->pCommentTextFormat != NULL)
-	{
-		pDWR->pCommentTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
-		pDWR->pCommentTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
-		pDWR->pCommentTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
-	}
+	pDWR->InitResources(m_style.label_font_face, m_style.label_font_point, m_style.font_face, m_style.font_point, m_style.comment_font_face, m_style.comment_font_point);
 	pFonts = new GDIFonts(m_style.label_font_face, m_style.label_font_point,
 		m_style.font_face, m_style.font_point,
 		m_style.comment_font_face, m_style.comment_font_point);

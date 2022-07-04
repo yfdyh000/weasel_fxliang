@@ -49,10 +49,9 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 		pD2d1Factory->CreateDCRenderTarget(&properties, &pRenderTarget);
 	}
     //get the dpi information
-    HDC screen = ::GetDC(0);
-    dpiScaleX_ = GetDeviceCaps(screen, LOGPIXELSX) / 72.0f;
-    dpiScaleY_ = GetDeviceCaps(screen, LOGPIXELSY) / 72.0f;
-    ::ReleaseDC(0, screen);
+	pD2d1Factory->GetDesktopDpi(&dpiScaleX_, &dpiScaleY_);
+	dpiScaleX_ /= 72.0f;
+	dpiScaleY_ /= 72.0f;
 	if(pTextFormat == NULL)
 		hResult = pDWFactory->CreateTextFormat(font_face.c_str(), NULL,
 			DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL,
