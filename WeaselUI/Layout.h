@@ -5,6 +5,10 @@
 #include <regex>
 #include <dwrite.h>
 #include <d2d1.h>
+#include <dwrite_2.h>
+#include <boost/regex.hpp>
+#include <vector>
+#include <regex>
 
 template <class T> void SafeRelease(T** ppT)
 {
@@ -28,11 +32,12 @@ public:
 
 	float dpiScaleX_, dpiScaleY_;
 	ID2D1Factory* pD2d1Factory;
-	IDWriteFactory* pDWFactory;
+	IDWriteFactory2* pDWFactory;
 	ID2D1DCRenderTarget* pRenderTarget;
-	IDWriteTextFormat* pTextFormat;
-	IDWriteTextFormat* pLabelTextFormat;
-	IDWriteTextFormat* pCommentTextFormat;
+	IDWriteTextFormat1* pTextFormat;
+	IDWriteTextFormat1* pLabelTextFormat;
+	IDWriteTextFormat1* pCommentTextFormat;
+private:
 };
 
 class GDIFonts
@@ -40,15 +45,7 @@ class GDIFonts
 public:
 	GDIFonts() {};
 	~GDIFonts(){}
-	GDIFonts(std::wstring labelFontFace, int labelFontPoint, std::wstring textFontFace, int textFontPoint, std::wstring commentFontFace, int commentFontPoint) 
-	{
-		_LabelFontFace		= labelFontFace;
-		_LabelFontPoint		= labelFontPoint;
-		_TextFontFace		= textFontFace;
-		_TextFontPoint		= textFontPoint;
-		_CommentFontFace	= commentFontFace;
-		_CommentFontPoint	= commentFontPoint;
-	}
+	GDIFonts(std::wstring labelFontFace, int labelFontPoint, std::wstring textFontFace, int textFontPoint, std::wstring commentFontFace, int commentFontPoint);
 	std::wstring _LabelFontFace;
 	std::wstring _TextFontFace;
 	std::wstring _CommentFontFace;

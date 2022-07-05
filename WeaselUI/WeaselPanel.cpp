@@ -428,7 +428,7 @@ void WeaselPanel::Refresh()
 	_CreateLayout();
 
 	CDCHandle dc = GetDC();
-	if (m_style.color_font)
+	if (m_style.color_font == true && _isWin8Point1OrGrater)
 		m_layout->DoLayout(dc, pDWR);
 	else
 		m_layout->DoLayout(dc, pFonts);
@@ -513,7 +513,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 		if (range.start < range.end)
 		{
 			CSize selStart, selEnd;
-			if (m_style.color_font)
+			if (m_style.color_font && _isWin8Point1OrGrater)
 			{
 				m_layout->GetTextSizeDW(t, range.start, pDWR->pTextFormat, pDWR->pDWFactory, &selStart);
 				m_layout->GetTextSizeDW(t, range.end, pDWR->pTextFormat, pDWR->pDWFactory, &selEnd);
@@ -539,7 +539,10 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				CRect rc_before(x, rc.top, rc.left + selStart.cx, rc.bottom);
 				dc.SetTextColor(m_style.text_color);
 				dc.SetBkColor(m_style.back_color);
-				_TextOut(dc, x, rc.top, rc_before, str_before.c_str(), str_before.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace);
+				if(m_style.color_font && _isWin8Point1OrGrater)
+					_TextOut(dc, x, rc.top, rc_before, str_before.c_str(), str_before.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace);
+				else
+					_TextOut(dc, x, rc.top, rc_before, str_before.c_str(), str_before.length(), NULL, pFonts->_TextFontPoint, pFonts->_TextFontFace);
 				x += selStart.cx + m_style.hilite_spacing;
 			}
 			{
@@ -552,7 +555,10 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 					(m_style.margin_x-m_style.hilite_padding), (m_style.margin_y - m_style.hilite_padding), m_style.round_corner);
 				dc.SetTextColor(m_style.hilited_text_color);
 				dc.SetBkColor(m_style.hilited_back_color);
-				_TextOut(dc, x, rc.top, rc_hi, str_highlight.c_str(), str_highlight.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace);
+				if(m_style.color_font && _isWin8Point1OrGrater)
+					_TextOut(dc, x, rc.top, rc_hi, str_highlight.c_str(), str_highlight.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace);
+				else
+					_TextOut(dc, x, rc.top, rc_hi, str_highlight.c_str(), str_highlight.length(), NULL, pFonts->_TextFontPoint, pFonts->_TextFontFace);
 				dc.SetTextColor(m_style.text_color);
 				dc.SetBkColor(m_style.back_color);
 				x += (selEnd.cx - selStart.cx);
@@ -563,13 +569,20 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				x += m_style.hilite_spacing;
 				std::wstring str_after(t.substr(range.end));
 				CRect rc_after(x, rc.top, rc.right, rc.bottom);
-				_TextOut(dc, x, rc.top, rc_after, str_after.c_str(), str_after.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace);
+				if(m_style.color_font && _isWin8Point1OrGrater)
+					_TextOut(dc, x, rc.top, rc_after, str_after.c_str(), str_after.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace);
+				else
+					_TextOut(dc, x, rc.top, rc_after, str_after.c_str(), str_after.length(), NULL, pFonts->_TextFontPoint, pFonts->_TextFontFace);
+
 			}
 		}
 		else
 		{
 			CRect rcText(rc.left, rc.top, rc.right, rc.bottom);
-			_TextOut(dc, rc.left, rc.top, rcText, t.c_str(), t.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace);
+			if (m_style.color_font && _isWin8Point1OrGrater)
+				_TextOut(dc, rc.left, rc.top, rcText, t.c_str(), t.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace);
+			else
+				_TextOut(dc, rc.left, rc.top, rcText, t.c_str(), t.length(), NULL, pFonts->_TextFontPoint, pFonts->_TextFontFace);
 		}
 		drawn = true;
 	}
@@ -634,7 +647,12 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 		std::wstring label = m_layout->GetLabelText(labels, i, m_style.label_text_format.c_str());
 		rect = m_layout->GetCandidateLabelRect(i);
 		rect = OffsetRect(rect, ox, oy);
-		_TextOut(dc, rect.left, rect.top, rect, label.c_str(), label.length(), pDWR->pLabelTextFormat, pFonts->_LabelFontPoint, pFonts->_LabelFontFace);
+
+		if (m_style.color_font && _isWin8Point1OrGrater)
+			_TextOut(dc, rect.left, rect.top, rect, label.c_str(), label.length(), pDWR->pLabelTextFormat, pFonts->_LabelFontPoint, pFonts->_LabelFontFace);
+		else
+			_TextOut(dc, rect.left, rect.top, rect, label.c_str(), label.length(), NULL, pFonts->_LabelFontPoint, pFonts->_LabelFontFace);
+
 
 		// Draw text
 		std::wstring text = candidates.at(i).str;
@@ -644,7 +662,11 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 			dc.SetTextColor(m_style.candidate_text_color);
 		rect = m_layout->GetCandidateTextRect(i);
 		rect = OffsetRect(rect, ox, oy);
-		_TextOut(dc, rect.left, rect.top, rect, text.c_str(), text.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace);
+		if (m_style.color_font && _isWin8Point1OrGrater)
+			_TextOut(dc, rect.left, rect.top, rect, text.c_str(), text.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace);
+		else
+			_TextOut(dc, rect.left, rect.top, rect, text.c_str(), text.length(), NULL, pFonts->_TextFontPoint, pFonts->_TextFontFace);
+
 		
 		// Draw comment
 		std::wstring comment = comments.at(i).str;
@@ -656,7 +678,10 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 				dc.SetTextColor(m_style.comment_text_color);
 			rect = m_layout->GetCandidateCommentRect(i);
 			rect = OffsetRect(rect, ox, oy);
-			_TextOut(dc, rect.left, rect.top, rect, comment.c_str(), comment.length(), pDWR->pCommentTextFormat, pFonts->_CommentFontPoint, pFonts->_CommentFontFace);
+			if(m_style.color_font == true && _isWin8Point1OrGrater)
+				_TextOut(dc, rect.left, rect.top, rect, comment.c_str(), comment.length(), pDWR->pCommentTextFormat, pFonts->_CommentFontPoint, pFonts->_CommentFontFace);
+			else
+				_TextOut(dc, rect.left, rect.top, rect, comment.c_str(), comment.length(), NULL, pFonts->_CommentFontPoint, pFonts->_CommentFontFace);
 		}
 		drawn = true;
 	}
@@ -786,12 +811,15 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	::SetWindowLong(m_hWnd, GWL_EXSTYLE, t);
 	GdiplusStartup(&_m_gdiplusToken, &_m_gdiplusStartupInput, NULL);
 	GetWindowRect(&m_inputPos);
-
-	pDWR = new DirectWriteResources();
-	// prepare d2d1 resources
-	pDWR->InitResources(m_style.label_font_face, m_style.label_font_point,
+	_isWin8Point1OrGrater = IsWindows8Point1OrGreater();
+	if (m_style.color_font == true && _isWin8Point1OrGrater)
+	{
+		pDWR = new DirectWriteResources();
+		// prepare d2d1 resources
+		pDWR->InitResources(m_style.label_font_face, m_style.label_font_point,
 			m_style.font_face, m_style.font_point,
 			m_style.comment_font_face, m_style.comment_font_point);
+	}
 	pFonts = new GDIFonts(m_style.label_font_face, m_style.label_font_point,
 		m_style.font_face, m_style.font_point,
 		m_style.comment_font_face, m_style.comment_font_point);

@@ -57,6 +57,7 @@ private:
 
 	Gdiplus::GdiplusStartupInput _m_gdiplusStartupInput;
 	ULONG_PTR _m_gdiplusToken;
+	bool _isWin8Point1OrGrater = FALSE;
 	
 	DirectWriteResources* pDWR = NULL;
 	GDIFonts* pFonts = NULL;
