@@ -5,6 +5,22 @@
 
 using namespace weasel;
 
+static void GetUnicodeRange(IDWriteTextFormat* pTextFormat, IDWriteFontCollection* collection, WCHAR* fontName, DWRITE_UNICODE_RANGE* rngs, UINT32* actualRngCount)
+{
+	// offset calc start
+	WCHAR name[64] = { 0 };
+	UINT32 findex;
+	BOOL exists;
+	collection->FindFamilyName(name, &findex, &exists);
+	IDWriteFontFamily* ffamily;
+	collection->GetFontFamily(findex, &ffamily);
+	IDWriteFont1* font;
+	ffamily->GetFirstMatchingFont(pTextFormat->GetFontWeight(), pTextFormat->GetFontStretch(), pTextFormat->GetFontStyle(), reinterpret_cast<IDWriteFont**>(&font));
+	font->GetUnicodeRanges(0xffff, rngs, actualRngCount);
+	ffamily->Release();
+	//collection->Release();
+	font->Release();
+}
 static std::vector<std::wstring> ws_split(const std::wstring& in, const std::wstring& delim)
 {
 	std::wregex re{ delim };
@@ -94,7 +110,6 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	// prepare d2d1 resources
 	HRESULT hResult = S_OK;
 	std::vector<std::wstring> parsedStrV = ws_split(font_face, L",");
-
 	hResult = pDWFactory->CreateTextFormat(parsedStrV[0].c_str(), NULL,
 			DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL,
 			font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pTextFormat));
@@ -114,10 +129,10 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 				fbFontsV = ws_split(parsedStrV[i], L":");
 				// must be format like bellow, first and last must be hex number like 1f600, 1f6ff and so on, no space befor and after.
 				// font name:first:last
-				if(fbFontsV.size() == 3)
-				{
+				if (fbFontsV.size() == 3)
 					AddAMapping(pFontFallbackBuilder, fbFontsV[0].c_str(), std::stoi(fbFontsV[1].c_str(), 0, 16), std::stoi(fbFontsV[2].c_str(), 0, 16));
-				}
+				else if (fbFontsV.size() == 1)	// if only font defined, use all range
+					AddAMapping(pFontFallbackBuilder, fbFontsV[0].c_str(), 0, 0xffffffff);
 				fbFontsV.swap(std::vector<std::wstring>());
 			}
 			pFontFallbackBuilder->CreateFontFallback(&pFontFallback);
@@ -148,9 +163,9 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 				// must be format like bellow, first and last must be hex number like 1f600, 1f6ff and so on, no space befor and after.
 				// font name:first:last
 				if(fbFontsV.size() == 3)
-				{
 					AddAMapping(pFontFallbackBuilder, fbFontsV[0].c_str(), std::stoi(fbFontsV[1].c_str(), 0, 16), std::stoi(fbFontsV[2].c_str(), 0, 16));
-				}
+				else if (fbFontsV.size() == 1)	// if only font defined, use all range
+					AddAMapping(pFontFallbackBuilder, fbFontsV[0].c_str(), 0, 0xffffffff);
 				fbFontsV.swap(std::vector<std::wstring>());
 			}
 			pFontFallbackBuilder->CreateFontFallback(&pFontFallback);
@@ -181,9 +196,9 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 				// must be format like bellow, first and last must be hex number like 1f600, 1f6ff and so on, no space befor and after.
 				// font name:first:last
 				if(fbFontsV.size() == 3)
-				{
 					AddAMapping(pFontFallbackBuilder, fbFontsV[0].c_str(), std::stoi(fbFontsV[1].c_str(), 0, 16), std::stoi(fbFontsV[2].c_str(), 0, 16));
-				}
+				else if (fbFontsV.size() == 1)	// if only font defined, use all range
+					AddAMapping(pFontFallbackBuilder, fbFontsV[0].c_str(), 0, 0xffffffff);
 				fbFontsV.swap(std::vector<std::wstring>());
 			}
 			pFontFallbackBuilder->CreateFontFallback(&pFontFallback);

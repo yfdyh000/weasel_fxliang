@@ -1287,15 +1287,17 @@ HRESULT WeaselPanel::_TextOutWithFallback_D2D (CDCHandle dc, CRect const rc, wst
 		IDWriteTextLayout* pTextLayout = NULL;
 		if (pTextFormat == NULL)
 			pTextFormat = pDWR->pTextFormat;
-		pDWR->pDWFactory->CreateTextLayout( ((wstring)psz).c_str(), ((wstring)psz).size(), pTextFormat, 0, 0, &pTextLayout);
-		CSize sz;
-		m_layout->GetTextSizeDW(psz.c_str(), psz.length(), pTextFormat, pDWR->pDWFactory, &sz);
-		float offsetx = (rc.Width() - sz.cx) / 2.0f;
+		pDWR->pDWFactory->CreateTextLayout( ((wstring)psz).c_str(), ((wstring)psz).size(), pTextFormat, rc.Width(), rc.Height(), &pTextLayout);
+		//CSize sz;
+		//m_layout->GetTextSizeDW(psz.c_str(), psz.length(), pTextFormat, pDWR->pDWFactory, &sz);
+		//float offsetx = (rc.Width() - sz.cx) / 2.0f  * pDWR->dpiScaleX_;
+		//float offsety = (rc.Height() / 2) * pDWR->dpiScaleY_;
 		pDWR->pRenderTarget->BindDC(dc, &rc);
 		pDWR->pRenderTarget->BeginDraw();
 		if (pTextLayout != NULL)
-			pDWR->pRenderTarget->DrawTextLayout({ offsetx, (float)(rc.Height() / 2) }, pTextLayout, pBrush, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
+			pDWR->pRenderTarget->DrawTextLayout({ 0.0f, 0.0f}, pTextLayout, pBrush, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
 		pDWR->pRenderTarget->EndDraw();
+		SafeRelease(&pTextLayout);
 	}
 	pBrush->Release();
 	return S_OK;
