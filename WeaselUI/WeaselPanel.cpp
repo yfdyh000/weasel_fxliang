@@ -549,6 +549,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				// zzz[yyy]
 				std::wstring str_highlight(t.substr(range.start, range.end - range.start));
 				CRect rc_hi(x, rc.top, x + (selEnd.cx - selStart.cx), rc.bottom);
+				CRect rct = rc_hi;
 				rc_hi.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 				OffsetRect(rc_hi, -m_style.hilite_padding, 0);
 				_HighlightTextEx(dc, rc_hi, m_style.hilited_back_color, m_style.hilited_shadow_color, 
@@ -556,9 +557,9 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				dc.SetTextColor(m_style.hilited_text_color);
 				dc.SetBkColor(m_style.hilited_back_color);
 				if(m_style.color_font && _isWin8Point1OrGrater)
-					_TextOut(dc, x, rc.top, rc_hi, str_highlight.c_str(), str_highlight.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace);
+					_TextOut(dc, x, rc.top, rct, str_highlight.c_str(), str_highlight.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace);
 				else
-					_TextOut(dc, x, rc.top, rc_hi, str_highlight.c_str(), str_highlight.length(), NULL, pFonts->_TextFontPoint, pFonts->_TextFontFace);
+					_TextOut(dc, x, rc.top, rct, str_highlight.c_str(), str_highlight.length(), NULL, pFonts->_TextFontPoint, pFonts->_TextFontFace);
 				dc.SetTextColor(m_style.text_color);
 				dc.SetBkColor(m_style.back_color);
 				x += (selEnd.cx - selStart.cx);
@@ -629,14 +630,16 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 			{
 				candidateBackRect.left = m_layout->GetCandidateLabelRect(i).left;
 				candidateBackRect.right = m_layout->GetCandidateCommentRect(i).right;
+				candidateBackRect.top = m_layout->GetHighlightRect().top;
+				candidateBackRect.bottom = m_layout->GetHighlightRect().bottom;
 			}
 			else
 			{
 				candidateBackRect.left = m_layout->GetHighlightRect().left;
 				candidateBackRect.right = m_layout->GetHighlightRect().right;
+				candidateBackRect.top =m_layout->GetCandidateTextRect(i).top;
+				candidateBackRect.bottom = m_layout->GetCandidateTextRect(i).bottom;
 			}
-			candidateBackRect.top =m_layout->GetCandidateTextRect(i).top;
-			candidateBackRect.bottom = m_layout->GetCandidateTextRect(i).bottom;
 			candidateBackRect = OffsetRect(candidateBackRect, ox, oy);
 			candidateBackRect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 			_HighlightTextEx(dc, candidateBackRect, m_style.candidate_back_color, m_style.candidate_shadow_color, bkx, bky, m_style.round_corner);
@@ -816,9 +819,8 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	{
 		pDWR = new DirectWriteResources();
 		// prepare d2d1 resources
-		pDWR->InitResources(m_style.label_font_face, m_style.label_font_point,
-			m_style.font_face, m_style.font_point,
-			m_style.comment_font_face, m_style.comment_font_point);
+		pDWR->InitResources(m_style);
+		//pDWR->InitResources(m_style.label_font_face, m_style.label_font_point, m_style.font_face, m_style.font_point, m_style.comment_font_face, m_style.comment_font_point);
 	}
 	pFonts = new GDIFonts(m_style.label_font_face, m_style.label_font_point,
 		m_style.font_face, m_style.font_point,
@@ -1222,30 +1224,6 @@ static std::vector<DWRITE_TEXT_RANGE> CheckNotEmojiRange(std::wstring str)
 	}
 	return rng;
 }
-static inline int CalcFontOffsetDW(IDWriteTextFormat* pTextFormat)
-{
-	// offset calc start
-	IDWriteFontCollection* collection;
-	WCHAR name[64];
-	UINT32 findex;
-	BOOL exists;
-	pTextFormat->GetFontFamilyName(name, 64);
-	pTextFormat->GetFontCollection(&collection);
-	collection->FindFamilyName(name, &findex, &exists);
-	IDWriteFontFamily* ffamily;
-	collection->GetFontFamily(findex, &ffamily);
-	IDWriteFont* font;
-	ffamily->GetFirstMatchingFont(pTextFormat->GetFontWeight(), pTextFormat->GetFontStretch(), pTextFormat->GetFontStyle(), &font);
-	DWRITE_FONT_METRICS metrics;
-	font->GetMetrics(&metrics);
-	float ratio = pTextFormat->GetFontSize() / (float)metrics.designUnitsPerEm;
-	int offset = static_cast<int>((-metrics.strikethroughPosition + metrics.descent) * ratio);
-	ffamily->Release();
-	collection->Release();
-	font->Release();
-	// offset calc end
-	return offset;
-}
 static inline int CalcFontHeightDW(IDWriteTextFormat* pTextFormat)
 {
 	// offset calc start
@@ -1272,6 +1250,30 @@ static inline int CalcFontHeightDW(IDWriteTextFormat* pTextFormat)
 }
 #endif
 
+static inline float CalcFontOffsetDW(IDWriteTextFormat* pTextFormat)
+{
+	// offset calc start
+	IDWriteFontCollection* collection;
+	WCHAR name[64];
+	UINT32 findex;
+	BOOL exists;
+	pTextFormat->GetFontFamilyName(name, 64);
+	pTextFormat->GetFontCollection(&collection);
+	collection->FindFamilyName(name, &findex, &exists);
+	IDWriteFontFamily* ffamily;
+	collection->GetFontFamily(findex, &ffamily);
+	IDWriteFont* font;
+	ffamily->GetFirstMatchingFont(pTextFormat->GetFontWeight(), pTextFormat->GetFontStretch(), pTextFormat->GetFontStyle(), &font);
+	DWRITE_FONT_METRICS metrics;
+	font->GetMetrics(&metrics);
+	float ratio = pTextFormat->GetFontSize() / (float)metrics.designUnitsPerEm;
+	float offset = ((-metrics.strikethroughPosition + metrics.descent) * ratio);
+	ffamily->Release();
+	collection->Release();
+	font->Release();
+	// offset calc end
+	return offset;
+}
 HRESULT WeaselPanel::_TextOutWithFallback_D2D (CDCHandle dc, CRect const rc, wstring psz, int cch, COLORREF gdiColor, IDWriteTextFormat* pTextFormat)
 {
 	float r = (float)(GetRValue(gdiColor))/255.0f;
@@ -1291,11 +1293,15 @@ HRESULT WeaselPanel::_TextOutWithFallback_D2D (CDCHandle dc, CRect const rc, wst
 		//CSize sz;
 		//m_layout->GetTextSizeDW(psz.c_str(), psz.length(), pTextFormat, pDWR->pDWFactory, &sz);
 		//float offsetx = (rc.Width() - sz.cx) / 2.0f  * pDWR->dpiScaleX_;
-		//float offsety = (rc.Height() / 2) * pDWR->dpiScaleY_;
+		//float offsety = CalcFontOffsetDW(pTextFormat);
+		float offsetx = 0;
+		float offsety = 0;
 		pDWR->pRenderTarget->BindDC(dc, &rc);
 		pDWR->pRenderTarget->BeginDraw();
 		if (pTextLayout != NULL)
-			pDWR->pRenderTarget->DrawTextLayout({ 0.0f, 0.0f}, pTextLayout, pBrush, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
+			pDWR->pRenderTarget->DrawTextLayout({ offsetx, offsety}, pTextLayout, pBrush, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
+		//D2D1_RECT_F rectf{ 0,0, rc.Width(), rc.Height() };
+		//pDWR->pRenderTarget->DrawRectangle(&rectf, pBrush);
 		pDWR->pRenderTarget->EndDraw();
 		SafeRelease(&pTextLayout);
 	}

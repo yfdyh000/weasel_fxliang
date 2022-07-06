@@ -178,48 +178,33 @@ void weasel::HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 		/* Label */
 		std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
 		GetTextSizeDW(label, label.length(), pDWR->pLabelTextFormat, pDWR->pDWFactory, &size);
-		_candidateLabelRects[i].SetRect(w, height, w + size.cx, height + size.cy);
+		_candidateLabelRects[i].SetRect(w, height, w + size.cx, height + max(size.cy, h));
 		w += size.cx, h = max(h, size.cy);
 		w += space;
 
 		/* Text */
 		const std::wstring& text = candidates.at(i).str;
 		GetTextSizeDW(text, text.length(), pDWR->pTextFormat, pDWR->pDWFactory, &size);
-		_candidateTextRects[i].SetRect(w, height, w + size.cx, height + size.cy);
+		_candidateTextRects[i].SetRect(w, height, w + size.cx, height + max(size.cy, h));
 		w += size.cx + space, h = max(h, size.cy);
+		if (_candidateLabelRects[i].Height() < h)
+		{
+			_candidateLabelRects[i].top = _candidateTextRects[i].top;
+			_candidateLabelRects[i].bottom = _candidateTextRects[i].bottom;
+		}
 
 		/* Comment */
 		if (!comments.at(i).str.empty())
 		{
 			const std::wstring& comment = comments.at(i).str;
 			GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat, pDWR->pDWFactory, &size);
-			_candidateCommentRects[i].SetRect(w, height, w + size.cx + space, height + size.cy);
+			_candidateCommentRects[i].SetRect(w, height, w + size.cx + space, height + max(size.cy, h));
 			w += size.cx + space, h = max(h, size.cy);
 		}
 		else /* Used for highlighted candidate calculation below */
 		{
 			_candidateCommentRects[i].SetRect(w, height, w, height + size.cy);
 		}
-	}
-	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
-	{
-		int ol = 0, ot = 0, oc = 0;
-		if (_style.align_type == UIStyle::ALIGN_CENTER)
-		{
-			ol = (h - _candidateLabelRects[i].Height()) / 2;
-			ot = (h - _candidateTextRects[i].Height()) / 2;
-			oc = (h - _candidateCommentRects[i].Height()) / 2;
-		}
-		else if (_style.align_type == UIStyle::ALIGN_BOTTOM)
-		{
-			ol = (h - _candidateLabelRects[i].Height()) ;
-			ot = (h - _candidateTextRects[i].Height()) ;
-			oc = (h - _candidateCommentRects[i].Height()) ;
-
-		}
-		_candidateLabelRects[i].OffsetRect(0, ol);
-		_candidateTextRects[i].OffsetRect(0, ot);
-		_candidateCommentRects[i].OffsetRect(0, oc);
 	}
 	w += _style.margin_x;
 
