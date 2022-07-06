@@ -1248,8 +1248,6 @@ static inline int CalcFontHeightDW(IDWriteTextFormat* pTextFormat)
 	// offset calc end
 	return height;
 }
-#endif
-
 static inline float CalcFontOffsetDW(IDWriteTextFormat* pTextFormat)
 {
 	// offset calc start
@@ -1274,6 +1272,8 @@ static inline float CalcFontOffsetDW(IDWriteTextFormat* pTextFormat)
 	// offset calc end
 	return offset;
 }
+#endif
+
 HRESULT WeaselPanel::_TextOutWithFallback_D2D (CDCHandle dc, CRect const rc, wstring psz, int cch, COLORREF gdiColor, IDWriteTextFormat* pTextFormat)
 {
 	float r = (float)(GetRValue(gdiColor))/255.0f;

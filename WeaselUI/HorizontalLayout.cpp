@@ -90,16 +90,17 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts )
 		if (_style.align_type == UIStyle::ALIGN_CENTER)
 		{
 			ol = (h - _candidateLabelRects[i].Height()) / 2;
-			ot = (h - _candidateTextRects[i].Height()) / 2;
+			//ot = (h - _candidateTextRects[i].Height()) / 2;
 			oc = (h - _candidateCommentRects[i].Height()) / 2;
 		}
 		else if (_style.align_type == UIStyle::ALIGN_BOTTOM)
 		{
 			ol = (h - _candidateLabelRects[i].Height()) ;
-			ot = (h - _candidateTextRects[i].Height()) ;
+			//ot = (h - _candidateTextRects[i].Height()) ;
 			oc = (h - _candidateCommentRects[i].Height()) ;
 
 		}
+		ot = (h - _candidateTextRects[i].Height()) / 2;
 		_candidateLabelRects[i].OffsetRect(0, ol);
 		_candidateTextRects[i].OffsetRect(0, ot);
 		_candidateCommentRects[i].OffsetRect(0, oc);
