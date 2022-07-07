@@ -135,7 +135,7 @@ bool FullScreenLayout::AdjustFontPoint(CDCHandle dc, const CRect& workArea, Dire
 		if(fontPoint < 4) fontPoint = 4; 
 		if(fontPointLabel < 4) fontPointLabel = 4; 
 		if(fontPointComment < 4) fontPointComment = 4; 
-		pDWR->InitResources(_style.label_font_face, fontPointLabel, _style.font_face, fontPoint, _style.comment_font_face, fontPointComment);
+		pDWR->InitResources(_style.label_font_face, fontPointLabel, _style.font_face, fontPoint, _style.comment_font_face, fontPointComment, _style.align_type);
 		return true;
 	}
 	else if (sz.cx <= workArea.Width() * 31 / 32 && sz.cy <= workArea.Height() * 31 / 32)
@@ -150,7 +150,7 @@ bool FullScreenLayout::AdjustFontPoint(CDCHandle dc, const CRect& workArea, Dire
 		if(fontPoint < 4) fontPoint = 4; 
 		if(fontPointLabel < 4) fontPointLabel = 4; 
 		if(fontPointComment < 4) fontPointComment = 4; 
-		pDWR->InitResources(_style.label_font_face, fontPointLabel, _style.font_face, fontPoint, _style.comment_font_face, fontPointComment);
+		pDWR->InitResources(_style.label_font_face, fontPointLabel, _style.font_face, fontPoint, _style.comment_font_face, fontPointComment, _style.align_type);
 		return true;
 	}
 

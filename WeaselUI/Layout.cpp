@@ -1,38 +1,12 @@
 #include "stdafx.h"
 #include "Layout.h"
 #include <string>
-#include <fstream>
 
-using namespace weasel;
-
-static void GetUnicodeRange(IDWriteTextFormat* pTextFormat, IDWriteFontCollection* collection, WCHAR* fontName, DWRITE_UNICODE_RANGE* rngs, UINT32* actualRngCount)
-{
-	// offset calc start
-	WCHAR name[64] = { 0 };
-	UINT32 findex;
-	BOOL exists;
-	collection->FindFamilyName(name, &findex, &exists);
-	IDWriteFontFamily* ffamily;
-	collection->GetFontFamily(findex, &ffamily);
-	IDWriteFont1* font;
-	ffamily->GetFirstMatchingFont(pTextFormat->GetFontWeight(), pTextFormat->GetFontStretch(), pTextFormat->GetFontStyle(), reinterpret_cast<IDWriteFont**>(&font));
-	font->GetUnicodeRanges(0xffff, rngs, actualRngCount);
-	ffamily->Release();
-	//collection->Release();
-	font->Release();
-}
-static std::vector<std::wstring> ws_split(const std::wstring& in, const std::wstring& delim)
-{
-	std::wregex re{ delim };
-	return std::vector<std::wstring> {
-		std::wsregex_token_iterator(in.begin(), in.end(), re, -1),
-			std::wsregex_token_iterator()
-	};
-}
 Layout::Layout(const UIStyle& style, const Context& context, const Status& status)
 	: _style(style), _context(context), _status(status)
 {
 }
+
 DirectWriteResources::DirectWriteResources() :
 	dpiScaleX_(0),
 	dpiScaleY_(0),
@@ -81,31 +55,10 @@ static void AddAMapping(IDWriteFontFallbackBuilder* pFontFallbackBuilder, const 
 	rng.last = end;
 	pFontFallbackBuilder->AddMapping(&rng, 1, &fname, 1);
 }
-#if 0
-// trim from start
-inline std::wstring ltrim(std::wstring &s)
-{
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
-    return s;
-}
 
-// trim from end
-inline std::wstring rtrim(std::wstring &s)
-{
-    s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
-    return s;
-}
-
-// trim from both ends
-inline std::wstring trim(std::wstring &s)
-{
-    return ltrim(rtrim(s));
-}
-#endif
-
-HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int label_font_point,
-	std::wstring font_face, int font_point,
-	std::wstring comment_font_face, int comment_font_point, UIStyle::LayoutAlignType alignType) 
+HRESULT DirectWriteResources::InitResources(wstring label_font_face, int label_font_point,
+	wstring font_face, int font_point,
+	wstring comment_font_face, int comment_font_point, UIStyle::LayoutAlignType alignType) 
 {
 	// prepare d2d1 resources
 	DWRITE_PARAGRAPH_ALIGNMENT paragraphAliment;
@@ -117,8 +70,12 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 		paragraphAliment = DWRITE_PARAGRAPH_ALIGNMENT_NEAR;
 
 	HRESULT hResult = S_OK;
-	std::vector<std::wstring> parsedStrV = ws_split(font_face, L",");
-	hResult = pDWFactory->CreateTextFormat(parsedStrV[0].c_str(), NULL,
+	vector<wstring> fontFaceStrVector;
+	// text font text format set up
+	split(fontFaceStrVector, font_face, is_any_of(L","));
+	wstring mainFontFace = fontFaceStrVector[0];
+	trim(mainFontFace);
+	hResult = pDWFactory->CreateTextFormat(mainFontFace.c_str(), NULL,
 			DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL,
 			font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pTextFormat));
 	if( pTextFormat != NULL)
@@ -126,12 +83,16 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 		pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 		pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 		pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
-		if (parsedStrV.size() > 1)
-			_SetFontFallback(pTextFormat, parsedStrV);
+		if (fontFaceStrVector.size() > 1)
+			_SetFontFallback(pTextFormat, fontFaceStrVector);
 	}
-	parsedStrV.swap(std::vector<std::wstring>());
-	parsedStrV = ws_split(label_font_face, L",");
-	hResult = pDWFactory->CreateTextFormat(parsedStrV[0].c_str(), NULL,
+	fontFaceStrVector.swap(vector<wstring>());
+
+	// label font text format set up
+	split(fontFaceStrVector, label_font_face, is_any_of(L","));
+	mainFontFace = fontFaceStrVector[0];
+	trim(mainFontFace);
+	hResult = pDWFactory->CreateTextFormat(mainFontFace.c_str(), NULL,
 			DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL,
 			label_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pLabelTextFormat));
 	if( pLabelTextFormat != NULL)
@@ -139,12 +100,16 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 		pLabelTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 		pLabelTextFormat->SetParagraphAlignment(paragraphAliment);
 		pLabelTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
-		if (parsedStrV.size() > 1)
-			_SetFontFallback(pLabelTextFormat, parsedStrV);
+		if (fontFaceStrVector.size() > 1)
+			_SetFontFallback(pLabelTextFormat, fontFaceStrVector);
 	}
-	parsedStrV.swap(std::vector<std::wstring>());
-	parsedStrV = ws_split(comment_font_face, L",");
-	hResult = pDWFactory->CreateTextFormat(parsedStrV[0].c_str(), NULL,
+	fontFaceStrVector.swap(vector<wstring>());
+
+	// comment font text format set up
+	split(fontFaceStrVector, comment_font_face, is_any_of(L","));
+	mainFontFace = fontFaceStrVector[0];
+	trim(mainFontFace);
+	hResult = pDWFactory->CreateTextFormat(mainFontFace.c_str(), NULL,
 			DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL,
 			comment_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pCommentTextFormat));
 	if( pCommentTextFormat != NULL)
@@ -152,10 +117,10 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 		pCommentTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 		pCommentTextFormat->SetParagraphAlignment(paragraphAliment);
 		pCommentTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
-		if (parsedStrV.size() > 1)
-			_SetFontFallback(pCommentTextFormat, parsedStrV);
+		if (fontFaceStrVector.size() > 1)
+			_SetFontFallback(pCommentTextFormat, fontFaceStrVector);
 	}
-	parsedStrV.swap(std::vector<std::wstring>());
+	fontFaceStrVector.swap(vector<wstring>());
 	return hResult;
 }
 
@@ -163,7 +128,6 @@ HRESULT DirectWriteResources::InitResources(const UIStyle style)
 {
 	// prepare d2d1 resources
 	HRESULT hResult = S_OK;
-#if 1
 	DWRITE_PARAGRAPH_ALIGNMENT paragraphAliment;
 	if (style.align_type == UIStyle::ALIGN_BOTTOM)
 		paragraphAliment = DWRITE_PARAGRAPH_ALIGNMENT_FAR;
@@ -172,8 +136,12 @@ HRESULT DirectWriteResources::InitResources(const UIStyle style)
 	else
 		paragraphAliment = DWRITE_PARAGRAPH_ALIGNMENT_NEAR;
 
-	std::vector<std::wstring> fontFaceStrVector = ws_split(style.font_face, L",");
-	hResult = pDWFactory->CreateTextFormat(fontFaceStrVector[0].c_str(), NULL,
+	vector<wstring> fontFaceStrVector;
+	// text font text format set up
+	split(fontFaceStrVector, style.font_face, is_any_of(L","));
+	wstring mainFontFace = fontFaceStrVector[0];
+	trim(mainFontFace);
+	hResult = pDWFactory->CreateTextFormat(mainFontFace.c_str(), NULL,
 			DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL,
 			style.font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pTextFormat));
 	if( pTextFormat != NULL)
@@ -185,9 +153,13 @@ HRESULT DirectWriteResources::InitResources(const UIStyle style)
 		if (fontFaceStrVector.size() > 1)
 			_SetFontFallback(pTextFormat, fontFaceStrVector);
 	}
-	fontFaceStrVector.swap(std::vector<std::wstring>());
-	fontFaceStrVector = ws_split(style.label_font_face, L",");
-	hResult = pDWFactory->CreateTextFormat(fontFaceStrVector[0].c_str(), NULL,
+	fontFaceStrVector.swap(vector<wstring>());
+
+	// label font text format set up
+	split(fontFaceStrVector, style.label_font_face, is_any_of(L","));
+	mainFontFace = fontFaceStrVector[0];
+	trim(mainFontFace);
+	hResult = pDWFactory->CreateTextFormat(mainFontFace.c_str(), NULL,
 			DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL,
 			style.label_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pLabelTextFormat));
 	if( pLabelTextFormat != NULL)
@@ -198,9 +170,13 @@ HRESULT DirectWriteResources::InitResources(const UIStyle style)
 		if (fontFaceStrVector.size() > 1)
 			_SetFontFallback(pLabelTextFormat, fontFaceStrVector);
 	}
-	fontFaceStrVector.swap(std::vector<std::wstring>());
-	fontFaceStrVector = ws_split(style.comment_font_face, L",");
-	hResult = pDWFactory->CreateTextFormat(fontFaceStrVector[0].c_str(), NULL,
+	fontFaceStrVector.swap(vector<wstring>());
+
+	// comment font text format set up
+	split(fontFaceStrVector, style.comment_font_face, is_any_of(L","));
+	mainFontFace = fontFaceStrVector[0];
+	trim(mainFontFace);
+	hResult = pDWFactory->CreateTextFormat(mainFontFace.c_str(), NULL,
 			DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL,
 			style.comment_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pCommentTextFormat));
 	if( pCommentTextFormat != NULL)
@@ -211,16 +187,12 @@ HRESULT DirectWriteResources::InitResources(const UIStyle style)
 		if (fontFaceStrVector.size() > 1)
 			_SetFontFallback(pCommentTextFormat, fontFaceStrVector);
 	}
-	fontFaceStrVector.swap(std::vector<std::wstring>());
-#else
-	hResult = _SetTextFormat(pTextFormat, style.font_face, style.font_point, UIStyle::ALIGN_CENTER);
-	hResult = _SetTextFormat(pLabelTextFormat, style.label_font_face, style.label_font_point, style.align_type);
-	hResult = _SetTextFormat(pCommentTextFormat, style.comment_font_face, style.comment_font_point, style.align_type);
-#endif
+	fontFaceStrVector.swap(vector<wstring>());
+
 	return hResult;
 }
 
-HRESULT weasel::DirectWriteResources::_SetTextFormat(IDWriteTextFormat1* _pTextFormat, const std::wstring fontFace, const UINT32 fontPoint, const UIStyle::LayoutAlignType alignType)
+HRESULT weasel::DirectWriteResources::_SetTextFormat(IDWriteTextFormat1* _pTextFormat, const wstring fontFace, const UINT32 fontPoint, const UIStyle::LayoutAlignType alignType)
 {
 	HRESULT hResult = S_OK;
 
@@ -231,8 +203,11 @@ HRESULT weasel::DirectWriteResources::_SetTextFormat(IDWriteTextFormat1* _pTextF
 		paragraphAliment = DWRITE_PARAGRAPH_ALIGNMENT_CENTER;
 	else
 		paragraphAliment = DWRITE_PARAGRAPH_ALIGNMENT_NEAR;
-	std::vector<std::wstring> fontFaceStrVector = ws_split(fontFace, L",");
-	hResult = pDWFactory->CreateTextFormat(fontFaceStrVector[0].c_str(), NULL,
+	vector<wstring> fontFaceStrVector; 
+	split(fontFaceStrVector, fontFace, is_any_of(L","));
+	wstring mainFontFace = fontFaceStrVector[0];
+	trim(mainFontFace);
+	hResult = pDWFactory->CreateTextFormat(mainFontFace.c_str(), NULL,
 			DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL,
 			fontPoint * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&_pTextFormat));
 	if( _pTextFormat != NULL)
@@ -243,26 +218,67 @@ HRESULT weasel::DirectWriteResources::_SetTextFormat(IDWriteTextFormat1* _pTextF
 		if (fontFaceStrVector.size() > 1)
 			_SetFontFallback(_pTextFormat, fontFaceStrVector);
 	}
-	fontFaceStrVector.swap(std::vector<std::wstring>());
+	fontFaceStrVector.swap(vector<wstring>());
 	return hResult;
 }
 
-void DirectWriteResources::_SetFontFallback(IDWriteTextFormat1* pTextFormat, std::vector<std::wstring> fontVector)
+void DirectWriteResources::_SetFontFallback(IDWriteTextFormat1* pTextFormat, vector<wstring> fontVector)
 {
 	IDWriteFontFallback* pSysFallback;
 	pDWFactory->GetSystemFontFallback(&pSysFallback);
 	IDWriteFontFallback* pFontFallback = NULL;
 	IDWriteFontFallbackBuilder* pFontFallbackBuilder = NULL;
 	pDWFactory->CreateFontFallbackBuilder(&pFontFallbackBuilder);
-	std::vector<std::wstring> fbFontsV;
+	vector<wstring> fallbackFontsVector;
 	for (UINT32 i = 1; i < fontVector.size(); i++)
 	{
-		fbFontsV = ws_split(fontVector[i], L":");
-		if (fbFontsV.size() == 3)
-			AddAMapping(pFontFallbackBuilder, fbFontsV[0].c_str(), std::stoi(fbFontsV[1].c_str(), 0, 16), std::stoi(fbFontsV[2].c_str(), 0, 16));
-		else if (fbFontsV.size() == 1)	// if only font defined, use all range
-			AddAMapping(pFontFallbackBuilder, fbFontsV[0].c_str(), 0, 0xffffffff);
-		fbFontsV.swap(std::vector<std::wstring>());
+		split(fallbackFontsVector, fontVector[i], is_any_of(L":"));
+		wstring _fontFaceWstr, firstWstr, lastWstr;
+		if (fallbackFontsVector.size() == 3)
+		{
+			_fontFaceWstr = fallbackFontsVector[0];
+			firstWstr = fallbackFontsVector[1];
+			lastWstr = fallbackFontsVector[2];
+			trim(_fontFaceWstr);
+			trim(firstWstr);
+			trim(lastWstr);
+			if (lastWstr.empty())
+				lastWstr = L"10ffff";
+			if (firstWstr.empty())
+				firstWstr = L"0";
+		}
+		else if (fallbackFontsVector.size() == 2)	// fontName : codepoint
+		{
+			_fontFaceWstr = fallbackFontsVector[0];
+			firstWstr = fallbackFontsVector[1];
+			trim(_fontFaceWstr);
+			trim(firstWstr);
+			if (firstWstr.empty())
+				firstWstr = L"0";
+			lastWstr = L"10ffff";
+		}
+		else if (fallbackFontsVector.size() == 1)	// if only font defined, use all range
+		{
+			_fontFaceWstr = fallbackFontsVector[0];
+			trim(_fontFaceWstr);
+			firstWstr = L"0";
+			lastWstr = L"10ffff";
+		}
+		UINT first = 0, last = 0x10ffff;
+		try {
+			first = stoi(firstWstr.c_str(), 0, 16);
+		}
+		catch(...){
+			first = 0;
+		}
+		try {
+			last = stoi(lastWstr.c_str(), 0, 16);
+		}
+		catch(...){
+			first = 0x10ffff;
+		}
+		AddAMapping(pFontFallbackBuilder, _fontFaceWstr.c_str(), first, last);
+		fallbackFontsVector.swap(vector<wstring>());
 	}
 	pFontFallbackBuilder->AddMappings(pSysFallback);
 	pFontFallbackBuilder->CreateFontFallback(&pFontFallback);
@@ -272,17 +288,21 @@ void DirectWriteResources::_SetFontFallback(IDWriteTextFormat1* pTextFormat, std
 	SafeRelease(&pFontFallbackBuilder);
 }
 
-#if 1
-GDIFonts::GDIFonts(std::wstring labelFontFace, int labelFontPoint, std::wstring textFontFace, int textFontPoint, std::wstring commentFontFace, int commentFontPoint) 
+GDIFonts::GDIFonts(wstring labelFontFace, int labelFontPoint, wstring textFontFace, int textFontPoint, wstring commentFontFace, int commentFontPoint) 
 {
-	std::vector<std::wstring> parsedStrV = ws_split(labelFontFace, L",");
-	_LabelFontFace		= parsedStrV[0];
+	vector<wstring> fontFaceStrVector;
+	split(fontFaceStrVector, labelFontFace, is_any_of(L","));
+	_LabelFontFace		= fontFaceStrVector[0];
 	_LabelFontPoint		= labelFontPoint;
-	parsedStrV = ws_split(textFontFace, L",");
-	_TextFontFace		= parsedStrV[0];
+	fontFaceStrVector.swap(vector<wstring>());
+
+	split(fontFaceStrVector, textFontFace, is_any_of(L","));
+	_TextFontFace		= fontFaceStrVector[0];
 	_TextFontPoint		= textFontPoint;
-	parsedStrV = ws_split(commentFontFace, L",");
-	_CommentFontFace	= parsedStrV[0];
+	fontFaceStrVector.swap(vector<wstring>());
+
+	split(fontFaceStrVector, commentFontFace, is_any_of(L","));
+	_CommentFontFace	= fontFaceStrVector[0];
 	_CommentFontPoint	= commentFontPoint;
+	fontFaceStrVector.swap(vector<wstring>());
 }
-#endif

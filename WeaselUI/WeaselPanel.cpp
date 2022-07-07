@@ -2,9 +2,8 @@
 #include "WeaselPanel.h"
 #include <WeaselCommon.h>
 #include <vector>
-#include <fstream>
 #include <string>
-#include <dwmapi.h>
+#include <boost/algorithm/string.hpp>
 
 #include "VerticalLayout.h"
 #include "HorizontalLayout.h"
@@ -13,11 +12,10 @@
 // for IDI_ZH, IDI_EN
 #include <resource.h>
 
-#pragma comment( lib, "dwmapi" )
-
 using namespace Gdiplus;
 using namespace weasel;
 using namespace std;
+using namespace boost::algorithm;
 
 /* start image gauss blur functions from https://github.com/kenjinote/DropShadow/  */
 #define myround(x) (int)((x)+0.5)
@@ -428,7 +426,7 @@ void WeaselPanel::Refresh()
 	_CreateLayout();
 
 	CDCHandle dc = GetDC();
-	if (m_style.color_font == true && _isWin8Point1OrGrater)
+	if (m_style.color_font)
 		m_layout->DoLayout(dc, pDWR);
 	else
 		m_layout->DoLayout(dc, pFonts);
@@ -513,7 +511,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 		if (range.start < range.end)
 		{
 			CSize selStart, selEnd;
-			if (m_style.color_font && _isWin8Point1OrGrater)
+			if (m_style.color_font)
 			{
 				m_layout->GetTextSizeDW(t, range.start, pDWR->pTextFormat, pDWR->pDWFactory, &selStart);
 				m_layout->GetTextSizeDW(t, range.end, pDWR->pTextFormat, pDWR->pDWFactory, &selEnd);
@@ -539,7 +537,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				CRect rc_before(x, rc.top, rc.left + selStart.cx, rc.bottom);
 				dc.SetTextColor(m_style.text_color);
 				dc.SetBkColor(m_style.back_color);
-				if(m_style.color_font && _isWin8Point1OrGrater)
+				if(m_style.color_font)
 					_TextOut(dc, x, rc.top, rc_before, str_before.c_str(), str_before.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace);
 				else
 					_TextOut(dc, x, rc.top, rc_before, str_before.c_str(), str_before.length(), NULL, pFonts->_TextFontPoint, pFonts->_TextFontFace);
@@ -556,7 +554,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 					(m_style.margin_x-m_style.hilite_padding), (m_style.margin_y - m_style.hilite_padding), m_style.round_corner);
 				dc.SetTextColor(m_style.hilited_text_color);
 				dc.SetBkColor(m_style.hilited_back_color);
-				if(m_style.color_font && _isWin8Point1OrGrater)
+				if(m_style.color_font) 
 					_TextOut(dc, x, rc.top, rct, str_highlight.c_str(), str_highlight.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace);
 				else
 					_TextOut(dc, x, rc.top, rct, str_highlight.c_str(), str_highlight.length(), NULL, pFonts->_TextFontPoint, pFonts->_TextFontFace);
@@ -570,7 +568,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				x += m_style.hilite_spacing;
 				std::wstring str_after(t.substr(range.end));
 				CRect rc_after(x, rc.top, rc.right, rc.bottom);
-				if(m_style.color_font && _isWin8Point1OrGrater)
+				if(m_style.color_font) 
 					_TextOut(dc, x, rc.top, rc_after, str_after.c_str(), str_after.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace);
 				else
 					_TextOut(dc, x, rc.top, rc_after, str_after.c_str(), str_after.length(), NULL, pFonts->_TextFontPoint, pFonts->_TextFontFace);
@@ -580,7 +578,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 		else
 		{
 			CRect rcText(rc.left, rc.top, rc.right, rc.bottom);
-			if (m_style.color_font && _isWin8Point1OrGrater)
+			if (m_style.color_font)
 				_TextOut(dc, rc.left, rc.top, rcText, t.c_str(), t.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace);
 			else
 				_TextOut(dc, rc.left, rc.top, rcText, t.c_str(), t.length(), NULL, pFonts->_TextFontPoint, pFonts->_TextFontFace);
@@ -651,7 +649,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 		rect = m_layout->GetCandidateLabelRect(i);
 		rect = OffsetRect(rect, ox, oy);
 
-		if (m_style.color_font && _isWin8Point1OrGrater)
+		if (m_style.color_font)
 			_TextOut(dc, rect.left, rect.top, rect, label.c_str(), label.length(), pDWR->pLabelTextFormat, pFonts->_LabelFontPoint, pFonts->_LabelFontFace);
 		else
 			_TextOut(dc, rect.left, rect.top, rect, label.c_str(), label.length(), NULL, pFonts->_LabelFontPoint, pFonts->_LabelFontFace);
@@ -665,7 +663,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 			dc.SetTextColor(m_style.candidate_text_color);
 		rect = m_layout->GetCandidateTextRect(i);
 		rect = OffsetRect(rect, ox, oy);
-		if (m_style.color_font && _isWin8Point1OrGrater)
+		if (m_style.color_font)
 			_TextOut(dc, rect.left, rect.top, rect, text.c_str(), text.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace);
 		else
 			_TextOut(dc, rect.left, rect.top, rect, text.c_str(), text.length(), NULL, pFonts->_TextFontPoint, pFonts->_TextFontFace);
@@ -681,7 +679,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 				dc.SetTextColor(m_style.comment_text_color);
 			rect = m_layout->GetCandidateCommentRect(i);
 			rect = OffsetRect(rect, ox, oy);
-			if(m_style.color_font == true && _isWin8Point1OrGrater)
+			if(m_style.color_font)
 				_TextOut(dc, rect.left, rect.top, rect, comment.c_str(), comment.length(), pDWR->pCommentTextFormat, pFonts->_CommentFontPoint, pFonts->_CommentFontFace);
 			else
 				_TextOut(dc, rect.left, rect.top, rect, comment.c_str(), comment.length(), NULL, pFonts->_CommentFontPoint, pFonts->_CommentFontFace);
@@ -814,8 +812,10 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	::SetWindowLong(m_hWnd, GWL_EXSTYLE, t);
 	GdiplusStartup(&_m_gdiplusToken, &_m_gdiplusStartupInput, NULL);
 	GetWindowRect(&m_inputPos);
-	_isWin8Point1OrGrater = IsWindows8Point1OrGreater();
-	if (m_style.color_font == true && _isWin8Point1OrGrater)
+	// windows version is depending on app running mode, if running mode lower then windows 8.1, disable color_font
+	if(!IsWindows8Point1OrGreater())
+		m_style.color_font = false;
+	if (m_style.color_font)
 	{
 		pDWR = new DirectWriteResources();
 		// prepare d2d1 resources
@@ -1105,175 +1105,6 @@ static HRESULT _TextOutWithFallback_ULW(CDCHandle dc, int x, int y, CRect const 
 	return hr;
 }
 
-#if 0
-// utf16* to unicode and return length of utf16
-inline static size_t Utf16ToUnicode(const wchar_t* src, ULONG& des)
-{
-	if (!src || (*src) == 0) return 0;
-
-	wchar_t w1 = src[0];
-	if (w1 >= 0xD800 && w1 <= 0xDFFF)
-	{
-		if (w1 < 0xDC00)
-		{
-			wchar_t w2 = src[1];
-			if (w2 >= 0xDC00 && w2 <= 0xDFFF)
-			{
-				des = (w2 & 0x03FF) + (((w1 & 0x03FF) + 0x40) << 10);
-				return 2;
-			}
-		}
-		return 0; // the src is invalid  
-	}
-	else
-	{
-		des = w1;
-		return 1;
-	}
-}
-
-// wstring中查找所有emoji字符的range
-static std::vector<DWRITE_TEXT_RANGE> CheckEmojiRange(std::wstring str)
-{
-	std::vector<DWRITE_TEXT_RANGE> rng;
-	size_t i = 0;
-	wchar_t* utf16 = &str[0];
-	ULONG unicode = 0;
-	UINT32 sc = 0, ec = 0;
-	size_t sz = 0;
-	BOOL isEmjtmp = FALSE;
-	BOOL isEmoji = FALSE;
-	while (i < str.size())
-	{
-		sz = Utf16ToUnicode(utf16, unicode);
-		if ( (unicode >= 0x2000 && unicode <= 0x27bf) || (unicode >= 0x1f000 && unicode <= 0x1fbff) )
-			isEmjtmp = TRUE;    /* 当前字符是emoji 字符长度为sz */
-		else
-			isEmjtmp = FALSE;
-		if (isEmoji == TRUE && (*utf16 == 0x200d)) /* 如果前面的字符是Emoji 后面链接符号也认为是Emoji的一部分 */
-		{
-			isEmjtmp = TRUE;
-			sz = 1;
-		}
-		if (isEmoji == FALSE && isEmjtmp == TRUE)    /* 如果前面不是emoji而当前文字为emoji 则这是emoji字符串的开始 */
-		{
-			sc = i;
-		}
-		if (isEmoji == TRUE && isEmjtmp == FALSE)    /* 如果前面是emoji 而当前文字不是emoji，则这是emoji字符串的结尾 */
-		{
-			ec = i;
-			rng.push_back(DWRITE_TEXT_RANGE{ sc, ec - sc });
-		}
-		isEmoji = isEmjtmp;
-		if ((i == str.size() - sz) && isEmjtmp == TRUE)  /* 最后一个字符，刚好为emoji， 这是emoji字符串结尾*/
-		{
-			ec = i + sz;
-			rng.push_back(DWRITE_TEXT_RANGE{ sc, ec - sc });
-		}
-		if (i < str.size())
-		{
-			i += sz;
-			utf16 += sz;
-		}
-	}
-	return rng;
-}
-// wstring中查找所有非emoji字符的range
-static std::vector<DWRITE_TEXT_RANGE> CheckNotEmojiRange(std::wstring str)
-{
-	std::vector<DWRITE_TEXT_RANGE> rng;
-	size_t i = 0;
-	wchar_t* utf16 = &str[0];
-	ULONG unicode = 0;
-	UINT32 sc = 0, ec = 0;
-	size_t sz = 0;
-	BOOL isEmjtmp = FALSE;
-	BOOL isEmoji = TRUE;
-	while (i < str.size())
-	{
-		sz = Utf16ToUnicode(utf16, unicode);
-		if ( (unicode >= 0x2000 && unicode <= 0x27bf) || (unicode >= 0x1f000 && unicode <= 0x1fbff) )
-			isEmjtmp = TRUE;    /* 当前字符是emoji 字符长度为sz */
-		else
-			isEmjtmp = FALSE;
-		if (isEmoji == TRUE && (*utf16 == 0x200d)) /* 如果前面的字符是Emoji 后面链接符号也认为是Emoji的一部分 */
-		{
-			isEmjtmp = TRUE;
-			sz = 1;
-		}
-		if (isEmoji == TRUE && isEmjtmp == FALSE)    /* 如果前面不是emoji而当前文字不是emoji 则这是非emoji字符串的开始 */
-		{
-			sc = i;
-		}
-		if (isEmoji == FALSE && isEmjtmp == TRUE)    /* 如果前面是非emoji 而当前文字是emoji，则这是非emoji字符串的结尾 */
-		{
-			ec = i;
-			rng.push_back(DWRITE_TEXT_RANGE{ sc, ec - sc });
-		}
-		isEmoji = isEmjtmp;
-		if ((i == str.size() - sz) && isEmjtmp == FALSE)  /* 最后一个字符，刚好不是emoji， 这是非emoji字符串结尾*/
-		{
-			ec = i + sz;
-			rng.push_back(DWRITE_TEXT_RANGE{ sc, ec - sc });
-		}
-		if (i < str.size())
-		{
-			i += sz;
-			utf16 += sz;
-		}
-	}
-	return rng;
-}
-static inline int CalcFontHeightDW(IDWriteTextFormat* pTextFormat)
-{
-	// offset calc start
-	IDWriteFontCollection* collection;
-	WCHAR name[64];
-	UINT32 findex;
-	BOOL exists;
-	pTextFormat->GetFontFamilyName(name, 64);
-	pTextFormat->GetFontCollection(&collection);
-	collection->FindFamilyName(name, &findex, &exists);
-	IDWriteFontFamily* ffamily;
-	collection->GetFontFamily(findex, &ffamily);
-	IDWriteFont* font;
-	ffamily->GetFirstMatchingFont(pTextFormat->GetFontWeight(), pTextFormat->GetFontStretch(), pTextFormat->GetFontStyle(), &font);
-	DWRITE_FONT_METRICS metrics;
-	font->GetMetrics(&metrics);
-	float ratio = pTextFormat->GetFontSize() / (float)metrics.designUnitsPerEm;
-	int height = static_cast<int>((metrics.ascent + metrics.descent) * ratio);
-	ffamily->Release();
-	collection->Release();
-	font->Release();
-	// offset calc end
-	return height;
-}
-static inline float CalcFontOffsetDW(IDWriteTextFormat* pTextFormat)
-{
-	// offset calc start
-	IDWriteFontCollection* collection;
-	WCHAR name[64];
-	UINT32 findex;
-	BOOL exists;
-	pTextFormat->GetFontFamilyName(name, 64);
-	pTextFormat->GetFontCollection(&collection);
-	collection->FindFamilyName(name, &findex, &exists);
-	IDWriteFontFamily* ffamily;
-	collection->GetFontFamily(findex, &ffamily);
-	IDWriteFont* font;
-	ffamily->GetFirstMatchingFont(pTextFormat->GetFontWeight(), pTextFormat->GetFontStretch(), pTextFormat->GetFontStyle(), &font);
-	DWRITE_FONT_METRICS metrics;
-	font->GetMetrics(&metrics);
-	float ratio = pTextFormat->GetFontSize() / (float)metrics.designUnitsPerEm;
-	float offset = ((-metrics.strikethroughPosition + metrics.descent) * ratio);
-	ffamily->Release();
-	collection->Release();
-	font->Release();
-	// offset calc end
-	return offset;
-}
-#endif
-
 HRESULT WeaselPanel::_TextOutWithFallback_D2D (CDCHandle dc, CRect const rc, wstring psz, int cch, COLORREF gdiColor, IDWriteTextFormat* pTextFormat)
 {
 	float r = (float)(GetRValue(gdiColor))/255.0f;
@@ -1290,10 +1121,6 @@ HRESULT WeaselPanel::_TextOutWithFallback_D2D (CDCHandle dc, CRect const rc, wst
 		if (pTextFormat == NULL)
 			pTextFormat = pDWR->pTextFormat;
 		pDWR->pDWFactory->CreateTextLayout( ((wstring)psz).c_str(), ((wstring)psz).size(), pTextFormat, rc.Width(), rc.Height(), &pTextLayout);
-		//CSize sz;
-		//m_layout->GetTextSizeDW(psz.c_str(), psz.length(), pTextFormat, pDWR->pDWFactory, &sz);
-		//float offsetx = (rc.Width() - sz.cx) / 2.0f  * pDWR->dpiScaleX_;
-		//float offsety = CalcFontOffsetDW(pTextFormat);
 		float offsetx = 0;
 		float offsety = 0;
 		pDWR->pRenderTarget->BindDC(dc, &rc);
@@ -1308,14 +1135,7 @@ HRESULT WeaselPanel::_TextOutWithFallback_D2D (CDCHandle dc, CRect const rc, wst
 	pBrush->Release();
 	return S_OK;
 }
-static std::vector<std::wstring> ws_split(const std::wstring& in, const std::wstring& delim) 
-{
-    std::wregex re{ delim };
-    return std::vector<std::wstring> {
-        std::wsregex_token_iterator(in.begin(), in.end(), re, -1),
-            std::wsregex_token_iterator()
-    };
-}
+
 void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch, IDWriteTextFormat* pTextFormat, int font_point, std::wstring font_face)
 {
 	if (m_style.color_font )
@@ -1326,7 +1146,7 @@ void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR 
 	{ 
 		long height = -MulDiv(font_point, dc.GetDeviceCaps(LOGPIXELSY), 72);
 		std::vector<std::wstring> lines;
-		lines = ws_split(psz, L"\r");
+		split(lines, psz, is_any_of(L"\r"));
 		int offset = 0;
 		for (wstring line : lines)
 		{

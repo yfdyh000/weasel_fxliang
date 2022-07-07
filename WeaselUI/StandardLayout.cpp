@@ -14,14 +14,6 @@ std::wstring StandardLayout::GetLabelText(const std::vector<Text> &labels, int i
 	return std::wstring(buffer);
 }
 
-// std::wstring°æ±¾
-//static std::vector<std::wstring> ws_split(const std::wstring& in, const std::wstring& delim) {
-//    std::wregex re{ delim };
-//    return std::vector<std::wstring> {
-//        std::wsregex_token_iterator(in.begin(), in.end(), re, -1),
-//            std::wsregex_token_iterator()
-//    };
-//}
 // from https://www.wabiapp.com/WabiSampleSource/windows/convert_crlf_w.html
 std::wstring StandardLayout::ConvertCRLF(std::wstring strString, std::wstring strCRLF) const
 {
