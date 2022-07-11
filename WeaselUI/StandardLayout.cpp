@@ -74,9 +74,20 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, int nCount, 
 		// 获取文本尺寸  
 		DWRITE_TEXT_METRICS textMetrics;
 		hr = pTextLayout->GetMetrics(&textMetrics);
-		sz = D2D1::SizeF(ceil(textMetrics.width), ceil(textMetrics.height));
+		sz = D2D1::SizeF(ceil(textMetrics.widthIncludingTrailingWhitespace), ceil(textMetrics.height));
 		lpSize->cx = (int)sz.width;
 		lpSize->cy = (int)sz.height;
+		if (pTextFormat->GetFontWeight() > DWRITE_FONT_WEIGHT_NORMAL)
+		{
+			hr = pDWFactory->CreateTextLayout(L"A", 1, pTextFormat, 0, 0, &pTextLayout);
+			if (SUCCEEDED(hr))
+			{
+				hr = pTextLayout->GetMetrics(&textMetrics);
+				sz = D2D1::SizeF(ceil(textMetrics.widthIncludingTrailingWhitespace), ceil(textMetrics.height));
+				lpSize->cx += sz.width;
+				//lpSize->cy += sz.height;
+			}
+		}
 	}
 	SafeRelease(&pTextLayout);
 }

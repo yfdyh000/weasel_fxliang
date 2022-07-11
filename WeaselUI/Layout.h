@@ -6,6 +6,8 @@
 #include <dwrite_2.h>
 #include <vector>
 #include <boost/algorithm/string.hpp>
+#include <regex>
+#include <boost/regex.hpp>
 
 using namespace weasel;
 using namespace boost::algorithm;
@@ -40,8 +42,8 @@ namespace weasel
 		IDWriteTextFormat1* pLabelTextFormat;
 		IDWriteTextFormat1* pCommentTextFormat;
 	private:
+		void _ParseFontFace(const std::wstring fontFaceStr, std::wstring& fontFace, DWRITE_FONT_WEIGHT& fontWeight);
 		void _SetFontFallback(IDWriteTextFormat1* pTextFormat, vector<wstring> fontVector);
-		HRESULT _SetTextFormat(IDWriteTextFormat1* pTextFormat, const wstring fontFace, const UINT32 fontPoint, const UIStyle::LayoutAlignType alignType = UIStyle::ALIGN_BOTTOM);
 	};
 
 	class GDIFonts
