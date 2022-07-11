@@ -74,7 +74,6 @@ HRESULT DirectWriteResources::InitResources(wstring label_font_face, int label_f
 	// text font text format set up
 	split(fontFaceStrVector, font_face, is_any_of(L","));
 	wstring mainFontFace = fontFaceStrVector[0];
-	trim(mainFontFace);
 	hResult = pDWFactory->CreateTextFormat(mainFontFace.c_str(), NULL,
 			DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL,
 			font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pTextFormat));
@@ -91,7 +90,6 @@ HRESULT DirectWriteResources::InitResources(wstring label_font_face, int label_f
 	// label font text format set up
 	split(fontFaceStrVector, label_font_face, is_any_of(L","));
 	mainFontFace = fontFaceStrVector[0];
-	trim(mainFontFace);
 	hResult = pDWFactory->CreateTextFormat(mainFontFace.c_str(), NULL,
 			DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL,
 			label_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pLabelTextFormat));
@@ -108,7 +106,6 @@ HRESULT DirectWriteResources::InitResources(wstring label_font_face, int label_f
 	// comment font text format set up
 	split(fontFaceStrVector, comment_font_face, is_any_of(L","));
 	mainFontFace = fontFaceStrVector[0];
-	trim(mainFontFace);
 	hResult = pDWFactory->CreateTextFormat(mainFontFace.c_str(), NULL,
 			DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL,
 			comment_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pCommentTextFormat));
@@ -140,7 +137,6 @@ HRESULT DirectWriteResources::InitResources(const UIStyle style)
 	// text font text format set up
 	split(fontFaceStrVector, style.font_face, is_any_of(L","));
 	wstring mainFontFace = fontFaceStrVector[0];
-	trim(mainFontFace);
 	hResult = pDWFactory->CreateTextFormat(mainFontFace.c_str(), NULL,
 			DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL,
 			style.font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pTextFormat));
@@ -158,7 +154,6 @@ HRESULT DirectWriteResources::InitResources(const UIStyle style)
 	// label font text format set up
 	split(fontFaceStrVector, style.label_font_face, is_any_of(L","));
 	mainFontFace = fontFaceStrVector[0];
-	trim(mainFontFace);
 	hResult = pDWFactory->CreateTextFormat(mainFontFace.c_str(), NULL,
 			DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL,
 			style.label_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pLabelTextFormat));
@@ -175,7 +170,6 @@ HRESULT DirectWriteResources::InitResources(const UIStyle style)
 	// comment font text format set up
 	split(fontFaceStrVector, style.comment_font_face, is_any_of(L","));
 	mainFontFace = fontFaceStrVector[0];
-	trim(mainFontFace);
 	hResult = pDWFactory->CreateTextFormat(mainFontFace.c_str(), NULL,
 			DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL,
 			style.comment_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pCommentTextFormat));
@@ -206,7 +200,6 @@ HRESULT weasel::DirectWriteResources::_SetTextFormat(IDWriteTextFormat1* _pTextF
 	vector<wstring> fontFaceStrVector; 
 	split(fontFaceStrVector, fontFace, is_any_of(L","));
 	wstring mainFontFace = fontFaceStrVector[0];
-	trim(mainFontFace);
 	hResult = pDWFactory->CreateTextFormat(mainFontFace.c_str(), NULL,
 			DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL,
 			fontPoint * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&_pTextFormat));
@@ -239,9 +232,6 @@ void DirectWriteResources::_SetFontFallback(IDWriteTextFormat1* pTextFormat, vec
 			_fontFaceWstr = fallbackFontsVector[0];
 			firstWstr = fallbackFontsVector[1];
 			lastWstr = fallbackFontsVector[2];
-			trim(_fontFaceWstr);
-			trim(firstWstr);
-			trim(lastWstr);
 			if (lastWstr.empty())
 				lastWstr = L"10ffff";
 			if (firstWstr.empty())
@@ -251,8 +241,6 @@ void DirectWriteResources::_SetFontFallback(IDWriteTextFormat1* pTextFormat, vec
 		{
 			_fontFaceWstr = fallbackFontsVector[0];
 			firstWstr = fallbackFontsVector[1];
-			trim(_fontFaceWstr);
-			trim(firstWstr);
 			if (firstWstr.empty())
 				firstWstr = L"0";
 			lastWstr = L"10ffff";
@@ -260,7 +248,6 @@ void DirectWriteResources::_SetFontFallback(IDWriteTextFormat1* pTextFormat, vec
 		else if (fallbackFontsVector.size() == 1)	// if only font defined, use all range
 		{
 			_fontFaceWstr = fallbackFontsVector[0];
-			trim(_fontFaceWstr);
 			firstWstr = L"0";
 			lastWstr = L"10ffff";
 		}

@@ -6,6 +6,7 @@
 #include <WeaselVersion.h>
 #include <VersionHelpers.hpp>
 #include <math.h>
+#include <regex>
 
 #include <rime_api.h>
 
@@ -580,22 +581,34 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 
 	weasel::UIStyle &style(ui->style());
 
-	const int BUF_SIZE = 99;
+	const int BUF_SIZE = 2047;
 	char buffer[BUF_SIZE + 1];
 	memset(buffer, '\0', sizeof(buffer));
 	if (RimeConfigGetString(config, "style/font_face", buffer, BUF_SIZE))
 	{
-		style.font_face = utf8towcs(buffer);
+		std::wstring tmp = utf8towcs(buffer);
+		tmp = std::regex_replace(tmp, std::wregex(L"\\s*,\\s*"), L",");
+		tmp = std::regex_replace(tmp, std::wregex(L"\\s*:\\s*"), L":");
+		tmp = std::regex_replace(tmp, std::wregex(L"^\\s*|\\s*$"), L"");
+		style.font_face = tmp;
 	}
 	memset(buffer, '\0', sizeof(buffer));
 	if (RimeConfigGetString(config, "style/label_font_face", buffer, BUF_SIZE))
 	{
-		style.label_font_face = utf8towcs(buffer);
+		std::wstring tmp = utf8towcs(buffer);
+		tmp = std::regex_replace(tmp, std::wregex(L"\\s*,\\s*"), L",");
+		tmp = std::regex_replace(tmp, std::wregex(L"\\s*:\\s*"), L":");
+		tmp = std::regex_replace(tmp, std::wregex(L"^\\s*|\\s*$"), L"");
+		style.label_font_face = tmp;
 	}
 	memset(buffer, '\0', sizeof(buffer));
 	if (RimeConfigGetString(config, "style/comment_font_face", buffer, BUF_SIZE))
 	{
-		style.comment_font_face = utf8towcs(buffer);
+		std::wstring tmp = utf8towcs(buffer);
+		tmp = std::regex_replace(tmp, std::wregex(L"\\s*,\\s*"), L",");
+		tmp = std::regex_replace(tmp, std::wregex(L"\\s*:\\s*"), L":");
+		tmp = std::regex_replace(tmp, std::wregex(L"^\\s*|\\s*$"), L"");
+		style.comment_font_face = tmp;
 	}
 	RimeConfigGetInt(config, "style/font_point", &style.font_point);
 	if (!RimeConfigGetInt(config, "style/label_font_point", &style.label_font_point))
