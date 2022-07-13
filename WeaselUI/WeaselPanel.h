@@ -60,6 +60,7 @@ private:
 
 	Gdiplus::GdiplusStartupInput _m_gdiplusStartupInput;
 	ULONG_PTR _m_gdiplusToken;
+	CRect bgRc;
 	
 	DirectWriteResources* pDWR = NULL;
 	GDIFonts* pFonts = NULL;
@@ -71,6 +72,7 @@ public:
 	GraphicsRoundRectPath();
 	GraphicsRoundRectPath(int left, int top, int width, int height, int cornerx, int cornery);
 	GraphicsRoundRectPath(const CRect rc, int corner);
+	GraphicsRoundRectPath(const CRect rc, int corner, bool rtl, bool rtr, bool rbr, bool rbl);
 
 public:
 	void AddRoundRect(int left, int top, int width, int height, int cornerx, int cornery);
