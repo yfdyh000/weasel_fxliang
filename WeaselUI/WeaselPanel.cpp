@@ -364,6 +364,7 @@ static CRect OffsetRect(const CRect rc, int offsetx, int offsety)
 	m_iconDisabled.LoadIconW(IDI_RELOAD, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 	m_iconEnabled.LoadIconW(IDI_ZH, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 	m_iconAlpha.LoadIconW(IDI_EN, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
+
 }
 
 WeaselPanel::~WeaselPanel()
@@ -372,6 +373,8 @@ WeaselPanel::~WeaselPanel()
 		delete m_layout;
 	if (pDWR != NULL)
 		delete pDWR;
+	if (pFonts != NULL)
+		delete pFonts;
 }
 
 void WeaselPanel::_ResizeWindow()
@@ -513,7 +516,7 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 		// shadow off, and any side out of backgroud border
 		//if (((overborder && !isBgRc) || (!(shadowColor & 0xff000000))) && (rtl || rtr || rbr || rbl) )
 		//if (overborder && !isBgRc)
-		if (rtl || rtr || rbr || rbl)
+		if ((rtl || rtr || rbr || rbl) && m_style.inline_preedit)
 		{
 			rc.DeflateRect(m_style.border / 2, m_style.border / 2);
 			if (!overleft)
@@ -524,24 +527,27 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 				rc.top -= m_style.border;
 			if (!overbottom)
 				rc.bottom += m_style.border;
-			GraphicsRoundRectPath bgPath(rc, m_style.round_corner_ex - m_style.border/2, rtl, rtr, rbr, rbl);
+			GraphicsRoundRectPath bgPath(rc, m_style.round_corner_ex, rtl, rtr, rbr, rbl);
 			gBack.FillPath(&gBrBack, &bgPath);
 		}
 		else
 		{
-			if (m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL || m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
+			//if(m_style.inline_preedit)
 			{
-				if (overtop)
-					rc.top = bgRc.top + m_style.border / 2;
-				if (overbottom)
-					rc.bottom = bgRc.bottom - m_style.border / 2;
-			}
-			else if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL || m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
-			{
-				if (overleft)
-					rc.left = bgRc.left + m_style.border / 2;
-				if (overright)
-					rc.right = bgRc.right - m_style.border / 2;
+				if (m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL || m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
+				{
+					if (overtop)
+						rc.top = bgRc.top + m_style.border / 2;
+					if (overbottom)
+						rc.bottom = bgRc.bottom - m_style.border / 2;
+				}
+				else if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL || m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
+				{
+					if (overleft)
+						rc.left = bgRc.left + m_style.border / 2;
+					if (overright)
+						rc.right = bgRc.right - m_style.border / 2;
+				}
 			}
 			GraphicsRoundRectPath bgPath(rc, radius);
 			gBack.FillPath(&gBrBack, &bgPath);
@@ -935,7 +941,6 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 		pDWR = new DirectWriteResources();
 		// prepare d2d1 resources
 		pDWR->InitResources(m_style);
-		//pDWR->InitResources(m_style.label_font_face, m_style.label_font_point, m_style.font_face, m_style.font_point, m_style.comment_font_face, m_style.comment_font_point);
 	}
 	pFonts = new GDIFonts(m_style.label_font_face, m_style.label_font_point,
 		m_style.font_face, m_style.font_point,
