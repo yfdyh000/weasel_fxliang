@@ -449,20 +449,19 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 	bool rtr = overright && overtop;
 	bool rbr = overright && overbottom;
 	bool rbl = overleft && overbottom;
-	if (overleft)
-		rc.left = bgRc.left;
-	if (overright)
-		rc.right = bgRc.right;
-	if (overtop)
-		rc.top = bgRc.top;
-	if (overbottom)
-		rc.bottom = bgRc.bottom;
+	//	if (overleft)
+	//		rc.left = bgRc.left;
+	//	if (overright)
+	//		rc.right = bgRc.right;
+	//	if (overtop)
+	//		rc.top = bgRc.top;
+	//	if (overbottom)
+	//		rc.bottom = bgRc.bottom;
 	bool overborder = (overleft || overright || overtop || overbottom);
-	bool isBgRc = (rc.Width() == bgRc.Width() && rc.Height() == bgRc.Height());
 	// 必须shadow_color都是非完全透明色才做绘制, 全屏状态不绘制阴影保证响应速度
-	if (((!overborder && !isBgRc ) || isBgRc) && m_style.shadow_radius && (shadowColor & 0xff000000) 
-		&& m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN 
-		&& m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN)	
+	if ((!overborder) && m_style.shadow_radius && (shadowColor & 0xff000000)
+		&& m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN
+		&& m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
 	{
 		BYTE r = GetRValue(shadowColor);
 		BYTE g = GetGValue(shadowColor);
@@ -474,10 +473,10 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 		gg.SetSmoothingMode(SmoothingModeHighQuality);
 
 		CRect rect(
-				blurOffsetX + m_style.shadow_offset_x,
-				blurOffsetY + m_style.shadow_offset_y, 
-				rc.Width() + blurOffsetX + m_style.shadow_offset_x,
-				rc.Height() + blurOffsetY + m_style.shadow_offset_y);
+			blurOffsetX + m_style.shadow_offset_x,
+			blurOffsetY + m_style.shadow_offset_y,
+			rc.Width() + blurOffsetX + m_style.shadow_offset_x,
+			rc.Height() + blurOffsetY + m_style.shadow_offset_y);
 		rect.InflateRect(m_style.border, m_style.border);
 		if (m_style.shadow_offset_x != 0 || m_style.shadow_offset_y != 0)
 		{
@@ -514,23 +513,35 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 		// shadow off, and any side out of backgroud border
 		//if (((overborder && !isBgRc) || (!(shadowColor & 0xff000000))) && (rtl || rtr || rbr || rbl) )
 		//if (overborder && !isBgRc)
-		if (overborder)
+		if (rtl || rtr || rbr || rbl)
 		{
 			rc.DeflateRect(m_style.border / 2, m_style.border / 2);
-			GraphicsRoundRectPath bgPath(rc, m_style.round_corner_ex-m_style.border/2, rtl, rtr, rbr, rbl);
+			if (!overleft)
+				rc.left -= m_style.border;
+			if (!overright)
+				rc.right += m_style.border;
+			if (!overtop)
+				rc.top -= m_style.border;
+			if (!overbottom)
+				rc.bottom += m_style.border;
+			GraphicsRoundRectPath bgPath(rc, m_style.round_corner_ex - m_style.border/2, rtl, rtr, rbr, rbl);
 			gBack.FillPath(&gBrBack, &bgPath);
 		}
 		else
 		{
-			if (!isBgRc && (m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL || m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN))
+			if (m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL || m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
 			{
-				rc.top += m_style.border / 2;
-				rc.bottom -= m_style.border / 2;
+				if (overtop)
+					rc.top = bgRc.top + m_style.border / 2;
+				if (overbottom)
+					rc.bottom = bgRc.bottom - m_style.border / 2;
 			}
-			if (!isBgRc && (m_style.layout_type == UIStyle::LAYOUT_VERTICAL || m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN))
+			else if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL || m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
 			{
-				rc.left += m_style.border / 2;
-				rc.right -= m_style.border / 2;
+				if (overleft)
+					rc.left = bgRc.left + m_style.border / 2;
+				if (overright)
+					rc.right = bgRc.right - m_style.border / 2;
 			}
 			GraphicsRoundRectPath bgPath(rc, radius);
 			gBack.FillPath(&gBrBack, &bgPath);
@@ -538,6 +549,64 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 	}
 }
 
+void WeaselPanel::_HighlightTextBg(CDCHandle dc, CRect rc, COLORREF color, COLORREF shadowColor, int blurOffsetX, int blurOffsetY, int radius)
+{
+	Graphics gBack(dc);
+	gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
+	// 必须shadow_color都是非完全透明色才做绘制, 全屏状态不绘制阴影保证响应速度
+	if (m_style.shadow_radius && (shadowColor & 0xff000000) 
+		&& m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN 
+		&& m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN)	
+	{
+		BYTE r = GetRValue(shadowColor);
+		BYTE g = GetGValue(shadowColor);
+		BYTE b = GetBValue(shadowColor);
+		Color brc = Color::MakeARGB((BYTE)(shadowColor >> 24), r, g, b);
+		static Bitmap* pBitmapDropShadow;
+		pBitmapDropShadow = new Gdiplus::Bitmap((INT)rc.Width() + blurOffsetX * 2, (INT)rc.Height() + blurOffsetY * 2, PixelFormat32bppARGB);
+		Gdiplus::Graphics gg(pBitmapDropShadow);
+		gg.SetSmoothingMode(SmoothingModeHighQuality);
+
+		CRect rect(
+				blurOffsetX + m_style.shadow_offset_x,
+				blurOffsetY + m_style.shadow_offset_y, 
+				rc.Width() + blurOffsetX + m_style.shadow_offset_x,
+				rc.Height() + blurOffsetY + m_style.shadow_offset_y);
+		if (m_style.shadow_offset_x != 0 || m_style.shadow_offset_y != 0)
+		{
+			GraphicsRoundRectPath path(rect, radius);
+			SolidBrush br(brc);
+			gg.FillPath(&br, &path);
+		}
+		else
+		{
+			int pensize = 1;
+			int alpha = ((shadowColor >> 24) & 255);
+			int step = alpha / m_style.shadow_radius;
+			Color scolor = Color::MakeARGB(alpha, GetRValue(shadowColor), GetGValue(shadowColor), GetBValue(shadowColor));
+			Pen penShadow(scolor, (Gdiplus::REAL)pensize);
+			CRect rcShadowEx = rect;
+			for (int i = 0; i < m_style.shadow_radius; i++)
+			{
+				GraphicsRoundRectPath path(rcShadowEx, radius + 1 + i);
+				gg.DrawPath(&penShadow, &path);
+				scolor = Color::MakeARGB(alpha - i * step, GetRValue(shadowColor), GetGValue(shadowColor), GetBValue(shadowColor));
+				penShadow.SetColor(scolor);
+				rcShadowEx.InflateRect(2, 2);
+			}
+		}
+		DoGaussianBlur(pBitmapDropShadow, (float)m_style.shadow_radius, (float)m_style.shadow_radius);
+		gBack.DrawImage(pBitmapDropShadow, rc.left - blurOffsetX, rc.top - blurOffsetY);
+		delete pBitmapDropShadow;
+	}
+	if (color & 0xff000000)	// 必须back_color非完全透明才绘制
+	{
+		GraphicsRoundRectPath bgPath(rc, radius);
+		Color back_color = Color::MakeARGB((color >> 24), GetRValue(color), GetGValue(color), GetBValue(color));
+		SolidBrush gBrBack(back_color);
+		gBack.FillPath(&gBrBack, &bgPath);
+	}
+}
 bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 {
 	bool drawn = false;
@@ -776,13 +845,13 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		Graphics gBack(memDC);
 		gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
 		trc = rc;
-		trc.DeflateRect(ox + m_style.border, oy + m_style.border);
+		trc.DeflateRect(ox+m_style.border, oy+m_style.border);
 		bgRc = trc;
 		GraphicsRoundRectPath bgPath(trc, m_style.round_corner_ex);
 		int alpha = ((m_style.border_color >> 24) & 255);
 		Color border_color = Color::MakeARGB(alpha, GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
 		Pen gPenBorder(border_color, (Gdiplus::REAL)m_style.border);
-		_HighlightTextEx(memDC, trc, m_style.back_color, m_style.shadow_color, ox * 2, oy * 2, m_style.round_corner_ex);
+		_HighlightTextBg(memDC, trc, m_style.back_color, m_style.shadow_color, ox * 2, oy * 2, m_style.round_corner_ex);
 		if(m_style.border)
 			gBack.DrawPath(&gPenBorder, &bgPath);
 		//int deflate = m_style.border / 2;
