@@ -452,14 +452,6 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 	bool rtr = overright && overtop;
 	bool rbr = overright && overbottom;
 	bool rbl = overleft && overbottom;
-	//	if (overleft)
-	//		rc.left = bgRc.left;
-	//	if (overright)
-	//		rc.right = bgRc.right;
-	//	if (overtop)
-	//		rc.top = bgRc.top;
-	//	if (overbottom)
-	//		rc.bottom = bgRc.bottom;
 	bool overborder = (overleft || overright || overtop || overbottom);
 	// 必须shadow_color都是非完全透明色才做绘制, 全屏状态不绘制阴影保证响应速度
 	if ((!overborder) && m_style.shadow_radius && (shadowColor & 0xff000000)
@@ -513,9 +505,6 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 		Color back_color = Color::MakeARGB((color >> 24), GetRValue(color), GetGValue(color), GetBValue(color));
 		SolidBrush gBrBack(back_color);
 
-		// shadow off, and any side out of backgroud border
-		//if (((overborder && !isBgRc) || (!(shadowColor & 0xff000000))) && (rtl || rtr || rbr || rbl) )
-		//if (overborder && !isBgRc)
 		if ((rtl || rtr || rbr || rbl) && m_style.inline_preedit)
 		{
 			rc.DeflateRect(m_style.border / 2, m_style.border / 2);
@@ -527,7 +516,7 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 				rc.top -= m_style.border;
 			if (!overbottom)
 				rc.bottom += m_style.border;
-			GraphicsRoundRectPath bgPath(rc, m_style.round_corner_ex, rtl, rtr, rbr, rbl);
+			GraphicsRoundRectPath bgPath(rc, m_style.round_corner_ex - m_style.border/2, rtl, rtr, rbr, rbl);
 			gBack.FillPath(&gBrBack, &bgPath);
 		}
 		else
@@ -860,8 +849,6 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		_HighlightTextBg(memDC, trc, m_style.back_color, m_style.shadow_color, ox * 2, oy * 2, m_style.round_corner_ex);
 		if(m_style.border)
 			gBack.DrawPath(&gPenBorder, &bgPath);
-		//int deflate = m_style.border / 2;
-		//bgRc.DeflateRect(deflate, deflate);
 		gBack.ReleaseHDC(memDC);
 	}
 	// background end
@@ -1333,47 +1320,47 @@ GraphicsRoundRectPath::GraphicsRoundRectPath(const CRect rc, int corner, bool rt
 	}
 	else
 	{
-		int cnx = ((corner*2 <= rc.Width()) ? corner : (rc.Width()/2));
-		int cny = ((corner*2 <= rc.Height()) ? corner : (rc.Height()/2));
+		int cnx = ((corner * 2 <= rc.Width()) ? corner : (rc.Width() / 2));
+		int cny = ((corner * 2 <= rc.Height()) ? corner : (rc.Height() / 2));
 		int elWid = 2 * cnx;
 		int elHei = 2 * cny;
-		AddArc(rc.left, rc.top, elWid * rtl, elHei * rtl, 180, 90);
-		AddLine(rc.left + cnx * rtl, rc.top, rc.right - cnx * rtr, rc.top);
+		AddArc(rc.left + 1, rc.top + 1, elWid * rtl, elHei * rtl, 180, 90);
+		AddLine(rc.left + cnx * rtl + 1, rc.top + 1, rc.right - cnx * rtr - 1, rc.top + 1);
 
-		AddArc(rc.right - elWid * rtr, rc.top, elWid * rtr, elHei * rtr, 270, 90);
-		AddLine(rc.right, rc.top + cny * rtr, rc.right, rc.bottom - cny * rbr);
+		AddArc(rc.right - elWid * rtr - 1, rc.top + 1, elWid * rtr, elHei * rtr, 270, 90);
+		AddLine(rc.right - 1, rc.top + cny * rtr + 1, rc.right - 1, rc.bottom - cny * rbr - 1);
 
-		AddArc(rc.right - elWid * rbr, rc.bottom - elHei * rbr, elWid * rbr, elHei * rbr, 0, 90);
-		AddLine(rc.right - cnx * rbr, rc.bottom, rc.left + cnx * rbl, rc.bottom);
+		AddArc(rc.right - elWid * rbr - 1, rc.bottom - elHei * rbr - 1, elWid * rbr, elHei * rbr, 0, 90);
+		AddLine(rc.right - cnx * rbr - 1, rc.bottom - 1, rc.left + cnx * rbl + 1, rc.bottom - 1);
 
-		AddArc(rc.left, rc.bottom - elHei * rbl, elWid * rbl, elHei * rbl, 90, 90);
-		AddLine(rc.left, rc.top + cny * rtl, rc.left, rc.bottom - cny * rbl);
+		AddArc(rc.left + 1, rc.bottom - elHei * rbl - 1, elWid * rbl, elHei * rbl, 90, 90);
+		AddLine(rc.left + 1, rc.top + cny * rtl + 1, rc.left + 1, rc.bottom - cny * rbl - 1);
 	}
 }
 void GraphicsRoundRectPath::AddRoundRect(int left, int top, int width, int height, int cornerx, int cornery)
 {
-	if(cornery > 0 && cornerx >0)
+	if (cornery > 0 && cornerx > 0)
 	{
-		int cnx = ((cornerx*2 <= width) ? cornerx : (width/2));
-		int cny = ((cornery*2 <= height) ? cornery : (height/2));
+		int cnx = ((cornerx * 2 <= width) ? cornerx : (width / 2));
+		int cny = ((cornery * 2 <= height) ? cornery : (height / 2));
 		int elWid = 2 * cnx;
 		int elHei = 2 * cny;
 
-		AddArc(left, top, elWid, elHei, 180, 90);
-		AddLine(left + cnx , top, left + width - cnx , top);
+		AddArc(left + 1, top + 1, elWid, elHei, 180, 90);
+		AddLine(left + cnx + 1, top + 1, left + width - cnx - 1, top + 1);
 
-		AddArc(left + width - elWid, top, elWid, elHei, 270, 90);
-		AddLine(left + width, top + cny, left + width, top + height - cny);
+		AddArc(left + width - elWid - 1, top + 1, elWid, elHei, 270, 90);
+		AddLine(left + width - 1, top + cny + 1, left + width - 1, top + height - cny - 1);
 
-		AddArc(left + width - elWid, top + height - elHei, elWid, elHei, 0, 90);
-		AddLine(left + width - cnx, top + height, left + cnx, top + height);
+		AddArc(left + width - elWid - 1, top + height - elHei - 1, elWid, elHei, 0, 90);
+		AddLine(left + width - cnx - 1, top + height - 1, left + cnx + 1, top + height - 1);
 
-		AddArc(left, top + height - elHei, elWid, elHei, 90, 90);
-		AddLine(left, top + cny, left, top + height - cny);
+		AddArc(left + 1, top + height - elHei - 1, elWid, elHei, 90, 90);
+		AddLine(left + 1, top + cny + 1, left + 1, top + height - cny - 1);
 	}
 	else
 	{
-		Gdiplus::Rect& rc = Rect(left, top, width, height);
+		Gdiplus::Rect& rc = Gdiplus::Rect(left, top, width, height);
 		AddRectangle(rc);
 	}
 }

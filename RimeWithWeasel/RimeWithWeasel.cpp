@@ -619,6 +619,10 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	{
 		RimeConfigGetInt(config, "style/font_point", &style.comment_font_point);
 	}
+	if (style.label_font_point > style.font_point)
+		style.label_font_point = style.font_point;
+	if (style.comment_font_point > style.font_point)
+		style.comment_font_point = style.font_point;
 	Bool inline_preedit = False;
 	if (RimeConfigGetBool(config, "style/inline_preedit", &inline_preedit) || initialize)
 	{
