@@ -472,7 +472,7 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 			blurOffsetY + m_style.shadow_offset_y,
 			rc.Width() + blurOffsetX + m_style.shadow_offset_x,
 			rc.Height() + blurOffsetY + m_style.shadow_offset_y);
-		rect.InflateRect(m_style.border, m_style.border);
+		//rect.InflateRect(m_style.border, m_style.border);
 		if (m_style.shadow_offset_x != 0 || m_style.shadow_offset_y != 0)
 		{
 			GraphicsRoundRectPath path(rect, radius);
@@ -515,13 +515,13 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 				{
 					rc.right += m_style.border / 2;
 					if (!m_style.inline_preedit)
-						rc.top -= m_style.border / 2;
+						rc.top -= m_style.border / 2 - 1;
 				}
 				else if (type == LAST_CAND)
 				{
 					rc.left -= m_style.border / 2;
 					if (!m_style.inline_preedit)
-						rc.top -= m_style.border / 2;
+						rc.top -= m_style.border / 2 - 1;
 				}
 				else if (type == TEXT)
 				{
@@ -532,9 +532,9 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 			else if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL || m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
 			{
 				if (type == FIRST_CAND)
-					rc.bottom += m_style.border/2;
+					rc.bottom += m_style.border/2 - 1;
 				else if (type == LAST_CAND)
-					rc.top -= m_style.border/2;
+					rc.top -= m_style.border/2 - 1;
 				else if (type == TEXT)
 				{
 					rc.right += m_style.border / 2 - 1;
@@ -549,9 +549,9 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 			if (m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL || m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
 			{
 				if (overtop)
-					rc.top = bgRc.top + m_style.border / 2;
+					rc.top = bgRc.top + m_style.border / 2 + 1;
 				if (overbottom)
-					rc.bottom = bgRc.bottom - m_style.border / 2;
+					rc.bottom = bgRc.bottom - m_style.border / 2 - 1;
 				if (type != MID_CAND)
 				{
 					rc.left -= 1;
@@ -561,9 +561,9 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 			else if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL || m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
 			{
 				if (overleft)
-					rc.left = bgRc.left + m_style.border / 2;
+					rc.left = bgRc.left + m_style.border / 2 + 1;
 				if (overright)
-					rc.right = bgRc.right - m_style.border / 2;
+					rc.right = bgRc.right - m_style.border / 2 - 1;
 				if (type != MID_CAND)
 				{
 					rc.bottom += 1;
@@ -1363,33 +1363,17 @@ GraphicsRoundRectPath::GraphicsRoundRectPath(const CRect rc, int corner, bool rt
 		int cny = ((corner * 2 <= rc.Height()) ? corner : (rc.Height() / 2));
 		int elWid = 2 * cnx;
 		int elHei = 2 * cny;
-#if 1
 		AddArc(rc.left + 1, rc.top + 1, elWid * rtl, elHei * rtl, 180, 90);
-		AddLine(rc.left + cnx * rtl + 2, rc.top + 1, rc.right - cnx * rtr - 2, rc.top + 1);
+		AddLine(rc.left + cnx * rtl + 2*rtl, rc.top + 1, rc.right - cnx * rtr - 2*rtr, rc.top + 1);
 
 		AddArc(rc.right - elWid * rtr - 1, rc.top + 1, elWid * rtr, elHei * rtr, 270, 90);
-		AddLine(rc.right - 1, rc.top + cny * rtr + 2, rc.right - 1, rc.bottom - cny * rbr - 2);
+		AddLine(rc.right - 1, rc.top + cny * rtr + 2*rtr, rc.right - 1, rc.bottom - cny * rbr - 2*rbr);
 
 		AddArc(rc.right - elWid * rbr - 1, rc.bottom - elHei * rbr - 1, elWid * rbr, elHei * rbr, 0, 90);
-		AddLine(rc.right - cnx * rbr - 2, rc.bottom - 1, rc.left + cnx * rbl + 2, rc.bottom - 1);
+		AddLine(rc.right - cnx * rbr - 2*rbr, rc.bottom - 1, rc.left + cnx * rbl + 2*rbl, rc.bottom - 1);
 
 		AddArc(rc.left + 1, rc.bottom - elHei * rbl - 1, elWid * rbl, elHei * rbl, 90, 90);
-		AddLine(rc.left + 1, rc.top + cny * rtl + 2, rc.left + 1, rc.bottom - cny * rbl - 2);
-#else
-		if ((rtl && rtr) && !(rbl || rbr))
-		{
-			AddArc(rc.left + 1, rc.top + 1, elWid, elHei, 180, 90);
-			AddLine(rc.left + cnx + 2, rc.top + 1, rc.left + rc.Width() - cnx - 2, rc.top + 1);
-
-			AddArc(rc.left + rc.Width() - elWid - 1, rc.top + 1, elWid, elHei, 270, 90);
-			AddLine(rc.left + rc.Width() - 1, rc.top + cny + 2, rc.left + rc.Width() - 1, rc.top + rc.Height());
-
-			AddLine(rc.left + rc.Width() - cnx - 2, rc.top + rc.Height() - 1, rc.left + cnx + 2, rc.top + rc.Height() - 1);
-
-			AddArc(rc.left + 1, rc.top + rc.Height() - elHei - 1, elWid, elHei, 90, 90);
-			AddLine(rc.left + 1, rc.top + cny + 2, rc.left + 1, rc.top + rc.Height() - cny - 2);
-		}
-#endif
+		AddLine(rc.left + 1, rc.top + cny * rtl + rtl, rc.left + 1, rc.bottom - cny * rbl - 2*rbl);
 	}
 }
 void GraphicsRoundRectPath::AddRoundRect(int left, int top, int width, int height, int cornerx, int cornery)
@@ -1411,7 +1395,7 @@ void GraphicsRoundRectPath::AddRoundRect(int left, int top, int width, int heigh
 		AddLine(left + width - cnx - 2, top + height - 1, left + cnx + 2, top + height - 1);
 
 		AddArc(left + 1, top + height - elHei - 1, elWid, elHei, 90, 90);
-		AddLine(left + 1, top + cny + 2, left + 1, top + height - cny - 2);
+		AddLine(left + 1, top + cny + 1, left + 1, top + height - cny - 2);
 	}
 	else
 	{
