@@ -436,7 +436,7 @@ void WeaselPanel::Refresh()
 	ReleaseDC(dc);
 
 	_ResizeWindow();
-	_RepositionWindow();
+	//_RepositionWindow();
 	RedrawWindow();
 }
 
@@ -504,75 +504,10 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 	{
 		Color back_color = Color::MakeARGB((color >> 24), GetRValue(color), GetGValue(color), GetBValue(color));
 		SolidBrush gBrBack(back_color);
-
-		if (rtl || rtr || rbr || rbl)
-		{
-			rc.DeflateRect(m_style.border / 2, m_style.border / 2);
-
-			if (m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL || m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
-			{
-				if (type == FIRST_CAND)
-				{
-					rc.right += m_style.border / 2;
-					if (!m_style.inline_preedit)
-						rc.top -= m_style.border / 2 - 1;
-				}
-				else if (type == LAST_CAND)
-				{
-					rc.left -= m_style.border / 2;
-					if (!m_style.inline_preedit)
-						rc.top -= m_style.border / 2 - 1;
-				}
-				else if (type == TEXT)
-				{
-					rc.right += m_style.border / 2 - 1;
-					rc.bottom += m_style.border / 2 - 0;
-				}
-			}
-			else if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL || m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
-			{
-				if (type == FIRST_CAND)
-					rc.bottom += m_style.border/2 - 1;
-				else if (type == LAST_CAND)
-					rc.top -= m_style.border/2 - 1;
-				else if (type == TEXT)
-				{
-					rc.right += m_style.border / 2 - 1;
-					rc.bottom += m_style.border / 2 - 1;
-				}
-			}
-			GraphicsRoundRectPath bgPath(rc, m_style.round_corner_ex - m_style.border/2, rtl, rtr, rbr, rbl);
-			gBack.FillPath(&gBrBack, &bgPath);
-		}
-		else
-		{
-			if (m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL || m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
-			{
-				if (overtop)
-					rc.top = bgRc.top + m_style.border / 2 + 1;
-				if (overbottom)
-					rc.bottom = bgRc.bottom - m_style.border / 2 - 1;
-				if (type != MID_CAND)
-				{
-					rc.left -= 1;
-					rc.right += 1;
-				}
-			}
-			else if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL || m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
-			{
-				if (overleft)
-					rc.left = bgRc.left + m_style.border / 2 + 1;
-				if (overright)
-					rc.right = bgRc.right - m_style.border / 2 - 1;
-				if (type != MID_CAND)
-				{
-					rc.bottom += 1;
-					rc.top -= 1;
-				}
-			}
-			GraphicsRoundRectPath bgPath(rc, radius);
-			gBack.FillPath(&gBrBack, &bgPath);
-		}
+		GraphicsRoundRectPath gbgPath(bgRc, m_style.round_corner_ex-m_style.border/2);
+		gBack.SetClip(&gbgPath);
+		GraphicsRoundRectPath bgPath(rc, radius);
+		gBack.FillPath(&gBrBack, &bgPath);
 	}
 }
 
@@ -881,6 +816,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		trc = rc;
 		trc.DeflateRect(ox+m_style.border, oy+m_style.border);
 		bgRc = trc;
+		bgRc.DeflateRect(m_style.border/2, m_style.border/2);
 		GraphicsRoundRectPath bgPath(trc, m_style.round_corner_ex);
 		int alpha = ((m_style.border_color >> 24) & 255);
 		Color border_color = Color::MakeARGB(alpha, GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
