@@ -661,6 +661,11 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	{
 		style.display_tray_icon = !!display_tray_icon;
 	}
+	Bool tydf = False;
+	if (RimeConfigGetBool(config, "style/tydf", &tydf) || initialize)
+	{
+		style.tydf = !!tydf;
+	}
 	Bool horizontal = False;
 	if (RimeConfigGetBool(config, "style/horizontal", &horizontal) || initialize)
 	{

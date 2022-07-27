@@ -504,10 +504,117 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 	{
 		Color back_color = Color::MakeARGB((color >> 24), GetRValue(color), GetGValue(color), GetBValue(color));
 		SolidBrush gBrBack(back_color);
+#if 0
 		GraphicsRoundRectPath gbgPath(bgRc, m_style.round_corner_ex-m_style.border/2);
 		gBack.SetClip(&gbgPath);
 		GraphicsRoundRectPath bgPath(rc, radius);
 		gBack.FillPath(&gBrBack, &bgPath);
+#else
+		GraphicsRoundRectPath* bgPath;
+		if (m_style.tydf)
+		{
+			if (m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL || m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
+			{
+				if (m_style.inline_preedit)
+				{
+					if (type == FIRST_CAND)
+					{
+						rtl = true; rbl = true; rtr = false; rbr = false;
+					}
+					else if (type == LAST_CAND)
+					{
+						rtr = true; rbr = true; rtl = false; rbl = false;
+					}
+					else if (type == MID_CAND)
+					{
+						rtl = rtr = rbr = rbl = false;
+					}
+					else if (type == ONLY_CAND)
+					{
+						rtl = rtr = rbr = rbl = true;
+					}
+				}
+				else
+				{
+					if (type == FIRST_CAND)
+					{
+						rtl = false; rbl = true; rtr = false; rbr = false;
+					}
+					else if (type == LAST_CAND)
+					{
+						rtr = false; rbr = true; rtl = false; rbl = false;
+					}
+					else if (type == MID_CAND)
+					{
+						rtl = rtr = rbr = rbl = false;
+					}
+					else if (type == TEXT)
+					{
+						rtl = true;
+						rtr = rbr = rbl = false;
+					}
+					else if (type == ONLY_CAND)
+					{
+						rtl = rtr = false;
+						rbr = rbl = true;
+					}
+				}
+			}
+			else
+			{
+				if (m_style.inline_preedit)
+				{
+					if (type == FIRST_CAND)
+					{
+						rtl = true; rbl = false; rtr = true; rbr = false;
+					}
+					else if (type == LAST_CAND)
+					{
+						rtr = false; rbr = true; rtl = false; rbl = true;
+					}
+					else if (type == MID_CAND)
+					{
+						rtl = rtr = rbr = rbl = false;
+					}
+					else if (type == ONLY_CAND)
+					{
+						rtl = rtr = rbr = rbl = true;
+					}
+				}
+				else
+				{
+					if (type == FIRST_CAND)
+					{
+						rtl = rtr = rbr = rbl = false;
+					}
+					else if (type == LAST_CAND)
+					{
+						rtr = false; rbr = true; rtl = false; rbl = true;
+					}
+					else if (type == MID_CAND)
+					{
+						rtl = rtr = rbr = rbl = false;
+					}
+					else if (type == TEXT)
+					{
+						rtl = true;
+						rtr = rbr = rbl = false;
+					}
+					else if (type == ONLY_CAND)
+					{
+						rtl = rtr = false;
+						rbl = rbr = true;
+					}
+				}
+			}
+			//GraphicsRoundRectPath bgPath(rc, m_style.round_corner_ex, rtl, rtr, rbr, rbl);
+			bgPath = new GraphicsRoundRectPath(rc, m_style.round_corner_ex, rtl, rtr, rbr, rbl);
+		}
+		else
+			bgPath = new GraphicsRoundRectPath(rc, radius);
+			//GraphicsRoundRectPath bgPath(rc, radius);
+		gBack.FillPath(&gBrBack, bgPath);
+#endif
 	}
 }
 
