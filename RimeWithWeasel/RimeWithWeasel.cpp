@@ -661,10 +661,10 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	{
 		style.display_tray_icon = !!display_tray_icon;
 	}
-	Bool round_sky_square_earth = False;
-	if (RimeConfigGetBool(config, "style/round_sky_square_earth", &round_sky_square_earth) || initialize)
+	Bool hemispherical_dome = False;
+	if (RimeConfigGetBool(config, "style/hemispherical_dome", &hemispherical_dome) || initialize)
 	{
-		style.round_sky_square_earth = !!round_sky_square_earth;
+		style.hemispherical_dome = !!hemispherical_dome;
 	}
 	Bool horizontal = False;
 	if (RimeConfigGetBool(config, "style/horizontal", &horizontal) || initialize)

@@ -453,9 +453,9 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 	bool rbr = overright && overbottom;
 	bool rbl = overleft && overbottom;
 	bool overborder = (overleft || overright || overtop || overbottom);
-	if (overborder) m_style.round_sky_square_earth = true;
+	if (overborder) m_style.hemispherical_dome = true;
 	// 必须shadow_color都是非完全透明色才做绘制, 全屏状态不绘制阴影保证响应速度
-	if ((!overborder) && (!m_style.round_sky_square_earth) && m_style.shadow_radius && (shadowColor & 0xff000000)
+	if ((!overborder) && (!m_style.hemispherical_dome) && m_style.shadow_radius && (shadowColor & 0xff000000)
 		&& m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN
 		&& m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
 	{
@@ -505,7 +505,7 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 		Color back_color = Color::MakeARGB((color >> 24), GetRValue(color), GetGValue(color), GetBValue(color));
 		SolidBrush gBrBack(back_color);
 		GraphicsRoundRectPath* bgPath;
-		if (m_style.round_sky_square_earth && m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN && m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
+		if (m_style.hemispherical_dome && m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN && m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
 		{
 			if (m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL)
 			{

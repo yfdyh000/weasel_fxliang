@@ -166,7 +166,7 @@ namespace weasel
 		bool hide_candidates_when_single;
 		bool color_font;
 		bool display_tray_icon;
-		bool round_sky_square_earth;
+		bool hemispherical_dome;
 		std::wstring label_text_format;
 		// layout
 		int min_width;
@@ -216,7 +216,7 @@ namespace weasel
 			preedit_type(COMPOSITION),
 			color_font(0),
 			display_tray_icon(false),
-			round_sky_square_earth(false),
+			hemispherical_dome(false),
 			label_text_format(L"%s."),
 			layout_type(LAYOUT_VERTICAL),
 			min_width(0),
@@ -270,7 +270,7 @@ namespace boost {
 			ar & s.color_font;
 			ar & s.preedit_type;
 			ar & s.display_tray_icon;
-			ar & s.round_sky_square_earth;
+			ar & s.hemispherical_dome;
 			ar & s.label_text_format;
 			// layout
 			ar & s.layout_type;
