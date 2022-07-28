@@ -453,8 +453,9 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 	bool rbr = overright && overbottom;
 	bool rbl = overleft && overbottom;
 	bool overborder = (overleft || overright || overtop || overbottom);
+	if (overborder) m_style.round_sky_square_earth = true;
 	// 必须shadow_color都是非完全透明色才做绘制, 全屏状态不绘制阴影保证响应速度
-	if ((!overborder) && m_style.shadow_radius && (shadowColor & 0xff000000)
+	if ((!overborder) && (!m_style.round_sky_square_earth) && m_style.shadow_radius && (shadowColor & 0xff000000)
 		&& m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN
 		&& m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
 	{
@@ -472,7 +473,6 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 			blurOffsetY + m_style.shadow_offset_y,
 			rc.Width() + blurOffsetX + m_style.shadow_offset_x,
 			rc.Height() + blurOffsetY + m_style.shadow_offset_y);
-		//rect.InflateRect(m_style.border, m_style.border);
 		if (m_style.shadow_offset_x != 0 || m_style.shadow_offset_y != 0)
 		{
 			GraphicsRoundRectPath path(rect, radius);
@@ -504,34 +504,42 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 	{
 		Color back_color = Color::MakeARGB((color >> 24), GetRValue(color), GetGValue(color), GetBValue(color));
 		SolidBrush gBrBack(back_color);
-#if 0
-		GraphicsRoundRectPath gbgPath(bgRc, m_style.round_corner_ex-m_style.border/2);
-		gBack.SetClip(&gbgPath);
-		GraphicsRoundRectPath bgPath(rc, radius);
-		gBack.FillPath(&gBrBack, &bgPath);
-#else
 		GraphicsRoundRectPath* bgPath;
-		if (m_style.tydf)
+		if (m_style.round_sky_square_earth && m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN && m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
 		{
-			if (m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL || m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
+			if (m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL)
 			{
 				if (m_style.inline_preedit)
 				{
 					if (type == FIRST_CAND)
 					{
+						rc.left += m_style.border / 2;
+						rc.top += m_style.border / 2;
+						rc.bottom -= m_style.border / 2;
 						rtl = true; rbl = true; rtr = false; rbr = false;
 					}
 					else if (type == LAST_CAND)
 					{
+						rc.right -= m_style.border / 2;
+						rc.top += m_style.border / 2;
+						rc.bottom -= m_style.border / 2;
 						rtr = true; rbr = true; rtl = false; rbl = false;
 					}
 					else if (type == MID_CAND)
 					{
+						rc.top += m_style.border / 2;
+						rc.bottom -= m_style.border / 2;
 						rtl = rtr = rbr = rbl = false;
 					}
 					else if (type == ONLY_CAND)
 					{
+						rc.left += m_style.border / 2;
+						//rc.right -= m_style.border / 2;
+						rc.right = bgRc.right - m_style.border / 2;
+						rc.top += m_style.border / 2;
+						rc.bottom -= m_style.border / 2;
 						rtl = rtr = rbr = rbl = true;
+						rc.right = bgRc.right;
 					}
 				}
 				else
@@ -539,17 +547,24 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 					if (type == FIRST_CAND)
 					{
 						rtl = false; rbl = true; rtr = false; rbr = false;
+						rc.left += m_style.border / 2;
+						rc.bottom -= m_style.border / 2;
 					}
 					else if (type == LAST_CAND)
 					{
 						rtr = false; rbr = true; rtl = false; rbl = false;
+						rc.right -= m_style.border / 2;
+						rc.bottom -= m_style.border / 2;
 					}
 					else if (type == MID_CAND)
 					{
 						rtl = rtr = rbr = rbl = false;
+						rc.bottom -= m_style.border / 2;
 					}
 					else if (type == TEXT)
 					{
+						rc.left += m_style.border / 2;
+						rc.top += m_style.border / 2;
 						rtl = true;
 						rtr = rbr = rbl = false;
 					}
@@ -557,6 +572,9 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 					{
 						rtl = rtr = false;
 						rbr = rbl = true;
+						rc.left += m_style.border / 2;
+						rc.right = bgRc.right;
+						rc.bottom -= m_style.border / 2;
 					}
 				}
 			}
@@ -566,18 +584,30 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 				{
 					if (type == FIRST_CAND)
 					{
+						rc.top += m_style.border / 2;
+						rc.right -= m_style.border / 2;
+						rc.left += m_style.border / 2;
 						rtl = true; rbl = false; rtr = true; rbr = false;
 					}
 					else if (type == LAST_CAND)
 					{
+						rc.bottom -= m_style.border / 2;
+						rc.right -= m_style.border / 2;
+						rc.left += m_style.border / 2;
 						rtr = false; rbr = true; rtl = false; rbl = true;
 					}
 					else if (type == MID_CAND)
 					{
+						rc.right -= m_style.border / 2;
+						rc.left += m_style.border / 2;
 						rtl = rtr = rbr = rbl = false;
 					}
 					else if (type == ONLY_CAND)
 					{
+						rc.top += m_style.border / 2;
+						rc.bottom -= m_style.border / 2;
+						rc.right = bgRc.right;
+						rc.left += m_style.border / 2;
 						rtl = rtr = rbr = rbl = true;
 					}
 				}
@@ -585,18 +615,27 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 				{
 					if (type == FIRST_CAND)
 					{
+						rc.right -= m_style.border / 2;
+						rc.left += m_style.border / 2;
 						rtl = rtr = rbr = rbl = false;
 					}
 					else if (type == LAST_CAND)
 					{
+						rc.right -= m_style.border / 2;
+						rc.left += m_style.border / 2;
+						rc.bottom -= m_style.border / 2;
 						rtr = false; rbr = true; rtl = false; rbl = true;
 					}
 					else if (type == MID_CAND)
 					{
+						rc.right -= m_style.border / 2;
+						rc.left += m_style.border / 2;
 						rtl = rtr = rbr = rbl = false;
 					}
 					else if (type == TEXT)
 					{
+						rc.top += m_style.border / 2;
+						rc.left += m_style.border / 2;
 						rtl = true;
 						rtr = rbr = rbl = false;
 					}
@@ -604,17 +643,17 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 					{
 						rtl = rtr = false;
 						rbl = rbr = true;
+						rc.bottom -= m_style.border / 2;
+						rc.right = bgRc.right;
+						rc.left += m_style.border / 2;
 					}
 				}
 			}
-			//GraphicsRoundRectPath bgPath(rc, m_style.round_corner_ex, rtl, rtr, rbr, rbl);
-			bgPath = new GraphicsRoundRectPath(rc, m_style.round_corner_ex, rtl, rtr, rbr, rbl);
+			bgPath = new GraphicsRoundRectPath(rc, m_style.round_corner_ex - m_style.border / 2, rtl, rtr, rbr, rbl);
 		}
 		else
 			bgPath = new GraphicsRoundRectPath(rc, radius);
-			//GraphicsRoundRectPath bgPath(rc, radius);
 		gBack.FillPath(&gBrBack, bgPath);
-#endif
 	}
 }
 
@@ -1407,16 +1446,16 @@ GraphicsRoundRectPath::GraphicsRoundRectPath(const CRect rc, int corner, bool rt
 		int elWid = 2 * cnx;
 		int elHei = 2 * cny;
 		AddArc(rc.left + 1, rc.top + 1, elWid * rtl, elHei * rtl, 180, 90);
-		AddLine(rc.left + cnx * rtl + 2*rtl, rc.top + 1, rc.right - cnx * rtr - 2*rtr, rc.top + 1);
+		AddLine(rc.left + cnx * rtl + 1, rc.top + 1, rc.right - cnx * rtr - 1, rc.top + 1);
 
 		AddArc(rc.right - elWid * rtr - 1, rc.top + 1, elWid * rtr, elHei * rtr, 270, 90);
-		AddLine(rc.right - 1, rc.top + cny * rtr + 2*rtr, rc.right - 1, rc.bottom - cny * rbr - 2*rbr);
+		AddLine(rc.right - 1, rc.top + cny * rtr + 1, rc.right - 1, rc.bottom - cny * rbr - 1);
 
 		AddArc(rc.right - elWid * rbr - 1, rc.bottom - elHei * rbr - 1, elWid * rbr, elHei * rbr, 0, 90);
-		AddLine(rc.right - cnx * rbr - 2*rbr, rc.bottom - 1, rc.left + cnx * rbl + 2*rbl, rc.bottom - 1);
+		AddLine(rc.right - cnx * rbr - 1, rc.bottom - 1, rc.left + cnx * rbl + 1, rc.bottom - 1);
 
 		AddArc(rc.left + 1, rc.bottom - elHei * rbl - 1, elWid * rbl, elHei * rbl, 90, 90);
-		AddLine(rc.left + 1, rc.top + cny * rtl + rtl, rc.left + 1, rc.bottom - cny * rbl - 2*rbl);
+		AddLine(rc.left + 1, rc.top + cny * rtl + 1, rc.left + 1, rc.bottom - cny * rbl - 1);
 	}
 }
 void GraphicsRoundRectPath::AddRoundRect(int left, int top, int width, int height, int cornerx, int cornery)
