@@ -3,8 +3,10 @@
 #include <WeaselUI.h>
 #include "Layout.h"
 #include <Usp10.h>
-
 #include <gdiplus.h>
+
+#include "GdiplusBlur.h"
+
 #pragma comment(lib, "gdiplus.lib")
 #pragma comment(lib, "d2d1.lib")
 #pragma comment(lib, "dwrite.lib")
@@ -21,6 +23,7 @@ typedef enum _backType
 	LAST_CAND,
 	ONLY_CAND
 }BackType;
+
 class WeaselPanel : 
 	public CWindowImpl<WeaselPanel, CWindow, CWeaselPanelTraits>,
 	CDoubleBufferImpl<WeaselPanel>
@@ -66,13 +69,17 @@ private:
 	CIcon m_iconDisabled;
 	CIcon m_iconEnabled;
 	CIcon m_iconAlpha;
-
+	// for gdiplus drawings
 	Gdiplus::GdiplusStartupInput _m_gdiplusStartupInput;
 	ULONG_PTR _m_gdiplusToken;
+	// for hemispherical dome
 	CRect bgRc;
-	
-	DirectWriteResources* pDWR = NULL;
-	GDIFonts* pFonts = NULL;
+	BYTE m_candidateCount;
+
+	// for multi font_face & font_point
+	GdiplusBlur* m_blurer;
+	DirectWriteResources* pDWR;
+	GDIFonts* pFonts;
 };
 
 class GraphicsRoundRectPath : public Gdiplus::GraphicsPath
