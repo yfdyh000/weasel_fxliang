@@ -598,6 +598,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		trc = rc;
 		trc.DeflateRect(ox-m_style.border/2, oy-m_style.border/2);
 		bgRc = trc;
+		bgRc.DeflateRect(m_style.border / 2, m_style.border / 2);
 		GraphicsRoundRectPath bgPath(trc, m_style.round_corner_ex);
 		int alpha = ((m_style.border_color >> 24) & 255);
 		Color border_color = Color::MakeARGB(alpha, GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
