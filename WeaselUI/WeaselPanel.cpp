@@ -67,8 +67,8 @@ void WeaselPanel::_ResizeWindow()
 			oy *= 2;
 		}
 	}
-	size.cx += ox*2;
-	size.cy += oy*2;
+	size.cx += ox*2 + m_style.border*2;
+	size.cy += oy*2 + m_style.border*2;
 	SetWindowPos(NULL, 0, 0, size.cx, size.cy, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
 	ReleaseDC(dc);
 }
@@ -187,30 +187,18 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 				{
 					if (type == FIRST_CAND)
 					{
-						rc.left = bgRc.left + m_style.border / 2;
-						rc.top = bgRc.top + m_style.border / 2;
-						rc.bottom = bgRc.bottom - m_style.border / 2;
 						rtl = true; rbl = true; rtr = false; rbr = false;
 					}
 					else if (type == LAST_CAND)
 					{
-						rc.right = bgRc.right - m_style.border / 2;
-						rc.top = bgRc.top + m_style.border / 2;
-						rc.bottom = bgRc.bottom - m_style.border / 2;
 						rtr = true; rbr = true; rtl = false; rbl = false;
 					}
 					else if (type == MID_CAND)
 					{
-						rc.top = bgRc.top + m_style.border / 2;
-						rc.bottom = bgRc.bottom - m_style.border / 2;
 						rtl = rtr = rbr = rbl = false;
 					}
 					else if (type == ONLY_CAND)
 					{
-						rc.left = bgRc.left + m_style.border / 2;
-						rc.right = bgRc.right - m_style.border / 2;
-						rc.top = bgRc.top + m_style.border / 2;
-						rc.bottom = bgRc.bottom - m_style.border / 2;
 						rtl = rtr = rbr = rbl = true;
 					}
 				}
@@ -219,24 +207,17 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 					if (type == FIRST_CAND)
 					{
 						rtl = false; rbl = true; rtr = false; rbr = false;
-						rc.left = bgRc.left + m_style.border / 2;
-						rc.bottom = bgRc.bottom - m_style.border / 2;
 					}
 					else if (type == LAST_CAND)
 					{
 						rtr = false; rbr = true; rtl = false; rbl = false;
-						rc.right = bgRc.right - m_style.border / 2;
-						rc.bottom = bgRc.bottom - m_style.border / 2;
 					}
 					else if (type == MID_CAND)
 					{
 						rtl = rtr = rbr = rbl = false;
-						rc.bottom = bgRc.bottom - m_style.border / 2;
 					}
 					else if (type == TEXT)
 					{
-						rc.left = bgRc.left + m_style.border / 2;
-						rc.top = bgRc.top + m_style.border / 2;
 						rtl = true;
 						rtr = rbr = rbl = false;
 						if (m_candidateCount == 0)
@@ -246,9 +227,6 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 					{
 						rtl = rtr = false;
 						rbr = rbl = true;
-						rc.left  = bgRc.left + m_style.border / 2;
-						rc.right = bgRc.right - m_style.border / 2;
-						rc.bottom = bgRc.bottom - m_style.border / 2;
 					}
 				}
 			}
@@ -258,30 +236,18 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 				{
 					if (type == FIRST_CAND)
 					{
-						rc.top = bgRc.top + m_style.border / 2;
-						rc.right = bgRc.right - m_style.border / 2;
-						rc.left = bgRc.left + m_style.border / 2;
 						rtl = true; rbl = false; rtr = true; rbr = false;
 					}
 					else if (type == LAST_CAND)
 					{
-						rc.bottom = bgRc.bottom - m_style.border / 2;
-						rc.right = bgRc.right - m_style.border / 2;
-						rc.left = bgRc.left + m_style.border / 2;
 						rtr = false; rbr = true; rtl = false; rbl = true;
 					}
 					else if (type == MID_CAND)
 					{
-						rc.right = bgRc.right - m_style.border / 2;
-						rc.left = bgRc.left + m_style.border / 2;
 						rtl = rtr = rbr = rbl = false;
 					}
 					else if (type == ONLY_CAND)
 					{
-						rc.top = bgRc.top + m_style.border / 2;
-						rc.bottom = bgRc.bottom - m_style.border / 2;
-						rc.right = bgRc.right - m_style.border / 2;
-						rc.left = bgRc.left + m_style.border / 2;
 						rtl = rtr = rbr = rbl = true;
 					}
 				}
@@ -289,27 +255,18 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 				{
 					if (type == FIRST_CAND)
 					{
-						rc.right = bgRc.right - m_style.border / 2;
-						rc.left = bgRc.left + m_style.border / 2;
 						rtl = rtr = rbr = rbl = false;
 					}
 					else if (type == LAST_CAND)
 					{
-						rc.right = bgRc.right - m_style.border / 2;
-						rc.left = bgRc.left + m_style.border / 2;
-						rc.bottom = bgRc.bottom - m_style.border / 2;
 						rtr = false; rbr = true; rtl = false; rbl = true;
 					}
 					else if (type == MID_CAND)
 					{
-						rc.right = bgRc.right - m_style.border / 2;
-						rc.left = bgRc.left + m_style.border / 2;
 						rtl = rtr = rbr = rbl = false;
 					}
 					else if (type == TEXT)
 					{
-						rc.top = bgRc.top + m_style.border / 2;
-						rc.left = bgRc.left + m_style.border / 2;
 						rtl = true;
 						rtr = rbr = rbl = false;
 						if (m_candidateCount == 0)
@@ -319,9 +276,6 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 					{
 						rtl = rtr = false;
 						rbl = rbr = true;
-						rc.bottom = bgRc.bottom - m_style.border / 2;
-						rc.right = bgRc.right - m_style.border / 2;
-						rc.left = bgRc.left + m_style.border / 2;
 					}
 				}
 			}
@@ -503,6 +457,8 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 			oy *= 2;
 		}
 	}
+	ox += m_style.border;
+	oy += m_style.border;
 
 	int bkx = abs((m_style.margin_x - m_style.hilite_padding)) + max(abs(m_style.shadow_offset_x), abs(m_style.shadow_offset_y));
 	int bky = abs((m_style.margin_y - m_style.hilite_padding)) + max(abs(m_style.shadow_offset_x), abs(m_style.shadow_offset_y));
@@ -619,6 +575,8 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 			oy *= 2;
 		}
 	}
+	ox += m_style.border;
+	oy += m_style.border;
 
 	/* inline_preedit and candidate size 1 and preedit_type preview, and hide_candidates_when_single is set */
 	const std::vector<Text> &candidates(m_ctx.cinfo.candies);
@@ -638,9 +596,8 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		Graphics gBack(memDC);
 		gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
 		trc = rc;
-		trc.DeflateRect(ox+m_style.border, oy+m_style.border);
+		trc.DeflateRect(ox-m_style.border/2, oy-m_style.border/2);
 		bgRc = trc;
-		bgRc.DeflateRect(m_style.border/2, m_style.border/2);
 		GraphicsRoundRectPath bgPath(trc, m_style.round_corner_ex);
 		int alpha = ((m_style.border_color >> 24) & 255);
 		Color border_color = Color::MakeARGB(alpha, GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
@@ -1124,17 +1081,17 @@ GraphicsRoundRectPath::GraphicsRoundRectPath(const CRect rc, int corner, bool rt
 		int cny = ((corner * 2 <= rc.Height()) ? corner : (rc.Height() / 2));
 		int elWid = 2 * cnx;
 		int elHei = 2 * cny;
-		AddArc(rc.left + 1, rc.top + 1, elWid * rtl, elHei * rtl, 180, 90);
-		AddLine(rc.left + cnx * rtl + 1, rc.top + 1, rc.right - cnx * rtr - 1, rc.top + 1);
+		AddArc(rc.left, rc.top, elWid * rtl, elHei * rtl, 180, 90);
+		AddLine(rc.left + cnx * rtl, rc.top, rc.right - cnx * rtr, rc.top);
 
-		AddArc(rc.right - elWid * rtr - 1, rc.top + 1, elWid * rtr, elHei * rtr, 270, 90);
-		AddLine(rc.right - 1, rc.top + cny * rtr + 1, rc.right - 1, rc.bottom - cny * rbr - 1);
+		AddArc(rc.right - elWid * rtr-1, rc.top, elWid * rtr, elHei * rtr, 270, 90);
+		AddLine(rc.right-1, rc.top + cny * rtr, rc.right-1, rc.bottom - cny * rbr);
 
-		AddArc(rc.right - elWid * rbr - 1, rc.bottom - elHei * rbr - 1, elWid * rbr, elHei * rbr, 0, 90);
-		AddLine(rc.right - cnx * rbr - 1, rc.bottom - 1, rc.left + cnx * rbl + 1, rc.bottom - 1);
+		AddArc(rc.right - elWid * rbr-1, rc.bottom - elHei * rbr-1, elWid * rbr, elHei * rbr, 0, 90);
+		AddLine(rc.right - cnx * rbr, rc.bottom-1, rc.left + cnx * rbl, rc.bottom-1);
 
-		AddArc(rc.left + 1, rc.bottom - elHei * rbl - 1, elWid * rbl, elHei * rbl, 90, 90);
-		AddLine(rc.left + 1, rc.top + cny * rtl + 1, rc.left + 1, rc.bottom - cny * rbl - 1);
+		AddArc(rc.left, rc.bottom - elHei * rbl-1, elWid * rbl, elHei * rbl, 90, 90);
+		AddLine(rc.left, rc.top + cny * rtl, rc.left, rc.bottom - cny * rbl);
 	}
 }
 
@@ -1146,18 +1103,17 @@ void GraphicsRoundRectPath::AddRoundRect(int left, int top, int width, int heigh
 		int cny = ((cornery * 2 <= height) ? cornery : (height / 2));
 		int elWid = 2 * cnx;
 		int elHei = 2 * cny;
+		AddArc(left, top, elWid, elHei, 180, 90);
+		AddLine(left + cnx, top, left + width - cnx, top);
 
-		AddArc(left + 1, top + 1, elWid, elHei, 180, 90);
-		AddLine(left + cnx + 1, top + 1, left + width - cnx - 1, top + 1);
+		AddArc(left + width - elWid-1, top, elWid, elHei, 270, 90);
+		AddLine(left + width-1, top + cny, left + width-1, top + height - cny);
 
-		AddArc(left + width - elWid - 1, top + 1, elWid, elHei, 270, 90);
-		AddLine(left + width - 1, top + cny + 1, left + width - 1, top + height - cny - 1);
+		AddArc(left + width - elWid-1, top + height - elHei-1, elWid, elHei, 0, 90);
+		AddLine(left + width - cnx, top + height-1, left + cnx, top + height-1);
 
-		AddArc(left + width - elWid - 1, top + height - elHei - 1, elWid, elHei, 0, 90);
-		AddLine(left + width - cnx - 1, top + height - 1, left + cnx + 1, top + height - 1);
-
-		AddArc(left + 1, top + height - elHei - 1, elWid, elHei, 90, 90);
-		AddLine(left + 1, top + cny + 1, left + 1, top + height - cny - 1);
+		AddArc(left, top + height - elHei-1, elWid, elHei, 90, 90);
+		AddLine(left, top + cny, left, top + height - cny);
 	}
 	else
 	{
