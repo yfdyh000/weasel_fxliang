@@ -207,6 +207,13 @@ void weasel::HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 			_candidateCommentRects[i].SetRect(w, height, w, height + size.cy);
 		}
 	}
+
+	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
+	{
+		_candidateLabelRects[i].bottom = height + h;
+		_candidateLabelRects[i].bottom = height + h;
+		_candidateTextRects[i].bottom = height + h;
+	}
 	w += _style.margin_x;
 
 	/* Highlighted Candidate */

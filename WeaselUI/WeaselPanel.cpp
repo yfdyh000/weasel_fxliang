@@ -200,6 +200,10 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 					else if (type == ONLY_CAND)
 					{
 						rtl = rtr = rbr = rbl = true;
+						rc.left = bgRc.left;
+						rc.right = bgRc.right;
+						rc.bottom = bgRc.bottom;
+						rc.top = bgRc.top;
 					}
 				}
 				else
@@ -227,6 +231,9 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 					{
 						rtl = rtr = false;
 						rbr = rbl = true;
+						rc.left = bgRc.left;
+						rc.right = bgRc.right;
+						rc.bottom = bgRc.bottom;
 					}
 				}
 			}
@@ -992,6 +999,7 @@ HRESULT WeaselPanel::_TextOutWithFallback_D2D (CDCHandle dc, CRect const rc, wst
 		pDWR->pRenderTarget->BeginDraw();
 		if (pTextLayout != NULL)
 			pDWR->pRenderTarget->DrawTextLayout({ offsetx, offsety}, pTextLayout, pBrush, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
+		// for rect checking
 		//D2D1_RECT_F rectf{ 0,0, rc.Width(), rc.Height() };
 		//pDWR->pRenderTarget->DrawRectangle(&rectf, pBrush);
 		pDWR->pRenderTarget->EndDraw();
@@ -1073,7 +1081,7 @@ GraphicsRoundRectPath::GraphicsRoundRectPath(const CRect rc, int corner, bool rt
 {
 	if (!(rtl || rtr || rbr || rbl))
 	{
-		Rect& rcp = Rect(rc.left, rc.top, rc.Width(), rc.Height());
+		Rect& rcp = Rect(rc.left, rc.top, rc.Width() - 1, rc.Height() - 1);
 		AddRectangle(rcp);
 	}
 	else
@@ -1118,7 +1126,7 @@ void GraphicsRoundRectPath::AddRoundRect(int left, int top, int width, int heigh
 	}
 	else
 	{
-		Gdiplus::Rect& rc = Gdiplus::Rect(left, top, width, height);
+		Gdiplus::Rect& rc = Gdiplus::Rect(left, top, width-1, height-1);
 		AddRectangle(rc);
 	}
 }

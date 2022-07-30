@@ -20,6 +20,7 @@ style:
   horizontal: false
   fullscreen: false
   inline_preedit: false
+  hemispherical_dome: false		#天圆地方
   preedit_type: composition
   display_tray_icon: false
   label_format: "%s."
