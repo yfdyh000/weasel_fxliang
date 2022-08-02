@@ -48,12 +48,15 @@ namespace weasel
 	class GDIFonts
 	{
 	public:
-		//GDIFonts() {};
 		~GDIFonts() {}
 		GDIFonts(wstring labelFontFace, int labelFontPoint, wstring textFontFace, int textFontPoint, wstring commentFontFace, int commentFontPoint);
+		void _ParseFontFace(const std::wstring fontFaceStr, std::wstring& fontFace, LONG& fontWeight);
 		wstring _LabelFontFace;
 		wstring _TextFontFace;
 		wstring _CommentFontFace;
+		LONG _LabelFontWeight;
+		LONG _TextFontWeight;
+		LONG _CommentFontWeight;
 		int _LabelFontPoint;
 		int _TextFontPoint;
 		int _CommentFontPoint;

@@ -393,7 +393,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				long height = -MulDiv(pFonts->_TextFontPoint, dc.GetDeviceCaps(LOGPIXELSY), 72);
 				CFont font;
 				CFontHandle oldFont;
-				font.CreateFontW(height, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, pFonts->_TextFontFace.c_str());
+				font.CreateFontW(height, 0, 0, 0, pFonts->_TextFontWeight, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, pFonts->_TextFontFace.c_str());
 				oldFont = dc.SelectFont(font);
 				m_layout->GetTextExtentDCMultiline(dc, t, range.start, &selStart);
 				m_layout->GetTextExtentDCMultiline(dc, t, range.end, &selEnd);
@@ -410,9 +410,9 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				dc.SetTextColor(m_style.text_color);
 				dc.SetBkColor(m_style.back_color);
 				if(m_style.color_font)
-					_TextOut(dc, x, rc.top, rc_before, str_before.c_str(), str_before.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace);
+					_TextOut(dc, x, rc.top, rc_before, str_before.c_str(), str_before.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace, pFonts->_TextFontWeight);
 				else
-					_TextOut(dc, x, rc.top, rc_before, str_before.c_str(), str_before.length(), NULL, pFonts->_TextFontPoint, pFonts->_TextFontFace);
+					_TextOut(dc, x, rc.top, rc_before, str_before.c_str(), str_before.length(), NULL, pFonts->_TextFontPoint, pFonts->_TextFontFace, pFonts->_TextFontWeight);
 				x += selStart.cx + m_style.hilite_spacing;
 			}
 			{
@@ -427,9 +427,9 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				dc.SetTextColor(m_style.hilited_text_color);
 				dc.SetBkColor(m_style.hilited_back_color);
 				if(m_style.color_font) 
-					_TextOut(dc, x, rc.top, rct, str_highlight.c_str(), str_highlight.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace);
+					_TextOut(dc, x, rc.top, rct, str_highlight.c_str(), str_highlight.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace, pFonts->_TextFontWeight);
 				else
-					_TextOut(dc, x, rc.top, rct, str_highlight.c_str(), str_highlight.length(), NULL, pFonts->_TextFontPoint, pFonts->_TextFontFace);
+					_TextOut(dc, x, rc.top, rct, str_highlight.c_str(), str_highlight.length(), NULL, pFonts->_TextFontPoint, pFonts->_TextFontFace, pFonts->_TextFontWeight);
 				dc.SetTextColor(m_style.text_color);
 				dc.SetBkColor(m_style.back_color);
 				x += (selEnd.cx - selStart.cx);
@@ -441,9 +441,9 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				std::wstring str_after(t.substr(range.end));
 				CRect rc_after(x, rc.top, rc.right, rc.bottom);
 				if(m_style.color_font) 
-					_TextOut(dc, x, rc.top, rc_after, str_after.c_str(), str_after.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace);
+					_TextOut(dc, x, rc.top, rc_after, str_after.c_str(), str_after.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace, pFonts->_TextFontWeight);
 				else
-					_TextOut(dc, x, rc.top, rc_after, str_after.c_str(), str_after.length(), NULL, pFonts->_TextFontPoint, pFonts->_TextFontFace);
+					_TextOut(dc, x, rc.top, rc_after, str_after.c_str(), str_after.length(), NULL, pFonts->_TextFontPoint, pFonts->_TextFontFace, pFonts->_TextFontWeight);
 
 			}
 		}
@@ -451,9 +451,9 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 		{
 			CRect rcText(rc.left, rc.top, rc.right, rc.bottom);
 			if (m_style.color_font)
-				_TextOut(dc, rc.left, rc.top, rcText, t.c_str(), t.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace);
+				_TextOut(dc, rc.left, rc.top, rcText, t.c_str(), t.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace, pFonts->_TextFontWeight);
 			else
-				_TextOut(dc, rc.left, rc.top, rcText, t.c_str(), t.length(), NULL, pFonts->_TextFontPoint, pFonts->_TextFontFace);
+				_TextOut(dc, rc.left, rc.top, rcText, t.c_str(), t.length(), NULL, pFonts->_TextFontPoint, pFonts->_TextFontFace, pFonts->_TextFontWeight);
 		}
 		drawn = true;
 	}
@@ -531,9 +531,9 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 		rect = OffsetRect(rect, ox, oy);
 
 		if (m_style.color_font)
-			_TextOut(dc, rect.left, rect.top, rect, label.c_str(), label.length(), pDWR->pLabelTextFormat, pFonts->_LabelFontPoint, pFonts->_LabelFontFace);
+			_TextOut(dc, rect.left, rect.top, rect, label.c_str(), label.length(), pDWR->pLabelTextFormat, pFonts->_LabelFontPoint, pFonts->_LabelFontFace, pFonts->_TextFontWeight);
 		else
-			_TextOut(dc, rect.left, rect.top, rect, label.c_str(), label.length(), NULL, pFonts->_LabelFontPoint, pFonts->_LabelFontFace);
+			_TextOut(dc, rect.left, rect.top, rect, label.c_str(), label.length(), NULL, pFonts->_LabelFontPoint, pFonts->_LabelFontFace, pFonts->_LabelFontWeight);
 
 
 		// Draw text
@@ -545,9 +545,9 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 		rect = m_layout->GetCandidateTextRect(i);
 		rect = OffsetRect(rect, ox, oy);
 		if (m_style.color_font)
-			_TextOut(dc, rect.left, rect.top, rect, text.c_str(), text.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace);
+			_TextOut(dc, rect.left, rect.top, rect, text.c_str(), text.length(), pDWR->pTextFormat, pFonts->_TextFontPoint, pFonts->_TextFontFace, pFonts->_TextFontWeight);
 		else
-			_TextOut(dc, rect.left, rect.top, rect, text.c_str(), text.length(), NULL, pFonts->_TextFontPoint, pFonts->_TextFontFace);
+			_TextOut(dc, rect.left, rect.top, rect, text.c_str(), text.length(), NULL, pFonts->_TextFontPoint, pFonts->_TextFontFace, pFonts->_TextFontWeight);
 
 		
 		// Draw comment
@@ -561,9 +561,9 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 			rect = m_layout->GetCandidateCommentRect(i);
 			rect = OffsetRect(rect, ox, oy);
 			if(m_style.color_font)
-				_TextOut(dc, rect.left, rect.top, rect, comment.c_str(), comment.length(), pDWR->pCommentTextFormat, pFonts->_CommentFontPoint, pFonts->_CommentFontFace);
+				_TextOut(dc, rect.left, rect.top, rect, comment.c_str(), comment.length(), pDWR->pCommentTextFormat, pFonts->_CommentFontPoint, pFonts->_CommentFontFace, pFonts->_TextFontWeight);
 			else
-				_TextOut(dc, rect.left, rect.top, rect, comment.c_str(), comment.length(), NULL, pFonts->_CommentFontPoint, pFonts->_CommentFontFace);
+				_TextOut(dc, rect.left, rect.top, rect, comment.c_str(), comment.length(), NULL, pFonts->_CommentFontPoint, pFonts->_CommentFontFace, pFonts->_CommentFontWeight);
 		}
 		drawn = true;
 	}
@@ -891,12 +891,12 @@ HBITMAP WeaselPanel::_CreateAlphaTextBitmap(LPCWSTR inText, HFONT inFont, COLORR
 	return hMyDIB;
 }
 
-static HRESULT _TextOutWithFallback_ULW(CDCHandle dc, int x, int y, CRect const rc, LPCWSTR psz, int cch, long height, std::wstring fontface)
+static HRESULT _TextOutWithFallback_ULW(CDCHandle dc, int x, int y, CRect const rc, LPCWSTR psz, int cch, long height, std::wstring fontface, int font_weight=FW_DONTCARE)
 {
     SCRIPT_STRING_ANALYSIS ssa;
     HRESULT hr;
 	CFont font;
-	font.CreateFontW(height, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, fontface.c_str());
+	font.CreateFontW(height, 0, 0, 0, font_weight, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, fontface.c_str());
 	int TextLength = cch;
 	HDC hTextDC = CreateCompatibleDC(NULL);
 	HFONT hOldFont = (HFONT)SelectObject(hTextDC, font);
@@ -1022,7 +1022,7 @@ HRESULT WeaselPanel::_TextOutWithFallback_D2D (CDCHandle dc, CRect const rc, wst
 	return S_OK;
 }
 
-void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch, IDWriteTextFormat* pTextFormat, int font_point, std::wstring font_face)
+void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch, IDWriteTextFormat* pTextFormat, int font_point, std::wstring font_face, int font_weight=FW_DONTCARE)
 {
 	if (m_style.color_font )
 	{
@@ -1038,14 +1038,11 @@ void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR 
 		{
 			CSize size;
 			CFont font;
-			font.CreateFontW(height, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, font_face.c_str());
+			font.CreateFontW(height, 0, 0, 0, font_weight, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, font_face.c_str());
 			dc.SelectFont(font);
 			dc.GetTextExtent(line.c_str(), line.length(), &size);
-			if (FAILED(_TextOutWithFallback_ULW(dc, x, y+offset, rc, line.c_str(), line.length(), height, font_face ))) 
+			if (FAILED(_TextOutWithFallback_ULW(dc, x, y+offset, rc, line.c_str(), line.length(), height, font_face, font_weight ))) 
 			{
-				//CFont font;
-				//font.CreateFontW(height, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, m_style.font_face.c_str());
-
 				HBITMAP MyBMP = _CreateAlphaTextBitmap(psz, font, dc.GetTextColor(), cch);
 				DeleteObject(font);
 				if (MyBMP)

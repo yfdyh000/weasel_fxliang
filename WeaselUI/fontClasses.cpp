@@ -298,25 +298,52 @@ GDIFonts::GDIFonts(wstring labelFontFace, int labelFontPoint, wstring textFontFa
 {
 	vector<wstring> fontFaceStrVector;
 	split(fontFaceStrVector, labelFontFace, is_any_of(L","));
-	wstring _fontFace ;
-	vector<wstring> _fontFaceVector;
-	split(_fontFaceVector, fontFaceStrVector[0], is_any_of(L":"));
-	_LabelFontFace		= _fontFaceVector[0];
+	_ParseFontFace(fontFaceStrVector[0], _LabelFontFace, _LabelFontWeight);
 	_LabelFontPoint		= labelFontPoint;
 	fontFaceStrVector.swap(vector<wstring>());
-	_fontFaceVector.swap(vector<wstring>());
 
 	split(fontFaceStrVector, textFontFace, is_any_of(L","));
-	split(_fontFaceVector, fontFaceStrVector[0], is_any_of(L":"));
-	_TextFontFace		= _fontFaceVector[0];
+	_ParseFontFace(fontFaceStrVector[0], _TextFontFace, _TextFontWeight);
 	_TextFontPoint		= textFontPoint;
 	fontFaceStrVector.swap(vector<wstring>());
-	_fontFaceVector.swap(vector<wstring>());
 
 	split(fontFaceStrVector, commentFontFace, is_any_of(L","));
-	split(_fontFaceVector, fontFaceStrVector[0], is_any_of(L":"));
-	_CommentFontFace	= _fontFaceVector[0];
+	_ParseFontFace(fontFaceStrVector[0], _CommentFontFace, _CommentFontWeight);
 	_CommentFontPoint	= commentFontPoint;
 	fontFaceStrVector.swap(vector<wstring>());
-	_fontFaceVector.swap(vector<wstring>());
+}
+
+void GDIFonts::_ParseFontFace(const std::wstring fontFaceStr, std::wstring& fontFace, LONG& fontWeight)
+{
+	std::vector<std::wstring> parsedStrV; 
+	boost::algorithm::split(parsedStrV, fontFaceStr, boost::algorithm::is_any_of(L":"));
+	fontFace = parsedStrV[0];
+	boost::wsmatch res;
+	boost::wregex regex  ( L":((THIN)|(EXTRA_LIGHT)|(ULTRA_LIGHT)|(LIGHT)|(SEMI_LIGHT)|(NORMAL)|(MEDIUM)|(DEMI_BOLD)|(SEMI_BOLD)|(BOLD)|(EXTRA_BOLD)|(ULTRA_BOLD)|(BLACK)|(HEAVY)|(EXTRA_BLACK)|(ULTRA_BLACK))" , boost::wregex::icase);
+	if (boost::regex_search(fontFaceStr, res, regex))
+	{
+		if (res[0] == L":THIN" || res[0] == L":thin")
+			fontWeight = FW_THIN;
+		else if ((res[0] == L":EXTRA_LIGHT" || res[0] == L":extra_light") || (res[0] == L":ULTRA_LIGHT" || res[0] == L":ultra_light"))
+			fontWeight = FW_EXTRALIGHT;
+		else if ((res[0] == L":LIGHT" || res[0] == L":light") ||(res[0] == L":SEMI_LIGHT" || res[0] == L":semi_light"))
+			fontWeight = FW_LIGHT;
+		else if (res[0] == L":MEDIUM" || res[0] == L":medium")
+			fontWeight = FW_MEDIUM;
+		else if ((res[0] == L":DEMI_BOLD" || res[0] == L":demi_bold") || (res[0] == L":SEMI_BOLD" || res[0] == L":semi_bold"))
+			fontWeight = FW_SEMIBOLD;
+		else if (res[0] == L":BOLD" || res[0] == L":bold")
+			fontWeight = FW_BOLD;
+		else if ((res[0] == L":EXTRA_BOLD" || res[0] == L":extra_bold") || (res[0] == L":ULTRA_BOLD" || res[0] == L":ultra_bold"))
+			fontWeight = FW_EXTRABOLD;
+		else if ((res[0] == L":BLACK" || res[0] == L":black") 
+			|| (res[0] == L":HEAVY" || res[0] == L":heavy") 
+			|| (res[0] == L":EXTRA_BLACK" || res[0] == L":extra_black") 
+			|| (res[0] == L":ULTRA_BLACK" || res[0] == L":ultra_black"))
+			fontWeight = FW_BLACK;
+		else
+			fontWeight = FW_NORMAL;
+	}
+	else
+		fontWeight = FW_DONTCARE;
 }
