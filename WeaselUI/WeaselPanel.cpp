@@ -113,23 +113,43 @@ void WeaselPanel::Refresh()
 	_RepositionWindow();
 	RedrawWindow();
 }
+bool WeaselPanel::_IsHighlightOverCandidateWindow(CRect rc, Gdiplus::Graphics* g)
+{
+	GraphicsRoundRectPath bgPath(bgRc, m_style.round_corner_ex);
+	GraphicsRoundRectPath hlPath(rc, m_style.round_corner);
 
+	Region bgRegion(&bgPath);
+	Region hlRegion(&hlPath);
+	Region* tmpRegion = hlRegion.Clone();
+
+	tmpRegion->Xor(&bgRegion);
+	tmpRegion->Exclude(&bgRegion);
+	
+	return !tmpRegion->IsEmpty(g);
+
+}
 void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLORREF shadowColor, int blurOffsetX, int blurOffsetY, int radius, BackType type = TEXT)
 {
 	Graphics gBack(dc);
 	gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
-	bool overleft = (rc.left <= bgRc.left);
-	bool overright = (rc.right >= bgRc.right);
-	bool overtop = (rc.top <= bgRc.top);
-	bool overbottom = (rc.bottom >= bgRc.bottom);
-	bool rtl = overleft && overtop;
-	bool rtr = overright && overtop;
-	bool rbr = overright && overbottom;
-	bool rbl = overleft && overbottom;
-	bool overborder = (overleft || overright || overtop || overbottom);
-	if (overborder) m_style.hemispherical_dome = true;
+	bool rtl;
+	bool rtr;
+	bool rbr;
+	bool rbl;
+	if (_IsHighlightOverCandidateWindow(rc, &gBack))
+		hemispherical_dome = true;
+
+	CRect rect(
+		blurOffsetX + m_style.shadow_offset_x,
+		blurOffsetY + m_style.shadow_offset_y,
+		rc.Width() + blurOffsetX + m_style.shadow_offset_x,
+		rc.Height() + blurOffsetY + m_style.shadow_offset_y);
+	CRect src = rect;
+	src.InflateRect(m_style.shadow_radius, m_style.shadow_radius);
+	if (_IsHighlightOverCandidateWindow(src, &gBack))
+		hemispherical_dome = true;
 	// 必须shadow_color都是非完全透明色才做绘制, 全屏状态不绘制阴影保证响应速度
-	if ((!overborder) && (!m_style.hemispherical_dome) && m_style.shadow_radius && (shadowColor & 0xff000000)
+	if ((!hemispherical_dome) && m_style.shadow_radius && (shadowColor & 0xff000000)
 		&& m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN
 		&& m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
 	{
@@ -142,11 +162,6 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 		Gdiplus::Graphics gg(pBitmapDropShadow);
 		gg.SetSmoothingMode(SmoothingModeHighQuality);
 
-		CRect rect(
-			blurOffsetX + m_style.shadow_offset_x,
-			blurOffsetY + m_style.shadow_offset_y,
-			rc.Width() + blurOffsetX + m_style.shadow_offset_x,
-			rc.Height() + blurOffsetY + m_style.shadow_offset_y);
 		if (m_style.shadow_offset_x != 0 || m_style.shadow_offset_y != 0)
 		{
 			GraphicsRoundRectPath path(rect, radius);
@@ -179,7 +194,7 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 		Color back_color = Color::MakeARGB((color >> 24), GetRValue(color), GetGValue(color), GetBValue(color));
 		SolidBrush gBrBack(back_color);
 		GraphicsRoundRectPath* bgPath;
-		if (m_style.hemispherical_dome && m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN && m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
+		if (hemispherical_dome && m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN && m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
 		{
 			if (m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL)
 			{
@@ -286,7 +301,7 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 					}
 				}
 			}
-			bgPath = new GraphicsRoundRectPath(rc, m_style.round_corner_ex - m_style.border / 2, rtl, rtr, rbr, rbl);
+			bgPath = new GraphicsRoundRectPath(rc, m_style.round_corner_ex - m_style.border / 2 - (min(m_style.margin_x, m_style.margin_y)-m_style.hilite_padding), rtl, rtr, rbr, rbl);
 		}
 		else
 			bgPath = new GraphicsRoundRectPath(rc, radius);
@@ -685,8 +700,6 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	GdiplusStartup(&_m_gdiplusToken, &_m_gdiplusStartupInput, NULL);
 	GetWindowRect(&m_inputPos);
 	// windows version is depending on app running mode, if running mode lower then windows 8.1, disable color_font
-	if(!IsWindows8Point1OrGreater())
-		m_style.color_font = false;
 	if (m_style.color_font)
 	{
 		pDWR = new DirectWriteResources();

@@ -60,6 +60,8 @@ private:
 	HBITMAP _CreateAlphaTextBitmap(LPCWSTR inText, HFONT inFont, COLORREF inColor, int cch);
 	HRESULT _TextOutWithFallback_D2D(CDCHandle dc, CRect const rc, std::wstring psz, int cch, COLORREF gdiColor, IDWriteTextFormat* pTextFormat);
 
+	bool _IsHighlightOverCandidateWindow(CRect rc, Gdiplus::Graphics* g);
+
 	weasel::Layout *m_layout;
 	weasel::Context &m_ctx;
 	weasel::Status &m_status;
@@ -75,6 +77,7 @@ private:
 	// for hemispherical dome
 	CRect bgRc;
 	BYTE m_candidateCount;
+	bool hemispherical_dome = false;
 
 	// for multi font_face & font_point
 	GdiplusBlur* m_blurer;

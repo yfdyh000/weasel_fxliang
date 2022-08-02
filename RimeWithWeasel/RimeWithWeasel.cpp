@@ -661,11 +661,6 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	{
 		style.display_tray_icon = !!display_tray_icon;
 	}
-	Bool hemispherical_dome = False;
-	if (RimeConfigGetBool(config, "style/hemispherical_dome", &hemispherical_dome) || initialize)
-	{
-		style.hemispherical_dome = !!hemispherical_dome;
-	}
 	Bool horizontal = False;
 	if (RimeConfigGetBool(config, "style/horizontal", &horizontal) || initialize)
 	{
