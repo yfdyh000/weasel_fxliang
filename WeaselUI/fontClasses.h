@@ -44,21 +44,22 @@ namespace weasel
 		void _ParseFontFace(const std::wstring fontFaceStr, std::wstring& fontFace, DWRITE_FONT_WEIGHT& fontWeight);
 		void _SetFontFallback(IDWriteTextFormat1* pTextFormat, vector<wstring> fontVector);
 	};
-
+	class FontInfo
+	{
+	public:
+		wstring m_FontFace;
+		int m_FontPoint;
+		int m_FontWeight;
+	};
 	class GDIFonts
 	{
 	public:
 		~GDIFonts() {}
-		GDIFonts(wstring labelFontFace, int labelFontPoint, wstring textFontFace, int textFontPoint, wstring commentFontFace, int commentFontPoint);
-		void _ParseFontFace(const std::wstring fontFaceStr, std::wstring& fontFace, LONG& fontWeight);
-		wstring _LabelFontFace;
-		wstring _TextFontFace;
-		wstring _CommentFontFace;
-		LONG _LabelFontWeight;
-		LONG _TextFontWeight;
-		LONG _CommentFontWeight;
-		int _LabelFontPoint;
-		int _TextFontPoint;
-		int _CommentFontPoint;
+		//GDIFonts(wstring labelFontFace, int labelFontPoint, wstring textFontFace, int textFontPoint, wstring commentFontFace, int commentFontPoint);
+		GDIFonts(const UIStyle* style);
+		void _ParseFontFace(const std::wstring fontFaceStr, std::wstring& fontFace, int& fontWeight);
+		FontInfo m_LabelFont;
+		FontInfo m_TextFont;
+		FontInfo m_CommentFont;
 	};
 };

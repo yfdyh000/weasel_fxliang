@@ -169,9 +169,9 @@ bool weasel::FullScreenLayout::AdjustFontPoint(CDCHandle dc, const CRect& workAr
 		{
 			step = - (step >> 1);
 		}
-		pFonts->_LabelFontPoint += step;
-		pFonts->_TextFontPoint += step;
-		pFonts->_CommentFontPoint += step;
+		pFonts->m_LabelFont.m_FontPoint += step;
+		pFonts->m_TextFont.m_FontPoint += step;
+		pFonts->m_CommentFont.m_FontPoint += step;
 		return true;
 	}
 	else if (sz.cx <= workArea.Width() * 31 / 32 && sz.cy <= workArea.Height() * 31 / 32)
@@ -180,9 +180,9 @@ bool weasel::FullScreenLayout::AdjustFontPoint(CDCHandle dc, const CRect& workAr
 		{
 			step = -step >> 1;
 		}
-		pFonts->_LabelFontPoint += step;
-		pFonts->_TextFontPoint += step;
-		pFonts->_CommentFontPoint += step;
+		pFonts->m_LabelFont.m_FontPoint += step;
+		pFonts->m_TextFont.m_FontPoint += step;
+		pFonts->m_CommentFont.m_FontPoint += step;
 		return true;
 	}
 

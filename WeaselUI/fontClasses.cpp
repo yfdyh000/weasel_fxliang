@@ -294,26 +294,27 @@ void DirectWriteResources::_SetFontFallback(IDWriteTextFormat1* pTextFormat, vec
 	SafeRelease(&pFontFallbackBuilder);
 }
 
-GDIFonts::GDIFonts(wstring labelFontFace, int labelFontPoint, wstring textFontFace, int textFontPoint, wstring commentFontFace, int commentFontPoint) 
+
+GDIFonts::GDIFonts(const UIStyle* style) 
 {
 	vector<wstring> fontFaceStrVector;
-	split(fontFaceStrVector, labelFontFace, is_any_of(L","));
-	_ParseFontFace(fontFaceStrVector[0], _LabelFontFace, _LabelFontWeight);
-	_LabelFontPoint		= labelFontPoint;
+	split(fontFaceStrVector, style->label_font_face, is_any_of(L","));
+	_ParseFontFace(fontFaceStrVector[0], m_LabelFont.m_FontFace, m_LabelFont.m_FontWeight);
+	m_LabelFont.m_FontPoint = style->label_font_point;
 	fontFaceStrVector.swap(vector<wstring>());
 
-	split(fontFaceStrVector, textFontFace, is_any_of(L","));
-	_ParseFontFace(fontFaceStrVector[0], _TextFontFace, _TextFontWeight);
-	_TextFontPoint		= textFontPoint;
+	split(fontFaceStrVector, style->font_face, is_any_of(L","));
+	_ParseFontFace(fontFaceStrVector[0], m_TextFont.m_FontFace, m_TextFont.m_FontWeight);
+	m_TextFont.m_FontPoint = style->font_point;
 	fontFaceStrVector.swap(vector<wstring>());
 
-	split(fontFaceStrVector, commentFontFace, is_any_of(L","));
-	_ParseFontFace(fontFaceStrVector[0], _CommentFontFace, _CommentFontWeight);
-	_CommentFontPoint	= commentFontPoint;
+	split(fontFaceStrVector, style->comment_font_face, is_any_of(L","));
+	_ParseFontFace(fontFaceStrVector[0], m_CommentFont.m_FontFace, m_CommentFont.m_FontWeight);
+	m_CommentFont.m_FontPoint = style->comment_font_point;
 	fontFaceStrVector.swap(vector<wstring>());
 }
 
-void GDIFonts::_ParseFontFace(const std::wstring fontFaceStr, std::wstring& fontFace, LONG& fontWeight)
+void GDIFonts::_ParseFontFace(const std::wstring fontFaceStr, std::wstring& fontFace, int& fontWeight)
 {
 	std::vector<std::wstring> parsedStrV; 
 	boost::algorithm::split(parsedStrV, fontFaceStr, boost::algorithm::is_any_of(L":"));

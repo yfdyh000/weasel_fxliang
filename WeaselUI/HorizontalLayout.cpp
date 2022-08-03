@@ -21,12 +21,12 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts )
 
 	CFont labelFont, textFont, commentFont;
 	CFontHandle oldFont;
-	long hlabel = -MulDiv(pFonts->_LabelFontPoint, dc.GetDeviceCaps(LOGPIXELSY), 72);
-	long htext = -MulDiv(pFonts->_TextFontPoint, dc.GetDeviceCaps(LOGPIXELSY), 72);
-	long hcmmt = -MulDiv(pFonts->_CommentFontPoint, dc.GetDeviceCaps(LOGPIXELSY), 72);
-	labelFont.CreateFontW(hlabel, 0, 0, 0, pFonts->_LabelFontWeight, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, pFonts->_LabelFontFace.c_str());
-	textFont.CreateFontW(htext, 0, 0, 0, pFonts->_TextFontWeight, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, pFonts->_TextFontFace.c_str());
-	commentFont.CreateFontW(hcmmt, 0, 0, 0, pFonts->_CommentFontWeight, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, pFonts->_CommentFontFace.c_str());
+	long hlabel = -MulDiv(pFonts->m_LabelFont.m_FontPoint, dc.GetDeviceCaps(LOGPIXELSY), 72);
+	long htext = -MulDiv(pFonts->m_TextFont.m_FontPoint, dc.GetDeviceCaps(LOGPIXELSY), 72);
+	long hcmmt = -MulDiv(pFonts->m_CommentFont.m_FontPoint, dc.GetDeviceCaps(LOGPIXELSY), 72);
+	labelFont.CreateFontW(hlabel, 0, 0, 0, pFonts->m_LabelFont.m_FontWeight, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, pFonts->m_LabelFont.m_FontFace.c_str());
+	textFont.CreateFontW(htext, 0, 0, 0, pFonts->m_TextFont.m_FontWeight, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, pFonts->m_TextFont.m_FontFace.c_str());
+	commentFont.CreateFontW(hcmmt, 0, 0, 0, pFonts->m_CommentFont.m_FontWeight, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, pFonts->m_CommentFont.m_FontFace.c_str());
 
 	/* Preedit */
 	oldFont = dc.SelectFont(textFont);
