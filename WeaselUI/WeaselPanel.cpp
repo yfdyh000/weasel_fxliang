@@ -110,7 +110,8 @@ void WeaselPanel::Refresh()
 	ReleaseDC(dc);
 
 	_ResizeWindow();
-	_RepositionWindow();
+	// avoid reposition twice
+	//_RepositionWindow();
 	RedrawWindow();
 }
 bool WeaselPanel::_IsHighlightOverCandidateWindow(CRect rc, Gdiplus::Graphics* g)
