@@ -703,6 +703,33 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 
 }
 
+static inline BOOL IsWinVersionGreaterThan(DWORD dwMajorVersion, DWORD dwMinorVersion)
+{
+	OSVERSIONINFOEX osvi;
+	DWORDLONG dwlConditionMask = 0;
+
+	//Initialize the OSVERSIONINFOEX structure.
+	ZeroMemory(&osvi, sizeof(osvi));
+	osvi.dwOSVersionInfoSize = sizeof(osvi);
+	osvi.dwMajorVersion = dwMajorVersion;
+	osvi.dwMinorVersion = dwMinorVersion;
+
+	//system major version > dwMajorVersion
+	VER_SET_CONDITION(dwlConditionMask, VER_MAJORVERSION, VER_GREATER);
+	if (VerifyVersionInfo(&osvi, VER_MAJORVERSION, dwlConditionMask))
+		return TRUE;
+
+	//sytem major version = dwMajorVersion && minor version > dwMinorVersion
+	VER_SET_CONDITION(dwlConditionMask, VER_MAJORVERSION, VER_EQUAL);
+	VER_SET_CONDITION(dwlConditionMask, VER_MINORVERSION, VER_GREATER);
+
+	return VerifyVersionInfo(
+		&osvi,
+		VER_MAJORVERSION | VER_MINORVERSION,
+		dwlConditionMask
+	);
+}
+
 LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 	LONG t = ::GetWindowLong(m_hWnd, GWL_EXSTYLE);
@@ -710,6 +737,8 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	::SetWindowLong(m_hWnd, GWL_EXSTYLE, t);
 	GdiplusStartup(&_m_gdiplusToken, &_m_gdiplusStartupInput, NULL);
 	GetWindowRect(&m_inputPos);
+	if (!IsWinVersionGreaterThan(6, 3))
+		m_style.color_font = false;
 	if (m_style.color_font)
 	{
 		// prepare d2d1 resources
