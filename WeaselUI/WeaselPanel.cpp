@@ -140,21 +140,16 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 	if (_IsHighlightOverCandidateWindow(rc, &gBack))
 		hemispherical_dome = true;
 
-	CRect rect(
-		blurOffsetX + m_style.shadow_offset_x,
-		blurOffsetY + m_style.shadow_offset_y,
-		rc.Width() + blurOffsetX + m_style.shadow_offset_x,
-		rc.Height() + blurOffsetY + m_style.shadow_offset_y);
-	//CRect src = rect;
-	//src.InflateRect(m_style.shadow_radius, m_style.shadow_radius);
-	//src.InflateRect(m_style.border/2, m_style.border/2);
-	//if (_IsHighlightOverCandidateWindow(src, &gBack))
-		//hemispherical_dome = true;
 	// 必须shadow_color都是非完全透明色才做绘制, 全屏状态不绘制阴影保证响应速度
 	if ((!hemispherical_dome) && m_style.shadow_radius && (shadowColor & 0xff000000)
 		&& m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN
 		&& m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
 	{
+		CRect rect(
+			blurOffsetX + m_style.shadow_offset_x,
+			blurOffsetY + m_style.shadow_offset_y,
+			rc.Width() + blurOffsetX + m_style.shadow_offset_x,
+			rc.Height() + blurOffsetY + m_style.shadow_offset_y);
 		BYTE r = GetRValue(shadowColor);
 		BYTE g = GetGValue(shadowColor);
 		BYTE b = GetBValue(shadowColor);
@@ -636,7 +631,8 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		int alpha = ((m_style.border_color >> 24) & 255);
 		Color border_color = Color::MakeARGB(alpha, GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
 		Pen gPenBorder(border_color, (Gdiplus::REAL)m_style.border);
-		_HighlightTextBg(memDC, trc, m_style.back_color, m_style.shadow_color, ox * 2, oy * 2, m_style.round_corner_ex);
+		trc.DeflateRect(m_style.border / 2, m_style.border / 2);
+		_HighlightTextBg(memDC, trc, m_style.back_color, m_style.shadow_color, ox * 2, oy * 2, m_style.round_corner_ex - m_style.border / 2);
 		if(m_style.border)
 			gBack.DrawPath(&gPenBorder, &bgPath);
 		gBack.ReleaseHDC(memDC);
@@ -1118,11 +1114,14 @@ GraphicsRoundRectPath::GraphicsRoundRectPath(int left, int top, int width, int h
 }
 GraphicsRoundRectPath::GraphicsRoundRectPath(const CRect rc, int corner)
 {
-	AddRoundRect(rc.left, rc.top, rc.Width(), rc.Height(), corner, corner);
+	if (corner > 0)
+		AddRoundRect(rc.left, rc.top, rc.Width(), rc.Height(), corner, corner);
+	else
+		AddRectangle(Gdiplus::Rect(rc.left, rc.top, rc.Width(), rc.Height()));
 }
 GraphicsRoundRectPath::GraphicsRoundRectPath(const CRect rc, int corner, bool rtl, bool rtr, bool rbr, bool rbl)
 {
-	if (!(rtl || rtr || rbr || rbl))
+	if (!(rtl || rtr || rbr || rbl) || corner <= 0)
 	{
 		Rect& rcp = Rect(rc.left, rc.top, rc.Width()  , rc.Height());
 		AddRectangle(rcp);
@@ -1143,7 +1142,7 @@ GraphicsRoundRectPath::GraphicsRoundRectPath(const CRect rc, int corner, bool rt
 		AddLine(rc.right - cnx * rbr, rc.bottom, rc.left + cnx * rbl, rc.bottom);
 
 		AddArc(rc.left, rc.bottom - elHei * rbl, elWid * rbl, elHei * rbl, 90, 90);
-		AddLine(rc.left, rc.top + cny * rtl, rc.left, rc.bottom - cny * rbl);
+		AddLine(rc.left, rc.top + cny * rtl - 1, rc.left, rc.bottom - cny * rbl);
 	}
 }
 
@@ -1165,7 +1164,7 @@ void GraphicsRoundRectPath::AddRoundRect(int left, int top, int width, int heigh
 		AddLine(left + width - cnx, top + height, left + cnx, top + height);
 
 		AddArc(left, top + height - elHei, elWid, elHei, 90, 90);
-		AddLine(left, top + cny, left, top + height - cny);
+		AddLine(left, top + cny-1, left, top + height - cny);
 	}
 	else
 	{
