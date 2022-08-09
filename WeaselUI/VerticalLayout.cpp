@@ -192,22 +192,17 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 		/* Label */
 		std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
 		GetTextSizeDW(label, label.length(), pDWR->pLabelTextFormat, pDWR->pDWFactory, &size);
-		_candidateLabelRects[i].SetRect(w, height, w + size.cx, height + max(size.cy, h));
+		_candidateLabelRects[i].SetRect(w, height, w + size.cx, height + size.cy);
 		w += size.cx + space, h = max(h, size.cy);
 		candidate_width += size.cx + space;
 
 		/* Text */
 		const std::wstring& text = candidates.at(i).str;
 		GetTextSizeDW(text, text.length(), pDWR->pTextFormat, pDWR->pDWFactory, &size);
-		_candidateTextRects[i].SetRect(w, height, w + size.cx, height + max(size.cy, h));
+		_candidateTextRects[i].SetRect(w, height, w + size.cx, height + size.cy);
 		w += size.cx, h = max(h, size.cy);
 		candidate_width += size.cx;
 		max_candidate_width = max(max_candidate_width, candidate_width);
-		if (_candidateLabelRects[i].Height() < h)
-		{
-			_candidateLabelRects[i].top = _candidateTextRects[i].top;
-			_candidateLabelRects[i].bottom = _candidateTextRects[i].bottom;
-		}
 
 		/* Comment */
 		if (!comments.at(i).str.empty())
@@ -217,14 +212,14 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 
 			const std::wstring& comment = comments.at(i).str;
 			GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat, pDWR->pDWFactory, &size);
-			_candidateCommentRects[i].SetRect(0, height, size.cx, height + max(size.cy, h));
+			_candidateCommentRects[i].SetRect(0, height, size.cx, height + size.cy);
 			w += size.cx, h = max(h, size.cy);
 			comment_width += size.cx;
 			max_comment_width = max(max_comment_width, comment_width);
 		}
 		//w += margin;
 		//width = max(width, w);
-#if 0
+		
 		int ol = 0, ot = 0, oc = 0;
 		if (_style.align_type == UIStyle::ALIGN_CENTER)
 		{
@@ -242,7 +237,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 		_candidateLabelRects[i].OffsetRect(0, ol);
 		_candidateTextRects[i].OffsetRect(0, ot);
 		_candidateCommentRects[i].OffsetRect(0, oc);
-#endif
+
 		height += h;
 	}
 

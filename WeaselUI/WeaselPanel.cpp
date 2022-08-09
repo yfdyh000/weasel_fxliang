@@ -291,7 +291,7 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 					}
 				}
 			}
-			bgPath = new GraphicsRoundRectPath(rc, m_style.round_corner_ex - m_style.border / 2 - (min(m_style.margin_x, m_style.margin_y) - m_style.hilite_padding), rtl, rtr, rbr, rbl);
+			bgPath = new GraphicsRoundRectPath(rc, m_style.round_corner_ex - (min(m_style.margin_x, m_style.margin_y) - m_style.hilite_padding), rtl, rtr, rbr, rbl);
 		}
 		else
 			bgPath = new GraphicsRoundRectPath(rc, radius);
@@ -631,8 +631,8 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		int alpha = ((m_style.border_color >> 24) & 255);
 		Color border_color = Color::MakeARGB(alpha, GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
 		Pen gPenBorder(border_color, (Gdiplus::REAL)m_style.border);
-		trc.DeflateRect(m_style.border / 2, m_style.border / 2);
-		_HighlightTextBg(memDC, trc, m_style.back_color, m_style.shadow_color, ox * 2, oy * 2, m_style.round_corner_ex - m_style.border / 2);
+		trc.InflateRect(m_style.border / 2, m_style.border / 2);
+		_HighlightTextBg(memDC, trc, m_style.back_color, m_style.shadow_color, ox * 2, oy * 2, m_style.round_corner_ex + m_style.border / 2);
 		if(m_style.border)
 			gBack.DrawPath(&gPenBorder, &bgPath);
 		gBack.ReleaseHDC(memDC);

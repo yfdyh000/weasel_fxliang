@@ -56,13 +56,6 @@ HRESULT DirectWriteResources::InitResources(wstring label_font_face, int label_f
 	wstring comment_font_face, int comment_font_point, UIStyle::LayoutAlignType alignType) 
 {
 	// prepare d2d1 resources
-	DWRITE_PARAGRAPH_ALIGNMENT paragraphAliment;
-	if (alignType == UIStyle::ALIGN_BOTTOM)
-		paragraphAliment = DWRITE_PARAGRAPH_ALIGNMENT_FAR;
-	else if(alignType == UIStyle::ALIGN_CENTER)
-		paragraphAliment = DWRITE_PARAGRAPH_ALIGNMENT_CENTER;
-	else
-		paragraphAliment = DWRITE_PARAGRAPH_ALIGNMENT_NEAR;
 
 	HRESULT hResult = S_OK;
 	vector<wstring> fontFaceStrVector;
@@ -94,7 +87,7 @@ HRESULT DirectWriteResources::InitResources(wstring label_font_face, int label_f
 	if( pLabelTextFormat != NULL)
 	{
 		pLabelTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
-		pLabelTextFormat->SetParagraphAlignment(paragraphAliment);
+		pLabelTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 		pLabelTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 		if (fontFaceStrVector.size() > 1)
 			_SetFontFallback(pLabelTextFormat, fontFaceStrVector);
@@ -111,7 +104,7 @@ HRESULT DirectWriteResources::InitResources(wstring label_font_face, int label_f
 	if( pCommentTextFormat != NULL)
 	{
 		pCommentTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
-		pCommentTextFormat->SetParagraphAlignment(paragraphAliment);
+		pCommentTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 		pCommentTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 		if (fontFaceStrVector.size() > 1)
 			_SetFontFallback(pCommentTextFormat, fontFaceStrVector);
@@ -124,13 +117,6 @@ HRESULT DirectWriteResources::InitResources(const UIStyle style)
 {
 	// prepare d2d1 resources
 	HRESULT hResult = S_OK;
-	DWRITE_PARAGRAPH_ALIGNMENT paragraphAliment;
-	if (style.align_type == UIStyle::ALIGN_BOTTOM)
-		paragraphAliment = DWRITE_PARAGRAPH_ALIGNMENT_FAR;
-	else if(style.align_type == UIStyle::ALIGN_CENTER)
-		paragraphAliment = DWRITE_PARAGRAPH_ALIGNMENT_CENTER;
-	else
-		paragraphAliment = DWRITE_PARAGRAPH_ALIGNMENT_NEAR;
 
 	vector<wstring> fontFaceStrVector;
 	// text font text format set up
@@ -162,7 +148,7 @@ HRESULT DirectWriteResources::InitResources(const UIStyle style)
 	if( pLabelTextFormat != NULL)
 	{
 		pLabelTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
-		pLabelTextFormat->SetParagraphAlignment(paragraphAliment);
+		pLabelTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 		pLabelTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 		if (fontFaceStrVector.size() > 1)
 			_SetFontFallback(pLabelTextFormat, fontFaceStrVector);
@@ -179,7 +165,7 @@ HRESULT DirectWriteResources::InitResources(const UIStyle style)
 	if( pCommentTextFormat != NULL)
 	{
 		pCommentTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
-		pCommentTextFormat->SetParagraphAlignment(paragraphAliment);
+		pCommentTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 		pCommentTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 		if (fontFaceStrVector.size() > 1)
 			_SetFontFallback(pCommentTextFormat, fontFaceStrVector);
