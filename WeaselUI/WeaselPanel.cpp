@@ -356,7 +356,6 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				std::wstring str_before(t.substr(0, range.start));
 				CRect rc_before(x, rc.top, rc.left + selStart.cx, rc.bottom);
 				dc.SetTextColor(m_style.text_color);
-				dc.SetBkColor(m_style.back_color);
 				if(m_style.color_font)
 					_TextOut(dc, x, rc.top, rc_before, str_before.c_str(), str_before.length(), pDWR->pTextFormat, NULL);
 				else
@@ -372,7 +371,6 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				OffsetRect(rc_hi, -m_style.hilite_padding, 0);
 				_HighlightTextEx(dc, rc_hi, m_style.hilited_back_color, m_style.hilited_shadow_color, offsetX * 2, offsetY * 2, m_style.round_corner);
 				dc.SetTextColor(m_style.hilited_text_color);
-				dc.SetBkColor(m_style.hilited_back_color);
 				if(m_style.color_font) 
 					_TextOut(dc, x, rc.top, rct, str_highlight.c_str(), str_highlight.length(), pDWR->pTextFormat, NULL);
 				else
@@ -386,6 +384,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				// zzz[yyy]xxx
 				x += m_style.hilite_spacing;
 				std::wstring str_after(t.substr(range.end));
+				dc.SetTextColor(m_style.text_color);
 				CRect rc_after(x, rc.top, rc.right, rc.bottom);
 				if(m_style.color_font) 
 					_TextOut(dc, x, rc.top, rc_after, str_after.c_str(), str_after.length(), pDWR->pTextFormat, NULL);
@@ -397,6 +396,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 		else
 		{
 			CRect rcText(rc.left, rc.top, rc.right, rc.bottom);
+			dc.SetTextColor(m_style.text_color);
 			if (m_style.color_font)
 				_TextOut(dc, rc.left, rc.top, rcText, t.c_str(), t.length(), pDWR->pTextFormat, NULL);
 			else
