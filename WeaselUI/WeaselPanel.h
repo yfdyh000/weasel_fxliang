@@ -21,7 +21,8 @@ typedef enum _backType
 	FIRST_CAND,
 	MID_CAND,
 	LAST_CAND,
-	ONLY_CAND
+	ONLY_CAND,
+	NOT_CAND	// background
 }BackType;
 
 class WeaselPanel : 
@@ -55,9 +56,7 @@ private:
 	bool _DrawPreedit(weasel::Text const& text, CDCHandle dc, CRect const& rc);
 	bool _DrawCandidates(CDCHandle dc);
 	void _HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLORREF shadowColor, int blurOffsetX, int blurOffsetY, int radius, BackType type );
-	void _HighlightTextBg(CDCHandle dc, CRect rc, COLORREF color, COLORREF shadowColor, int blurOffsetX, int blurOffsetY, int radius );
 	void _TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch, IDWriteTextFormat* pTextFormat, FontInfo* pFontInfo);
-	HBITMAP _CreateAlphaTextBitmap(LPCWSTR inText, HFONT inFont, COLORREF inColor, int cch);
 	HRESULT _TextOutWithFallback_D2D(CDCHandle dc, CRect const rc, std::wstring psz, int cch, COLORREF gdiColor, IDWriteTextFormat* pTextFormat);
 
 	bool _IsHighlightOverCandidateWindow(CRect rc, Gdiplus::Graphics* g);
@@ -91,7 +90,7 @@ public:
 	GraphicsRoundRectPath();
 	GraphicsRoundRectPath(int left, int top, int width, int height, int cornerx, int cornery);
 	GraphicsRoundRectPath(const CRect rc, int corner);
-	GraphicsRoundRectPath(const CRect rc, int corner, bool rtl, bool rtr, bool rbr, bool rbl);
+	GraphicsRoundRectPath(const CRect rc, int corner, bool roundTopLeft, bool roundTopRight, bool roundBottomRight, bool roundBottomLeft);
 
 public:
 	void AddRoundRect(int left, int top, int width, int height, int cornerx, int cornery);
