@@ -765,15 +765,15 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 		}
 		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_candidate_shadow_color").c_str(), &style.hilited_candidate_shadow_color))
 		{
-			style.hilited_candidate_shadow_color = 0x20000000;
+			style.hilited_candidate_shadow_color = 0x00000000;
 		}
 		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_shadow_color").c_str(), &style.hilited_shadow_color))
 		{
-			style.hilited_shadow_color = 0x20000000;
+			style.hilited_shadow_color = 0x00000000;
 		}
 		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_shadow_color").c_str(), &style.candidate_shadow_color))
 		{
-			style.candidate_shadow_color = 0x20000000;
+			style.candidate_shadow_color = 0x00000000;
 		}
 		if (!RimeConfigGetColor32b(config, (prefix + "/label_color").c_str(), &style.label_text_color))
 		{

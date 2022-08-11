@@ -59,16 +59,16 @@ void WeaselPanel::_ResizeWindow()
 	int offsetY = 0;
 	if(m_style.shadow_color & 0xff000000 && m_style.shadow_radius != 0)
 	{
-		offsetX = abs(m_style.shadow_offset_x) + m_style.shadow_radius;
-		offsetY = abs(m_style.shadow_offset_y) + m_style.shadow_radius;
+		offsetX = abs(m_style.shadow_offset_x) + m_style.shadow_radius*2;
+		offsetY = abs(m_style.shadow_offset_y) + m_style.shadow_radius*2;
 		if((!m_style.shadow_offset_x) && (!m_style.shadow_offset_y))
 		{
 			offsetX *= 2;
 			offsetY *= 2;
 		}
 	}
-	size.cx += offsetX*2 + m_style.border*2;
-	size.cy += offsetY*2 + m_style.border*2;
+	size.cx += offsetX*2 + m_style.border*2 + 6;
+	size.cy += offsetY*2 + m_style.border*2 + 6;
 	SetWindowPos(NULL, 0, 0, size.cx, size.cy, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
 	ReleaseDC(dc);
 }
@@ -293,7 +293,7 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 					}
 				}
 			}
-			bgPath = new GraphicsRoundRectPath(rc, m_style.round_corner_ex - (min(m_style.margin_x, m_style.margin_y) - m_style.hilite_padding), rtl, rtr, rbr, rbl);
+			bgPath = new GraphicsRoundRectPath(rc, m_style.round_corner_ex - (min(m_style.margin_x, m_style.margin_y) - m_style.hilite_padding) - m_style.border / 2, rtl, rtr, rbr, rbl);
 		}
 		else
 			bgPath = new GraphicsRoundRectPath(rc, radius);
@@ -317,16 +317,16 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 		int offsetY = 0;
 		if (m_style.shadow_color & 0xff000000 && m_style.shadow_radius != 0)
 		{
-			offsetX = abs(m_style.shadow_offset_x) + m_style.shadow_radius;
-			offsetY = abs(m_style.shadow_offset_y) + m_style.shadow_radius;
+			offsetX = abs(m_style.shadow_offset_x) + m_style.shadow_radius*2;
+			offsetY = abs(m_style.shadow_offset_y) + m_style.shadow_radius*2;
 			if ((!m_style.shadow_offset_x) && (!m_style.shadow_offset_y))
 			{
 				offsetX *= 2;
 				offsetY *= 2;
 			}
 		}
-		offsetX += m_style.border;
-		offsetY += m_style.border;
+		offsetX += m_style.border + 3;
+		offsetY += m_style.border + 3;
 
 		if (range.start < range.end)
 		{
@@ -418,19 +418,19 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 	int offsetY = 0;
 	if(m_style.shadow_color & 0xff000000 && m_style.shadow_radius != 0)
 	{
-		offsetX = abs(m_style.shadow_offset_x) + m_style.shadow_radius;
-		offsetY = abs(m_style.shadow_offset_y) + m_style.shadow_radius;
+		offsetX = abs(m_style.shadow_offset_x) + m_style.shadow_radius*2;
+		offsetY = abs(m_style.shadow_offset_y) + m_style.shadow_radius*2;
 		if((!m_style.shadow_offset_x) && (!m_style.shadow_offset_y))
 		{
 			offsetX *= 2;
 			offsetY *= 2;
 		}
 	}
-	offsetX += m_style.border;
-	offsetY += m_style.border;
+	offsetX += m_style.border + 3;
+	offsetY += m_style.border + 3;
 
-	int bkx = abs((m_style.margin_x - m_style.hilite_padding)) + max(abs(m_style.shadow_offset_x), abs(m_style.shadow_offset_y));
-	int bky = abs((m_style.margin_y - m_style.hilite_padding)) + max(abs(m_style.shadow_offset_x), abs(m_style.shadow_offset_y));
+	int bkx = 2 * offsetX;
+	int bky = 2 * offsetY;
 
 	BackType bkType = FIRST_CAND;
 	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
@@ -535,16 +535,16 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	int offsetY = 0;
 	if(m_style.shadow_color & 0xff000000 && m_style.shadow_radius != 0)
 	{
-		offsetX = abs(m_style.shadow_offset_x) + m_style.shadow_radius;
-		offsetY = abs(m_style.shadow_offset_y) + m_style.shadow_radius;
+		offsetX = abs(m_style.shadow_offset_x) + m_style.shadow_radius*2;
+		offsetY = abs(m_style.shadow_offset_y) + m_style.shadow_radius*2;
 		if((!m_style.shadow_offset_x) && (!m_style.shadow_offset_y))
 		{
 			offsetX *= 2;
 			offsetY *= 2;
 		}
 	}
-	offsetX += m_style.border;
-	offsetY += m_style.border;
+	offsetX += m_style.border + 3;
+	offsetY += m_style.border + 3;
 	
 	// background start
 	/* inline_preedit and candidate size 1 and preedit_type preview, and hide_candidates_when_single is set */
@@ -697,7 +697,7 @@ void WeaselPanel::CloseDialog(int nVal)
 
 void WeaselPanel::MoveTo(RECT const& rc)
 {
-	const int distance = 6;
+	const int distance = 3;
 	m_inputPos = rc;
 	m_inputPos.OffsetRect(0, distance);
 	_RepositionWindow();
@@ -743,8 +743,8 @@ void WeaselPanel::_RepositionWindow()
 	{
 		if(m_style.shadow_color & 0xff000000 && m_style.shadow_radius != 0)
 		{
-			x -= abs(m_style.shadow_offset_x) + m_style.shadow_radius;
-			y -= abs(m_style.shadow_offset_y) + m_style.shadow_radius;
+			x -= abs(m_style.shadow_offset_x) + m_style.shadow_radius*2 + 3;
+			y -= abs(m_style.shadow_offset_y) + m_style.shadow_radius*2 + 3;
 		}
 	}
 	else 
@@ -755,12 +755,12 @@ void WeaselPanel::_RepositionWindow()
 		{
 			if (m_style.shadow_offset_x == 0 && m_style.shadow_offset_y == 0)
 			{
-				offsetX = offsetY = m_style.shadow_radius;
+				offsetX = offsetY = m_style.shadow_radius*2;
 			}
 			else
 			{
-				offsetX = (m_style.shadow_offset_x < 0) ? m_style.shadow_radius : (m_style.shadow_offset_x + m_style.shadow_radius);
-				offsetY = (m_style.shadow_offset_y < 0) ? m_style.shadow_radius : (m_style.shadow_offset_y + m_style.shadow_radius);
+				offsetX = (m_style.shadow_offset_x < 0) ? m_style.shadow_radius*2 : (m_style.shadow_offset_x + m_style.shadow_radius*2);
+				offsetY = (m_style.shadow_offset_y < 0) ? m_style.shadow_radius*2 : (m_style.shadow_offset_y + m_style.shadow_radius*2);
 			}
 			x -= offsetX;
 			y -= offsetY;
