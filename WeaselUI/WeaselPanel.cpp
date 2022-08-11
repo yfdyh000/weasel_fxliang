@@ -743,8 +743,25 @@ void WeaselPanel::_RepositionWindow()
 	{
 		if(m_style.shadow_color & 0xff000000 && m_style.shadow_radius != 0)
 		{
-			x -= abs(m_style.shadow_offset_x) + m_style.shadow_radius*2 + 3;
-			y -= abs(m_style.shadow_offset_y) + m_style.shadow_radius*2 + 3;
+			int offsetX = 0;
+			int offsetY = 0;
+			offsetX = abs(m_style.shadow_offset_x) + m_style.shadow_radius*2;
+			offsetY = abs(m_style.shadow_offset_y) + m_style.shadow_radius*2;
+			if((!m_style.shadow_offset_x) && (!m_style.shadow_offset_y))
+			{
+				offsetX *= 2;
+				offsetY *= 2;
+			}
+			offsetX += m_style.border + 3;
+			offsetY += m_style.border + 3;
+
+			x -= offsetX;
+			y -= offsetY;
+		}
+		else
+		{
+			x -= 3;
+			y -= 3;
 		}
 	}
 	else 
