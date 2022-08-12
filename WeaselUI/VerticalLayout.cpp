@@ -273,7 +273,4 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 		width - _style.margin_x,
 		_candidateTextRects[id].bottom);
 
-	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
-	{
-	}
 }
