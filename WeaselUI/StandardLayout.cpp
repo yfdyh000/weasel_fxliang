@@ -64,22 +64,46 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, int nCount, 
 {
 	D2D1_SIZE_F sz;
 	HRESULT hr = S_OK;
-	IDWriteTextLayout* pTextLayout = NULL;
-
+	IDWriteTextLayout1* pTextLayout = NULL;
+	
 	// 创建文本布局 
 	if(pTextFormat != NULL)
-		hr = pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, 0.0f, 0.0f, &pTextLayout);
+		hr = pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, 0.0f, 0.0f, reinterpret_cast<IDWriteTextLayout**>(&pTextLayout));
 	if (SUCCEEDED(hr))
 	{
+		//pTextLayout->SetPairKerning(True, { 0, (UINT32)text.length() });
 		// 获取文本尺寸  
 		DWRITE_TEXT_METRICS textMetrics;
 		hr = pTextLayout->GetMetrics(&textMetrics);
-		sz = D2D1::SizeF(ceil(textMetrics.widthIncludingTrailingWhitespace), ceil(textMetrics.height));
+		sz = D2D1::SizeF(ceil(textMetrics.width), ceil(textMetrics.height));
 		lpSize->cx = (int)sz.width;
 		lpSize->cy = (int)sz.height;
+#if 1
+		DWRITE_OVERHANG_METRICS overhangMetrics;
+		hr = pTextLayout->GetOverhangMetrics(&overhangMetrics);
+		if (overhangMetrics.left > 0)
+			lpSize->cx += overhangMetrics.left;
+		if (overhangMetrics.right > 0)
+			lpSize->cx += overhangMetrics.right / 2;
+		/*
+		float leadings;// = (float*)malloc(text.length() * sizeof * leadings);
+		float trailings;//= (float*)malloc(text.length() * sizeof * trailings);
+		float minimumAdvWidth;
+		for (UINT32 i = 0; i < text.length(); i++)
+		{
+			hr = pTextLayout->GetCharacterSpacing(i, &leadings, &trailings, &minimumAdvWidth);
+			lpSize->cx -= trailings + leadings;
+		}
+		*/
+		//if (overhangMetrics.top > 0)
+		//	lpSize->cy += overhangMetrics.top;
+		//if (overhangMetrics.bottom > 0)
+		//	lpSize->cy += overhangMetrics.bottom;
+#endif
+#if 0
 		if (pTextFormat->GetFontWeight() > DWRITE_FONT_WEIGHT_NORMAL)
 		{
-			hr = pDWFactory->CreateTextLayout(L"A", 1, pTextFormat, 0, 0, &pTextLayout);
+			hr = pDWFactory->CreateTextLayout(L"A", 1, pTextFormat, 0, 0, reinterpret_cast<IDWriteTextLayout**>(&pTextLayout));
 			if (SUCCEEDED(hr))
 			{
 				hr = pTextLayout->GetMetrics(&textMetrics);
@@ -88,6 +112,7 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, int nCount, 
 				//lpSize->cy += sz.height;
 			}
 		}
+#endif
 	}
 	SafeRelease(&pTextLayout);
 }
