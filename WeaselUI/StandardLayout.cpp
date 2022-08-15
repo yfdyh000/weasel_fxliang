@@ -67,7 +67,7 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, int nCount, 
 
 	// 创建文本布局 
 	if (pTextFormat != NULL)
-		hr = pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, 3840.0f, 2160.0f, &pTextLayout);
+		hr = pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, 0, 0, &pTextLayout);
 	if (SUCCEEDED(hr))
 	{
 		// 获取文本尺寸  
@@ -89,8 +89,7 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, int nCount, 
 		if (overhangMetrics.bottom > 0)
 			lpSize->cy += overhangMetrics.bottom + 1;
 	}
-	if (pTextLayout != NULL)
-		pTextLayout->Release();
+	SafeRelease(&pTextLayout);
 }
 
 CSize StandardLayout::GetPreeditSize(CDCHandle dc) const
