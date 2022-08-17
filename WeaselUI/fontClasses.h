@@ -41,7 +41,7 @@ namespace weasel
 		IDWriteTextFormat1* pLabelTextFormat;
 		IDWriteTextFormat1* pCommentTextFormat;
 	private:
-		void _ParseFontFace(const std::wstring fontFaceStr, std::wstring& fontFace, DWRITE_FONT_WEIGHT& fontWeight);
+		void _ParseFontFace(const std::wstring fontFaceStr, std::wstring& fontFace, DWRITE_FONT_WEIGHT& fontWeight, DWRITE_FONT_STYLE& fontStyle);
 		void _SetFontFallback(IDWriteTextFormat1* pTextFormat, vector<wstring> fontVector);
 	};
 	class FontInfo
