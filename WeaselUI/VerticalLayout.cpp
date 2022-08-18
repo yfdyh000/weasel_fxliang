@@ -136,26 +136,24 @@ void VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts)
 
 	/* Highlighted Candidate */
 	int id = _context.cinfo.highlighted;
-	int hlTop = _candidateTextRects[id].top;
-	int hlBot = _candidateTextRects[id].bottom;
-
-	if (_candidateLabelRects[id].Height() > 0)
+	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
 	{
-		hlTop = min(_candidateLabelRects[id].top, hlTop);
-		hlBot = max(_candidateLabelRects[id].bottom, _candidateTextRects[id].bottom);
-	}
-	if (_candidateCommentRects[id].Height() > 0)
-	{
-		hlTop = min(hlTop, _candidateCommentRects[id].top);
-		hlBot = max(hlBot, _candidateCommentRects[id].bottom);
-	}
-	_highlightRect.SetRect(
-		_style.margin_x,
-		hlTop,
-		width - _style.margin_x,
-		hlBot
-		);
+		int hlTop = _candidateTextRects[i].top;
+		int hlBot = _candidateTextRects[i].bottom;
 
+		if (_candidateLabelRects[i].Height() > 0)
+		{
+			hlTop = min(_candidateLabelRects[i].top, hlTop);
+			hlBot = max(_candidateLabelRects[i].bottom, _candidateTextRects[i].bottom);
+		}
+		if (_candidateCommentRects[i].Height() > 0)
+		{
+			hlTop = min(hlTop, _candidateCommentRects[i].top);
+			hlBot = max(hlBot, _candidateCommentRects[i].bottom);
+		}
+		_candidateRects[i].SetRect(_style.margin_x, hlTop, width - _style.margin_x, hlBot);
+	}
+	_highlightRect = _candidateRects[id];
 
 	labelFont.DeleteObject();
 	textFont.DeleteObject();
@@ -282,24 +280,22 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 
 	/* Highlighted Candidate */
 	int id = _context.cinfo.highlighted;
-	int hlTop = _candidateTextRects[id].top;
-	int hlBot = _candidateTextRects[id].bottom;
-
-	if (_candidateLabelRects[id].Height() > 0)
+	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
 	{
-		hlTop = min(_candidateLabelRects[id].top, hlTop);
-		hlBot = max(_candidateLabelRects[id].bottom, _candidateTextRects[id].bottom);
-	}
-	if (_candidateCommentRects[id].Height() > 0)
-	{
-		hlTop = min(hlTop, _candidateCommentRects[id].top);
-		hlBot = max(hlBot, _candidateCommentRects[id].bottom);
-	}
-	_highlightRect.SetRect(
-		_style.margin_x,
-		hlTop,
-		width - _style.margin_x,
-		hlBot
-		);
+		int hlTop = _candidateTextRects[i].top;
+		int hlBot = _candidateTextRects[i].bottom;
 
+		if (_candidateLabelRects[i].Height() > 0)
+		{
+			hlTop = min(_candidateLabelRects[i].top, hlTop);
+			hlBot = max(_candidateLabelRects[i].bottom, _candidateTextRects[i].bottom);
+		}
+		if (_candidateCommentRects[i].Height() > 0)
+		{
+			hlTop = min(hlTop, _candidateCommentRects[i].top);
+			hlBot = max(hlBot, _candidateCommentRects[i].bottom);
+		}
+		_candidateRects[i].SetRect(_style.margin_x, hlTop, width - _style.margin_x, hlBot);
+	}
+	_highlightRect = _candidateRects[id];
 }

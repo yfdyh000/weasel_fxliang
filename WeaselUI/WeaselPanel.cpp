@@ -442,33 +442,16 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 		else if (i == candidates.size() - 1)
 			bkType = LAST_CAND;
 		CRect rect;
+		rect = OffsetRect(m_layout->GetCandidateRect(i), offsetX, offsetY);
+		rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 		if (i == m_ctx.cinfo.highlighted)
 		{
-			rect = OffsetRect(m_layout->GetHighlightRect(), offsetX, offsetY);
-			rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 			_HighlightTextEx(dc, rect, m_style.hilited_candidate_back_color, m_style.hilited_candidate_shadow_color, bkx, bky, m_style.round_corner, bkType);
 			dc.SetTextColor(m_style.hilited_label_text_color);
 		}
 		else
 		{
-			CRect candidateBackRect;
-			if(m_style.layout_type == m_style.LAYOUT_HORIZONTAL_FULLSCREEN || m_style.layout_type == m_style.LAYOUT_HORIZONTAL)
-			{
-				candidateBackRect.left = m_layout->GetCandidateLabelRect(i).left;
-				candidateBackRect.right = m_layout->GetCandidateCommentRect(i).right;
-				candidateBackRect.top = m_layout->GetHighlightRect().top;
-				candidateBackRect.bottom = m_layout->GetHighlightRect().bottom;
-			}
-			else
-			{
-				candidateBackRect.left = m_layout->GetHighlightRect().left;
-				candidateBackRect.right = m_layout->GetHighlightRect().right;
-				candidateBackRect.top =m_layout->GetCandidateTextRect(i).top;
-				candidateBackRect.bottom = m_layout->GetCandidateTextRect(i).bottom;
-			}
-			candidateBackRect = OffsetRect(candidateBackRect, offsetX, offsetY);
-			candidateBackRect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
-			_HighlightTextEx(dc, candidateBackRect, m_style.candidate_back_color, m_style.candidate_shadow_color, bkx, bky, m_style.round_corner, bkType);
+			_HighlightTextEx(dc, rect, m_style.candidate_back_color, m_style.candidate_shadow_color, bkx, bky, m_style.round_corner, bkType);
 			dc.SetTextColor(m_style.label_text_color);
 		}
 
@@ -1012,9 +995,7 @@ HRESULT WeaselPanel::_TextOutWithFallback_D2D (CDCHandle dc, CRect const rc, wst
 		DWRITE_OVERHANG_METRICS omt;
 		pTextLayout->GetOverhangMetrics(&omt);
 		if (omt.left > 0)
-			offsetx += omt.left + 1;
-		if (omt.top > 0)
-			offsety += omt.top + 1;
+			offsetx += omt.left;
 		pDWR->pRenderTarget->BindDC(dc, &rc);
 		pDWR->pRenderTarget->BeginDraw();
 		if (pTextLayout != NULL)

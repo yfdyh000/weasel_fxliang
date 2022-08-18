@@ -26,6 +26,7 @@ namespace weasel
 		virtual CRect GetCandidateLabelRect(int id) const { return _candidateLabelRects[id]; }
 		virtual CRect GetCandidateTextRect(int id) const { return _candidateTextRects[id]; }
 		virtual CRect GetCandidateCommentRect(int id) const { return _candidateCommentRects[id]; }
+		virtual CRect GetCandidateRect(int id) const { return _candidateRects[id]; }
 		virtual CRect GetStatusIconRect() const { return _statusIconRect; }
 		virtual std::wstring GetLabelText(const std::vector<Text> &labels, int id, const wchar_t *format) const;
 		virtual bool IsInlinePreedit() const;
@@ -43,6 +44,7 @@ namespace weasel
 
 		CSize _contentSize;
 		CRect _preeditRect, _auxiliaryRect, _highlightRect;
+		CRect _candidateRects[MAX_CANDIDATES_COUNT];
 		CRect _candidateLabelRects[MAX_CANDIDATES_COUNT];
 		CRect _candidateTextRects[MAX_CANDIDATES_COUNT];
 		CRect _candidateCommentRects[MAX_CANDIDATES_COUNT];

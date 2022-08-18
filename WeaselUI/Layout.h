@@ -21,6 +21,7 @@ namespace weasel
 		virtual CRect GetHighlightRect() const = 0;
 		virtual CRect GetCandidateLabelRect(int id) const = 0;
 		virtual CRect GetCandidateTextRect(int id) const = 0;
+		virtual CRect GetCandidateRect(int id) const = 0;
 		virtual CRect GetCandidateCommentRect(int id) const = 0;
 		virtual CRect GetStatusIconRect() const = 0;
 

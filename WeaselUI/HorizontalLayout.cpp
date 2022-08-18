@@ -90,13 +90,13 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts )
 		if (_style.align_type == UIStyle::ALIGN_CENTER)
 		{
 			ol = (h - _candidateLabelRects[i].Height()) / 2;
-			//ot = (h - _candidateTextRects[i].Height()) / 2;
+			ot = (h - _candidateTextRects[i].Height()) / 2;
 			oc = (h - _candidateCommentRects[i].Height()) / 2;
 		}
 		else if (_style.align_type == UIStyle::ALIGN_BOTTOM)
 		{
 			ol = (h - _candidateLabelRects[i].Height()) ;
-			//ot = (h - _candidateTextRects[i].Height()) ;
+			ot = (h - _candidateTextRects[i].Height()) ;
 			oc = (h - _candidateCommentRects[i].Height()) ;
 
 		}
@@ -109,11 +109,24 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts )
 
 	/* Highlighted Candidate */
 	int id = _context.cinfo.highlighted;
-	_highlightRect.SetRect(
-		_candidateLabelRects[id].left,
-		height,
-		_candidateCommentRects[id].right,
-		height + h);
+	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
+	{
+		int hlTop = _candidateTextRects[i].top;
+		int hlBot = _candidateTextRects[i].bottom;
+
+		if (_candidateLabelRects[i].Height() > 0)
+		{
+			hlTop = min(_candidateLabelRects[i].top, hlTop);
+			hlBot = max(_candidateLabelRects[i].bottom, _candidateTextRects[i].bottom);
+		}
+		if (_candidateCommentRects[i].Height() > 0)
+		{
+			hlTop = min(hlTop, _candidateCommentRects[i].top);
+			hlBot = max(hlBot, _candidateCommentRects[i].bottom);
+		}
+		_candidateRects[i].SetRect(_candidateLabelRects[i].left, hlTop, _candidateCommentRects[i].right, hlBot);
+	}
+	_highlightRect = _candidateRects[id];
 
 	width = max(width, w);
 	height += h;
@@ -133,6 +146,8 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts )
 	}
 	UpdateStatusIconLayout(&width, &height);
 	_contentSize.SetSize(width, height);
+	if (candidates.size() == 1)
+		_highlightRect.right = width - _style.margin_x;
 	labelFont.DeleteObject();
 	textFont.DeleteObject();
 	commentFont.DeleteObject();
@@ -209,13 +224,13 @@ void weasel::HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 		if (_style.align_type == UIStyle::ALIGN_CENTER)
 		{
 			ol = (h - _candidateLabelRects[i].Height()) / 2;
-			//ot = (h - _candidateTextRects[i].Height()) / 2;
+			ot = (h - _candidateTextRects[i].Height()) / 2;
 			oc = (h - _candidateCommentRects[i].Height()) / 2;
 		}
 		else if (_style.align_type == UIStyle::ALIGN_BOTTOM)
 		{
 			ol = (h - _candidateLabelRects[i].Height()) ;
-			//ot = (h - _candidateTextRects[i].Height()) ;
+			ot = (h - _candidateTextRects[i].Height()) ;
 			oc = (h - _candidateCommentRects[i].Height()) ;
 
 		}
@@ -228,11 +243,24 @@ void weasel::HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 
 	/* Highlighted Candidate */
 	int id = _context.cinfo.highlighted;
-	_highlightRect.SetRect(
-		_candidateLabelRects[id].left,
-		height,
-		_candidateCommentRects[id].right,
-		height + h);
+	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
+	{
+		int hlTop = _candidateTextRects[i].top;
+		int hlBot = _candidateTextRects[i].bottom;
+
+		if (_candidateLabelRects[i].Height() > 0)
+		{
+			hlTop = min(_candidateLabelRects[i].top, hlTop);
+			hlBot = max(_candidateLabelRects[i].bottom, _candidateTextRects[i].bottom);
+		}
+		if (_candidateCommentRects[i].Height() > 0)
+		{
+			hlTop = min(hlTop, _candidateCommentRects[i].top);
+			hlBot = max(hlBot, _candidateCommentRects[i].bottom);
+		}
+		_candidateRects[i].SetRect(_candidateLabelRects[i].left, hlTop, _candidateCommentRects[i].right, hlBot);
+	}
+	_highlightRect = _candidateRects[id];
 
 	width = max(width, w);
 	height += h;
@@ -252,4 +280,6 @@ void weasel::HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 	}
 	UpdateStatusIconLayout(&width, &height);
 	_contentSize.SetSize(width, height);
+	if (candidates.size() == 1)
+		_highlightRect.right = width - _style.margin_x;
 }
