@@ -233,6 +233,8 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 					else if (type == TEXT)
 					{
 						rtl = true;
+						if (rc.left > bgRc.left)
+							rtl = false;
 						rtr = rbr = rbl = false;
 						if (m_candidateCount == 0)
 							rbl = true;
@@ -282,6 +284,8 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 					else if (type == TEXT)
 					{
 						rtl = true;
+						if (rc.left > bgRc.left)
+							rtl = false;
 						rtr = rbr = rbl = false;
 						if (m_candidateCount == 0)
 							rbl = true;
