@@ -101,7 +101,6 @@ void VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts)
 			oc = (h - _candidateCommentRects[i].Height()) ;
 
 		}
-		ot = (h - _candidateTextRects[i].Height()) / 2;
 		_candidateLabelRects[i].OffsetRect(0, ol);
 		_candidateTextRects[i].OffsetRect(0, ot);
 		_candidateCommentRects[i].OffsetRect(0, oc);

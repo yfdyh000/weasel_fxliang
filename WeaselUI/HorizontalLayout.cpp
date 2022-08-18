@@ -100,7 +100,6 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts )
 			oc = (h - _candidateCommentRects[i].Height()) ;
 
 		}
-		ot = (h - _candidateTextRects[i].Height()) / 2;
 		_candidateLabelRects[i].OffsetRect(0, ol);
 		_candidateTextRects[i].OffsetRect(0, ot);
 		_candidateCommentRects[i].OffsetRect(0, oc);
@@ -146,8 +145,11 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts )
 	}
 	UpdateStatusIconLayout(&width, &height);
 	_contentSize.SetSize(width, height);
-	if (candidates.size() == 1)
+
+	_candidateRects[candidates.size() - 1].right = width - _style.margin_x;
+	if (id == candidates.size() - 1)
 		_highlightRect.right = width - _style.margin_x;
+
 	labelFont.DeleteObject();
 	textFont.DeleteObject();
 	commentFont.DeleteObject();
@@ -234,7 +236,6 @@ void weasel::HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 			oc = (h - _candidateCommentRects[i].Height()) ;
 
 		}
-		ot = (h - _candidateTextRects[i].Height()) / 2;
 		_candidateLabelRects[i].OffsetRect(0, ol);
 		_candidateTextRects[i].OffsetRect(0, ot);
 		_candidateCommentRects[i].OffsetRect(0, oc);
@@ -280,6 +281,9 @@ void weasel::HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 	}
 	UpdateStatusIconLayout(&width, &height);
 	_contentSize.SetSize(width, height);
-	if (candidates.size() == 1)
+
+	_candidateRects[candidates.size() - 1].right = width - _style.margin_x;
+	if (id == candidates.size() - 1)
 		_highlightRect.right = width - _style.margin_x;
+
 }
