@@ -1012,7 +1012,9 @@ HRESULT WeaselPanel::_TextOutWithFallback_D2D (CDCHandle dc, CRect const rc, wst
 		DWRITE_OVERHANG_METRICS omt;
 		pTextLayout->GetOverhangMetrics(&omt);
 		if (omt.left > 0)
-			offsetx += omt.left;
+			offsetx += omt.left + 1;
+		if (omt.top > 0)
+			offsety += omt.top + 1;
 		pDWR->pRenderTarget->BindDC(dc, &rc);
 		pDWR->pRenderTarget->BeginDraw();
 		if (pTextLayout != NULL)

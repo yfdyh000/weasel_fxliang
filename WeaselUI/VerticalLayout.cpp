@@ -91,13 +91,13 @@ void VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts)
 		if (_style.align_type == UIStyle::ALIGN_CENTER)
 		{
 			ol = (h - _candidateLabelRects[i].Height()) / 2;
-			//ot = (h - _candidateTextRects[i].Height()) / 2;
+			ot = (h - _candidateTextRects[i].Height()) / 2;
 			oc = (h - _candidateCommentRects[i].Height()) / 2;
 		}
 		else if (_style.align_type == UIStyle::ALIGN_BOTTOM)
 		{
 			ol = (h - _candidateLabelRects[i].Height()) ;
-			//ot = (h - _candidateTextRects[i].Height()) ;
+			ot = (h - _candidateTextRects[i].Height()) ;
 			oc = (h - _candidateCommentRects[i].Height()) ;
 
 		}
@@ -136,11 +136,26 @@ void VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts)
 
 	/* Highlighted Candidate */
 	int id = _context.cinfo.highlighted;
+	int hlTop = _candidateTextRects[id].top;
+	int hlBot = _candidateTextRects[id].bottom;
+
+	if (_candidateLabelRects[id].Height() > 0)
+	{
+		hlTop = min(_candidateLabelRects[id].top, hlTop);
+		hlBot = max(_candidateLabelRects[id].bottom, _candidateTextRects[id].bottom);
+	}
+	if (_candidateCommentRects[id].Height() > 0)
+	{
+		hlTop = min(hlTop, _candidateCommentRects[id].top);
+		hlBot = max(hlBot, _candidateCommentRects[id].bottom);
+	}
 	_highlightRect.SetRect(
 		_style.margin_x,
-		_candidateTextRects[id].top,
+		hlTop,
 		width - _style.margin_x,
-		_candidateTextRects[id].bottom);
+		hlBot
+		);
+
 
 	labelFont.DeleteObject();
 	textFont.DeleteObject();
@@ -267,10 +282,24 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 
 	/* Highlighted Candidate */
 	int id = _context.cinfo.highlighted;
+	int hlTop = _candidateTextRects[id].top;
+	int hlBot = _candidateTextRects[id].bottom;
+
+	if (_candidateLabelRects[id].Height() > 0)
+	{
+		hlTop = min(_candidateLabelRects[id].top, hlTop);
+		hlBot = max(_candidateLabelRects[id].bottom, _candidateTextRects[id].bottom);
+	}
+	if (_candidateCommentRects[id].Height() > 0)
+	{
+		hlTop = min(hlTop, _candidateCommentRects[id].top);
+		hlBot = max(hlBot, _candidateCommentRects[id].bottom);
+	}
 	_highlightRect.SetRect(
 		_style.margin_x,
-		_candidateTextRects[id].top,
+		hlTop,
 		width - _style.margin_x,
-		_candidateTextRects[id].bottom);
+		hlBot
+		);
 
 }
