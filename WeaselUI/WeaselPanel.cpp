@@ -32,6 +32,8 @@ static CRect OffsetRect(const CRect rc, int offsetx, int offsety)
 	  pDWR(NULL),
 	  pFonts(NULL),
 	  m_blurer(NULL),
+	 offsetX(0),
+	 offsetY(0),
 	  _m_gdiplusToken(0)
 {
 	m_iconDisabled.LoadIconW(IDI_RELOAD, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
@@ -137,13 +139,18 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 	bool rtr = false;
 	bool rbr = false;
 	bool rbl = false;
-	if (type!= NOT_CAND && _IsHighlightOverCandidateWindow(rc, &gBack))
+	// if current rc trigger hemispherical dome
+	bool hemispherical_dome = false;
+	if (type != NOT_CAND && _IsHighlightOverCandidateWindow(rc, &gBack))
+	{
+		m_hemispherical_dome = true;
 		hemispherical_dome = true;
+	}
 	else
 		hemispherical_dome = false;
 
 	// 必须shadow_color都是非完全透明色才做绘制, 全屏状态不绘制阴影保证响应速度
-	if ((!hemispherical_dome) && m_style.shadow_radius && (shadowColor & 0xff000000)
+	if ((!m_hemispherical_dome) && m_style.shadow_radius && (shadowColor & 0xff000000)
 		&& m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN
 		&& m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
 	{
@@ -193,7 +200,7 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 		Color back_color = Color::MakeARGB((color >> 24), GetRValue(color), GetGValue(color), GetBValue(color));
 		SolidBrush gBrBack(back_color);
 		GraphicsRoundRectPath* bgPath;
-		if (hemispherical_dome && m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN && m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
+		if (m_hemispherical_dome && type!= NOT_CAND && m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN && m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
 		{
 			if (m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL)
 			{
@@ -232,9 +239,7 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 					}
 					else if (type == TEXT)
 					{
-						rtl = true;
-						if (rc.left > bgRc.left)
-							rtl = false;
+						rtl = hemispherical_dome;
 						rtr = rbr = rbl = false;
 						if (m_candidateCount == 0)
 							rbl = true;
@@ -283,9 +288,7 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 					}
 					else if (type == TEXT)
 					{
-						rtl = true;
-						if (rc.left > bgRc.left)
-							rtl = false;
+						rtl = hemispherical_dome;
 						rtr = rbr = rbl = false;
 						if (m_candidateCount == 0)
 							rbl = true;
@@ -316,21 +319,6 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 		for (size_t j = 0; j < attrs.size(); ++j)
 			if (attrs[j].type == weasel::HIGHLIGHTED)
 				range = attrs[j].range;
-
-		int offsetX = 0;
-		int offsetY = 0;
-		if (m_style.shadow_color & 0xff000000 && m_style.shadow_radius != 0)
-		{
-			offsetX = abs(m_style.shadow_offset_x) + m_style.shadow_radius*2;
-			offsetY = abs(m_style.shadow_offset_y) + m_style.shadow_radius*2;
-			if ((!m_style.shadow_offset_x) && (!m_style.shadow_offset_y))
-			{
-				offsetX *= 2;
-				offsetY *= 2;
-			}
-		}
-		offsetX += m_style.border + 3;
-		offsetY += m_style.border + 3;
 
 		if (range.start < range.end)
 		{
@@ -418,21 +406,6 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 	const std::vector<Text> &comments(m_ctx.cinfo.comments);
 	const std::vector<Text> &labels(m_ctx.cinfo.labels);
 
-	int offsetX = 0;
-	int offsetY = 0;
-	if(m_style.shadow_color & 0xff000000 && m_style.shadow_radius != 0)
-	{
-		offsetX = abs(m_style.shadow_offset_x) + m_style.shadow_radius*2;
-		offsetY = abs(m_style.shadow_offset_y) + m_style.shadow_radius*2;
-		if((!m_style.shadow_offset_x) && (!m_style.shadow_offset_y))
-		{
-			offsetX *= 2;
-			offsetY *= 2;
-		}
-	}
-	offsetX += m_style.border + 3;
-	offsetY += m_style.border + 3;
-
 	int bkx = 2 * offsetX;
 	int bky = 2 * offsetY;
 
@@ -517,21 +490,6 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	HBITMAP memBitmap = ::CreateCompatibleBitmap(hdc, sz.cx, sz.cy);
 	::SelectObject(memDC, memBitmap);
 	ReleaseDC(hdc);
-	
-	int offsetX = 0;
-	int offsetY = 0;
-	if(m_style.shadow_color & 0xff000000 && m_style.shadow_radius != 0)
-	{
-		offsetX = abs(m_style.shadow_offset_x) + m_style.shadow_radius*2;
-		offsetY = abs(m_style.shadow_offset_y) + m_style.shadow_radius*2;
-		if((!m_style.shadow_offset_x) && (!m_style.shadow_offset_y))
-		{
-			offsetX *= 2;
-			offsetY *= 2;
-		}
-	}
-	offsetX += m_style.border + 3;
-	offsetY += m_style.border + 3;
 	
 	// background start
 	/* inline_preedit and candidate size 1 and preedit_type preview, and hide_candidates_when_single is set */
@@ -667,6 +625,21 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 		pFonts = new GDIFonts(&m_style);
 		m_blurer = new GdiplusBlur();
 	}
+	// main offset because of window shadow
+	offsetX = offsetY = 0;
+	if(m_style.shadow_color & 0xff000000 && m_style.shadow_radius != 0)
+	{
+		offsetX = abs(m_style.shadow_offset_x) + m_style.shadow_radius*2;
+		offsetY = abs(m_style.shadow_offset_y) + m_style.shadow_radius*2;
+		if((!m_style.shadow_offset_x) && (!m_style.shadow_offset_y))
+		{
+			offsetX *= 2;
+			offsetY *= 2;
+		}
+	}
+	offsetX += m_style.border + 3;
+	offsetY += m_style.border + 3;
+
 	Refresh();
 	return TRUE;
 }
@@ -993,7 +966,7 @@ HRESULT WeaselPanel::_TextOutWithFallback_D2D (CDCHandle dc, CRect const rc, wst
 		IDWriteTextLayout* pTextLayout = NULL;
 		if (pTextFormat == NULL)
 			pTextFormat = pDWR->pTextFormat;
-		pDWR->pDWFactory->CreateTextLayout( ((wstring)psz).c_str(), ((wstring)psz).size(), pTextFormat, rc.Width(), rc.Height(), &pTextLayout);
+		pDWR->pDWFactory->CreateTextLayout( psz.c_str(), psz.size(), pTextFormat, rc.Width(), rc.Height(), &pTextLayout);
 		float offsetx = 0;
 		float offsety = 0;
 		DWRITE_OVERHANG_METRICS omt;

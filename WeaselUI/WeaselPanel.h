@@ -76,12 +76,16 @@ private:
 	// for hemispherical dome
 	CRect bgRc;
 	BYTE m_candidateCount;
-	bool hemispherical_dome = false;
+	// if hemispherical_dome has been trigged
+	bool m_hemispherical_dome = false;
 
 	// for multi font_face & font_point
 	GdiplusBlur* m_blurer;
 	DirectWriteResources* pDWR;
 	GDIFonts* pFonts;
+
+	int offsetX;
+	int offsetY;
 };
 
 class GraphicsRoundRectPath : public Gdiplus::GraphicsPath
