@@ -59,7 +59,7 @@ private:
 	void _TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch, IDWriteTextFormat* pTextFormat, FontInfo* pFontInfo);
 	HRESULT _TextOutWithFallback_D2D(CDCHandle dc, CRect const rc, std::wstring psz, int cch, COLORREF gdiColor, IDWriteTextFormat* pTextFormat);
 
-	bool _IsHighlightOverCandidateWindow(CRect rc, Gdiplus::Graphics* g);
+	bool _IsHighlightOverCandidateWindow(CRect rc, CRect bg, Gdiplus::Graphics* g);
 
 	weasel::Layout *m_layout;
 	weasel::Context &m_ctx;

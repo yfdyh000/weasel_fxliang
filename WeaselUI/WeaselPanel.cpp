@@ -116,9 +116,9 @@ void WeaselPanel::Refresh()
 	//_RepositionWindow();
 	RedrawWindow();
 }
-bool WeaselPanel::_IsHighlightOverCandidateWindow(CRect rc, Gdiplus::Graphics* g)
+bool WeaselPanel::_IsHighlightOverCandidateWindow(CRect rc, CRect bg, Gdiplus::Graphics* g)
 {
-	GraphicsRoundRectPath bgPath(bgRc, m_style.round_corner_ex);
+	GraphicsRoundRectPath bgPath(bg, m_style.round_corner_ex);
 	GraphicsRoundRectPath hlPath(rc, m_style.round_corner);
 
 	Region bgRegion(&bgPath);
@@ -141,10 +141,13 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 	bool rbl = false;
 	// if current rc trigger hemispherical dome
 	bool hemispherical_dome = false;
-	if (type != NOT_CAND && _IsHighlightOverCandidateWindow(rc, &gBack))
+	if (type != NOT_CAND && _IsHighlightOverCandidateWindow(rc, bgRc, &gBack))
 	{
 		m_hemispherical_dome = true;
-		hemispherical_dome = true;
+		CRect trc = bgRc;
+		trc.InflateRect(1, 1);
+		if(_IsHighlightOverCandidateWindow(rc, trc, &gBack))
+			hemispherical_dome = true;
 	}
 	else
 		hemispherical_dome = false;
