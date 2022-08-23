@@ -57,6 +57,8 @@ void FullScreenLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts)
 		_candidateTextRects[i].OffsetRect(offsetX, offsetY);
 		_candidateCommentRects[i] = m_layout->GetCandidateCommentRect(i);
 		_candidateCommentRects[i].OffsetRect(offsetX, offsetY);
+		_candidateRects[i] = m_layout->GetCandidateRect(i);
+		_candidateRects[i].OffsetRect(offsetX, offsetY);
 	}
 	_statusIconRect = m_layout->GetStatusIconRect();
 	_statusIconRect.OffsetRect(offsetX, offsetY);
@@ -108,6 +110,8 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 		_candidateTextRects[i].OffsetRect(offsetX, offsetY);
 		_candidateCommentRects[i] = m_layout->GetCandidateCommentRect(i);
 		_candidateCommentRects[i].OffsetRect(offsetX, offsetY);
+		_candidateRects[i] = m_layout->GetCandidateRect(i);
+		_candidateRects[i].OffsetRect(offsetX, offsetY);
 	}
 	_statusIconRect = m_layout->GetStatusIconRect();
 	_statusIconRect.OffsetRect(offsetX, offsetY);
