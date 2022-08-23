@@ -153,7 +153,8 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 		hemispherical_dome = false;
 
 	// 必须shadow_color都是非完全透明色才做绘制, 全屏状态不绘制阴影保证响应速度
-	if ((!m_hemispherical_dome) && m_style.shadow_radius && (shadowColor & 0xff000000)
+	// 背景状态不需要检查m_hemispherical_dome，避免 MoveTo中的Invalide()影响主窗体阴影绘制
+	if ((!m_hemispherical_dome || type == NOT_CAND) && m_style.shadow_radius && (shadowColor & 0xff000000)
 		&& m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN
 		&& m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
 	{
