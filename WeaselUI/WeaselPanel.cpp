@@ -664,6 +664,8 @@ void WeaselPanel::MoveTo(RECT const& rc)
 	m_inputPos = rc;
 	m_inputPos.OffsetRect(0, distance);
 	_RepositionWindow();
+	// invalidate for drawing right after keydown got, for layeredwindow
+	Invalidate();
 }
 
 void WeaselPanel::_RepositionWindow()
