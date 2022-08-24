@@ -678,8 +678,8 @@ void WeaselPanel::_RepositionWindow()
 	bool backShadowEnable = (m_style.shadow_color & 0xff000000 && m_style.shadow_radius != 0);
 	if (m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN || m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
 	{
-		x -= offsetX * (int)backShadowEnable + 3 * (int)(!backShadowEnable);
-		y -= offsetY * (int)backShadowEnable + 3 * (int)(!backShadowEnable);
+		x -= (offsetX + 1) * (int)backShadowEnable + 3 * (int)(!backShadowEnable);
+		y -= (offsetY + 1) * (int)backShadowEnable + 3 * (int)(!backShadowEnable);
 	}
 	else 
 	{
