@@ -9,6 +9,7 @@
 #include <regex>
 
 #include <rime_api.h>
+#define ISWINVERSIONGREATERTHAN8P1() IsWinVersionGreaterThan(6, 3)
 
 int expand_ibus_modifier(int m)
 {
@@ -575,6 +576,33 @@ static Bool RimeConfigGetColor32b(RimeConfig* config, const char* key, int* valu
 	return True;
 }
 
+static inline BOOL IsWinVersionGreaterThan(DWORD dwMajorVersion, DWORD dwMinorVersion)
+{
+	OSVERSIONINFOEX osvi;
+	DWORDLONG dwlConditionMask = 0;
+
+	//Initialize the OSVERSIONINFOEX structure.
+	ZeroMemory(&osvi, sizeof(osvi));
+	osvi.dwOSVersionInfoSize = sizeof(osvi);
+	osvi.dwMajorVersion = dwMajorVersion;
+	osvi.dwMinorVersion = dwMinorVersion;
+
+	//system major version > dwMajorVersion
+	VER_SET_CONDITION(dwlConditionMask, VER_MAJORVERSION, VER_GREATER);
+	if (VerifyVersionInfo(&osvi, VER_MAJORVERSION, dwlConditionMask))
+		return TRUE;
+
+	//sytem major version = dwMajorVersion && minor version > dwMinorVersion
+	VER_SET_CONDITION(dwlConditionMask, VER_MAJORVERSION, VER_EQUAL);
+	VER_SET_CONDITION(dwlConditionMask, VER_MINORVERSION, VER_GREATER);
+
+	return VerifyVersionInfo(
+		&osvi,
+		VER_MAJORVERSION | VER_MINORVERSION,
+		dwlConditionMask
+	);
+}
+
 static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 {
 	if (!ui) return;
@@ -633,11 +661,9 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	{
 		style.hide_candidates_when_single = !!hide_candidates_when_single;
 	}
-	Bool color_font = False;
-	if (RimeConfigGetBool(config, "style/color_font", &color_font) || initialize)
-	{
-		style.color_font = !!color_font;
-	}
+	// automatically determine if color font is available by system version info, if win 8.1 or greater enable, otherwise disable
+	style.color_font = ISWINVERSIONGREATERTHAN8P1();
+
 	char preedit_type[20] = { 0 };
 	if (RimeConfigGetString(config, "style/preedit_type", preedit_type, sizeof(preedit_type) - 1))
 	{

@@ -2,7 +2,7 @@
 #include <string>
 #include "fontClasses.h"
 
-DirectWriteResources::DirectWriteResources() :
+DirectWriteResources::DirectWriteResources(const weasel::UIStyle& style) :
 	dpiScaleX_(0),
 	dpiScaleY_(0),
 	pD2d1Factory(NULL),
@@ -31,6 +31,8 @@ DirectWriteResources::DirectWriteResources() :
 	pD2d1Factory->GetDesktopDpi(&dpiScaleX_, &dpiScaleY_);
 	dpiScaleX_ /= 72.0f;
 	dpiScaleY_ /= 72.0f;
+
+	InitResources(style);
 }
 
 DirectWriteResources::~DirectWriteResources()
@@ -53,7 +55,7 @@ static void AddAMapping(IDWriteFontFallbackBuilder* pFontFallbackBuilder, const 
 
 HRESULT DirectWriteResources::InitResources(wstring label_font_face, int label_font_point,
 	wstring font_face, int font_point,
-	wstring comment_font_face, int comment_font_point, UIStyle::LayoutAlignType alignType) 
+	wstring comment_font_face, int comment_font_point) 
 {
 	// prepare d2d1 resources
 
@@ -116,7 +118,7 @@ HRESULT DirectWriteResources::InitResources(wstring label_font_face, int label_f
 	return hResult;
 }
 
-HRESULT DirectWriteResources::InitResources(const UIStyle style)
+HRESULT DirectWriteResources::InitResources(const UIStyle& style)
 {
 	// prepare d2d1 resources
 	HRESULT hResult = S_OK;

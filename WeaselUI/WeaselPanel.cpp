@@ -304,7 +304,7 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 					}
 				}
 			}
-			bgPath = new GraphicsRoundRectPath(rc, m_style.round_corner_ex - (min(m_style.margin_x, m_style.margin_y) - m_style.hilite_padding) - m_style.border / 2, rtl, rtr, rbr, rbl);
+			bgPath = new GraphicsRoundRectPath(rc, m_style.round_corner_ex - (min(m_style.margin_x, m_style.margin_y) - m_style.hilite_padding) - m_style.border / 2 + 1, rtl, rtr, rbr, rbl);
 		}
 		else
 			bgPath = new GraphicsRoundRectPath(rc, radius);
@@ -582,33 +582,6 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 
 }
 
-static inline BOOL IsWinVersionGreaterThan(DWORD dwMajorVersion, DWORD dwMinorVersion)
-{
-	OSVERSIONINFOEX osvi;
-	DWORDLONG dwlConditionMask = 0;
-
-	//Initialize the OSVERSIONINFOEX structure.
-	ZeroMemory(&osvi, sizeof(osvi));
-	osvi.dwOSVersionInfoSize = sizeof(osvi);
-	osvi.dwMajorVersion = dwMajorVersion;
-	osvi.dwMinorVersion = dwMinorVersion;
-
-	//system major version > dwMajorVersion
-	VER_SET_CONDITION(dwlConditionMask, VER_MAJORVERSION, VER_GREATER);
-	if (VerifyVersionInfo(&osvi, VER_MAJORVERSION, dwlConditionMask))
-		return TRUE;
-
-	//sytem major version = dwMajorVersion && minor version > dwMinorVersion
-	VER_SET_CONDITION(dwlConditionMask, VER_MAJORVERSION, VER_EQUAL);
-	VER_SET_CONDITION(dwlConditionMask, VER_MINORVERSION, VER_GREATER);
-
-	return VerifyVersionInfo(
-		&osvi,
-		VER_MAJORVERSION | VER_MINORVERSION,
-		dwlConditionMask
-	);
-}
-
 LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 	LONG t = ::GetWindowLong(m_hWnd, GWL_EXSTYLE);
@@ -616,19 +589,16 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	::SetWindowLong(m_hWnd, GWL_EXSTYLE, t);
 	GdiplusStartup(&_m_gdiplusToken, &_m_gdiplusStartupInput, NULL);
 	GetWindowRect(&m_inputPos);
-	if (m_style.color_font == true && !IsWinVersionGreaterThan(6, 3))
-		m_style.color_font = false;
 	if (m_style.color_font)
 	{
 		// prepare d2d1 resources
-		pDWR = new DirectWriteResources();
-		pDWR->InitResources(m_style);
+		pDWR = new DirectWriteResources(m_style);
 	}
 	else
 	{
 		pFonts = new GDIFonts(&m_style);
-		m_blurer = new GdiplusBlur();
 	}
+	m_blurer = new GdiplusBlur();
 	// main offset because of window shadow
 	offsetX = offsetY = 0;
 	if(m_style.shadow_color & 0xff000000 && m_style.shadow_radius != 0)
@@ -705,48 +675,30 @@ void WeaselPanel::_RepositionWindow()
 	if (y < rcWorkArea.top)
 		y = rcWorkArea.top;
 	// memorize adjusted position (to avoid window bouncing on height change)
+	bool backShadowEnable = (m_style.shadow_color & 0xff000000 && m_style.shadow_radius != 0);
 	if (m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN || m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
 	{
-		if(m_style.shadow_color & 0xff000000 && m_style.shadow_radius != 0)
-		{
-			int offsetX = 0;
-			int offsetY = 0;
-			offsetX = abs(m_style.shadow_offset_x) + m_style.shadow_radius*2;
-			offsetY = abs(m_style.shadow_offset_y) + m_style.shadow_radius*2;
-			if((!m_style.shadow_offset_x) && (!m_style.shadow_offset_y))
-			{
-				offsetX *= 2;
-				offsetY *= 2;
-			}
-			offsetX += m_style.border + 3;
-			offsetY += m_style.border + 3;
-
-			x -= offsetX;
-			y -= offsetY;
-		}
-		else
-		{
-			x -= 3;
-			y -= 3;
-		}
+		x -= offsetX * (int)backShadowEnable + 3 * (int)(!backShadowEnable);
+		y -= offsetY * (int)backShadowEnable + 3 * (int)(!backShadowEnable);
 	}
 	else 
 	{
-		int offsetX = 0;
-		int offsetY = 0;
-		if(m_style.shadow_color & 0xff000000 && m_style.shadow_radius != 0)
+		bool roundShadowEnable = m_style.shadow_offset_x == 0 && m_style.shadow_offset_y == 0;
+		int offsetx = 0;
+		int offsety = 0;
+		if(backShadowEnable)
 		{
-			if (m_style.shadow_offset_x == 0 && m_style.shadow_offset_y == 0)
+			if (roundShadowEnable)
 			{
-				offsetX = offsetY = m_style.shadow_radius*2;
+				offsetx = offsety = m_style.shadow_radius*2;
 			}
 			else
 			{
-				offsetX = (m_style.shadow_offset_x < 0) ? m_style.shadow_radius*2 : (m_style.shadow_offset_x + m_style.shadow_radius*2);
-				offsetY = (m_style.shadow_offset_y < 0) ? m_style.shadow_radius*2 : (m_style.shadow_offset_y + m_style.shadow_radius*2);
+				offsetx = (m_style.shadow_offset_x < 0) ? m_style.shadow_radius*2 : (m_style.shadow_offset_x + m_style.shadow_radius*2);
+				offsety = (m_style.shadow_offset_y < 0) ? m_style.shadow_radius*2 : (m_style.shadow_offset_y + m_style.shadow_radius*2);
 			}
-			x -= offsetX;
-			y -= offsetY;
+			x -= offsetx;
+			y -= offsety;
 		}
 	}
 

@@ -26,13 +26,13 @@ namespace weasel
 	class DirectWriteResources
 	{
 	public:
-		DirectWriteResources();
+		DirectWriteResources(const weasel::UIStyle& style);
 		~DirectWriteResources();
 
 		HRESULT InitResources(wstring label_font_face, int label_font_point,
 			wstring font_face, int font_point,
-			wstring comment_font_face, int comment_font_point, UIStyle::LayoutAlignType alignType=UIStyle::ALIGN_BOTTOM);
-		HRESULT InitResources(const UIStyle style);
+			wstring comment_font_face, int comment_font_point);
+		HRESULT InitResources(const UIStyle& style);
 		float dpiScaleX_, dpiScaleY_;
 		ID2D1Factory* pD2d1Factory;
 		IDWriteFactory2* pDWFactory;
