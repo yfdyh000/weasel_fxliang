@@ -73,7 +73,7 @@ jobs:
       - name: Build Weasel
         #run: .\build.bat test
         id: build_weasel
-        run: .\build.bat rime data opencc hant installer
+        run: .\build.bat rime data hant installer
 
 
       #- name: Create distributable
