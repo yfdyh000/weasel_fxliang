@@ -47,7 +47,7 @@ jobs:
 
       - name: Install Boost
         if: steps.cache-boost.outputs.cache-hit != 'true'
-        run: .\install-boost.bat
+        run: .\install_boost.bat
 
       - name: Check submodules
         run: git submodule > submodule-status
