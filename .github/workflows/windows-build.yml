@@ -70,20 +70,25 @@ jobs:
       #- name: Install Rime plugins
       #  run: .\action-install-plugins-windows.bat
 
-      - name: Build all
+      - name: Build Weasel
         #run: .\build.bat test
-        run: .\build.bat all
+        id: build_weasel
+        run: build.bat boost data opencc hant installer
 
-      - name: Create distributable
-        run: |
-          7z a weasel-${{ env.git_ref_name }}-${{ runner.os }}.7z `
+
+      #- name: Create distributable
+      #  if: steps.build_weasel.outputs.cache-hit == 'true'
+      #  run: |
+      #    7z a weasel-${{ env.git_ref_name }}-${{ runner.os }}.7z output\archives\
           #dist version-info.txt
           #7z a -x'!*/.placeholder' rime-deps-${{ env.git_ref_name }}-${{ runner.os }}.7z `
           #bin include lib share
 
       - name: Upload artifacts
+        if: steps.build_weasel.outputs.cache-hit == 'true'
         uses: actions/upload-artifact@v3
         with:
           path: |
-            weasel-${{ env.git_ref_name }}-${{ runner.os }}.7z
+            .\output\archives\weasel*.exe
+            #weasel-${{ env.git_ref_name }}-${{ runner.os }}.7z
             #rime-deps-${{ env.git_ref_name }}-${{ runner.os }}.7z
