@@ -243,10 +243,16 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 					}
 					else if (type == TEXT)
 					{
-						rtl = hemispherical_dome;
-						rtr = rbr = rbl = false;
 						if (m_candidateCount == 0)
-							rbl = true;
+						{
+							rtl = rbl = hemispherical_dome;
+							rtr = rbr = false;
+						}
+						else
+						{
+							rtl = hemispherical_dome;
+							rtr = rbr = rbl = false;
+						}
 					}
 					else if (type == ONLY_CAND)
 					{
@@ -292,10 +298,16 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 					}
 					else if (type == TEXT)
 					{
-						rtl = hemispherical_dome;
-						rtr = rbr = rbl = false;
-						if (m_candidateCount == 0)
-							rbl = true;
+						if(m_candidateCount == 0)
+						{
+							rtl = rbl = hemispherical_dome;
+							rtr = rbr = false;
+						}
+						else
+						{
+							rtl = hemispherical_dome;
+							rtr = rbr = rbl = false;
+						}
 					}
 					else if (type == ONLY_CAND)
 					{
