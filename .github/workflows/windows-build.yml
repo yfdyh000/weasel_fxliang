@@ -74,6 +74,7 @@ jobs:
         #run: .\build.bat test
         id: build_weasel
         run: .\build.bat rime data 
+
       - name: Build Weasel2
         id: build_weasel2
         run: .\build.bat weasel installer
