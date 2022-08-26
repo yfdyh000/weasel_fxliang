@@ -661,8 +661,15 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	{
 		style.hide_candidates_when_single = !!hide_candidates_when_single;
 	}
-	// automatically determine if color font is available by system version info, if win 8.1 or greater enable, otherwise disable
-	style.color_font = ISWINVERSIONGREATERTHAN8P1();
+	Bool color_font = True;
+	if (RimeConfigGetBool(config, "style/color_font", &color_font) || initialize)
+	{
+		style.color_font = !!color_font;
+		// if system version lower than windows 8.1, color_font disable
+		style.color_font = style.color_font && ISWINVERSIONGREATERTHAN8P1();
+	}
+	else
+		style.color_font = ISWINVERSIONGREATERTHAN8P1();
 
 	char preedit_type[20] = { 0 };
 	if (RimeConfigGetString(config, "style/preedit_type", preedit_type, sizeof(preedit_type) - 1))

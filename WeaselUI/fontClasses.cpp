@@ -188,54 +188,44 @@ void DirectWriteResources::_ParseFontFace(const std::wstring fontFaceStr, std::w
 	std::vector<std::wstring> parsedStrV; 
 	boost::algorithm::split(parsedStrV, fontFaceStr, boost::algorithm::is_any_of(L":"));
 	fontFace = parsedStrV[0];
-	boost::wsmatch res;
-	boost::wregex regex  ( L":((THIN)|(EXTRA_LIGHT)|(ULTRA_LIGHT)|(LIGHT)|(SEMI_LIGHT)|(NORMAL)|(MEDIUM)|(DEMI_BOLD)|(SEMI_BOLD)|(BOLD)|(EXTRA_BOLD)|(ULTRA_BOLD)|(BLACK)|(HEAVY)|(EXTRA_BLACK)|(ULTRA_BLACK))" , boost::wregex::icase);
-	if (boost::regex_search(fontFaceStr, res, regex))
-	{
-		if (res[0] == L":THIN" || res[0] == L":thin")
-			fontWeight = DWRITE_FONT_WEIGHT_THIN;
-		else if (res[0] == L":EXTRA_LIGHT" || res[0] == L":extra_light")
-			fontWeight = DWRITE_FONT_WEIGHT_EXTRA_LIGHT;
-		else if (res[0] == L":ULTRA_LIGHT" || res[0] == L":ultra_light")
-			fontWeight = DWRITE_FONT_WEIGHT_ULTRA_LIGHT;
-		else if (res[0] == L":LIGHT" || res[0] == L":light")
-			fontWeight = DWRITE_FONT_WEIGHT_LIGHT;
-		else if (res[0] == L":SEMI_LIGHT" || res[0] == L":semi_light")
-			fontWeight = DWRITE_FONT_WEIGHT_SEMI_LIGHT;
-		else if (res[0] == L":MEDIUM" || res[0] == L":medium")
-			fontWeight = DWRITE_FONT_WEIGHT_MEDIUM;
-		else if (res[0] == L":DEMI_BOLD" || res[0] == L":demi_bold")
-			fontWeight = DWRITE_FONT_WEIGHT_DEMI_BOLD;
-		else if (res[0] == L":SEMI_BOLD" || res[0] == L":semi_bold")
-			fontWeight = DWRITE_FONT_WEIGHT_SEMI_BOLD;
-		else if (res[0] == L":BOLD" || res[0] == L":bold")
-			fontWeight = DWRITE_FONT_WEIGHT_BOLD;
-		else if (res[0] == L":EXTRA_BOLD" || res[0] == L":extra_bold")
-			fontWeight = DWRITE_FONT_WEIGHT_EXTRA_BOLD;
-		else if (res[0] == L":ULTRA_BOLD" || res[0] == L":ultra_bold")
-			fontWeight = DWRITE_FONT_WEIGHT_ULTRA_BOLD;
-		else if (res[0] == L":BLACK" || res[0] == L":black")
-			fontWeight = DWRITE_FONT_WEIGHT_BLACK;
-		else if (res[0] == L":HEAVY" || res[0] == L":heavy")
-			fontWeight = DWRITE_FONT_WEIGHT_HEAVY;
-		else if (res[0] == L":EXTRA_BLACK" || res[0] == L":extra_black")
-			fontWeight = DWRITE_FONT_WEIGHT_EXTRA_BLACK;
-		else if (res[0] == L":ULTRA_BLACK" || res[0] == L":ultra_black")
-			fontWeight = DWRITE_FONT_WEIGHT_ULTRA_BLACK;
-		else
-			fontWeight = DWRITE_FONT_WEIGHT_NORMAL;
-	}
+
+	if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":thin", boost::wregex::icase)))
+		fontWeight = DWRITE_FONT_WEIGHT_THIN;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":extra_light", boost::wregex::icase)))
+		fontWeight = DWRITE_FONT_WEIGHT_EXTRA_LIGHT;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":ultra_light", boost::wregex::icase)))
+		fontWeight = DWRITE_FONT_WEIGHT_ULTRA_LIGHT;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":light", boost::wregex::icase)))
+		fontWeight = DWRITE_FONT_WEIGHT_LIGHT;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":semi_light", boost::wregex::icase)))
+		fontWeight = DWRITE_FONT_WEIGHT_SEMI_LIGHT;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":medium", boost::wregex::icase)))
+		fontWeight = DWRITE_FONT_WEIGHT_MEDIUM;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":demi_bold", boost::wregex::icase)))
+		fontWeight = DWRITE_FONT_WEIGHT_DEMI_BOLD;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":semi_bold", boost::wregex::icase)))
+		fontWeight = DWRITE_FONT_WEIGHT_SEMI_BOLD;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":bold", boost::wregex::icase)))
+		fontWeight = DWRITE_FONT_WEIGHT_BOLD;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":extra_bold", boost::wregex::icase)))
+		fontWeight = DWRITE_FONT_WEIGHT_EXTRA_BOLD;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":ultra_bold", boost::wregex::icase)))
+		fontWeight = DWRITE_FONT_WEIGHT_ULTRA_BOLD;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":black", boost::wregex::icase)))
+		fontWeight = DWRITE_FONT_WEIGHT_BLACK;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":heavy", boost::wregex::icase)))
+		fontWeight = DWRITE_FONT_WEIGHT_HEAVY;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":extra_black", boost::wregex::icase)))
+		fontWeight = DWRITE_FONT_WEIGHT_EXTRA_BLACK;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":ultra_black", boost::wregex::icase)))
+		fontWeight = DWRITE_FONT_WEIGHT_ULTRA_BLACK;
 	else
 		fontWeight = DWRITE_FONT_WEIGHT_NORMAL;
-	boost::wsmatch res2;
-	boost::wregex reg2(L":((ITALIC)|(OBLIQUE))", boost::wregex::icase);
-	if (boost::regex_search(fontFaceStr, res2, reg2))
-	{
-		if (res2[0] == L":italic" || res2[0] == L"ITALIC")
-			fontStyle = DWRITE_FONT_STYLE_ITALIC;
-		else
-			fontStyle = DWRITE_FONT_STYLE_OBLIQUE;
-	}
+
+	if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":italic", boost::wregex::icase)))
+		fontStyle = DWRITE_FONT_STYLE_ITALIC;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":oblique", boost::wregex::icase)))
+		fontStyle = DWRITE_FONT_STYLE_OBLIQUE;
 	else
 		fontStyle = DWRITE_FONT_STYLE_NORMAL;
 }
@@ -325,32 +315,24 @@ void GDIFonts::_ParseFontFace(const std::wstring fontFaceStr, std::wstring& font
 	std::vector<std::wstring> parsedStrV; 
 	boost::algorithm::split(parsedStrV, fontFaceStr, boost::algorithm::is_any_of(L":"));
 	fontFace = parsedStrV[0];
-	boost::wsmatch res;
-	boost::wregex regex  ( L":((THIN)|(EXTRA_LIGHT)|(ULTRA_LIGHT)|(LIGHT)|(SEMI_LIGHT)|(NORMAL)|(MEDIUM)|(DEMI_BOLD)|(SEMI_BOLD)|(BOLD)|(EXTRA_BOLD)|(ULTRA_BOLD)|(BLACK)|(HEAVY)|(EXTRA_BLACK)|(ULTRA_BLACK))" , boost::wregex::icase);
-	if (boost::regex_search(fontFaceStr, res, regex))
-	{
-		if (res[0] == L":THIN" || res[0] == L":thin")
-			fontWeight = FW_THIN;
-		else if ((res[0] == L":EXTRA_LIGHT" || res[0] == L":extra_light") || (res[0] == L":ULTRA_LIGHT" || res[0] == L":ultra_light"))
-			fontWeight = FW_EXTRALIGHT;
-		else if ((res[0] == L":LIGHT" || res[0] == L":light") ||(res[0] == L":SEMI_LIGHT" || res[0] == L":semi_light"))
-			fontWeight = FW_LIGHT;
-		else if (res[0] == L":MEDIUM" || res[0] == L":medium")
-			fontWeight = FW_MEDIUM;
-		else if ((res[0] == L":DEMI_BOLD" || res[0] == L":demi_bold") || (res[0] == L":SEMI_BOLD" || res[0] == L":semi_bold"))
-			fontWeight = FW_SEMIBOLD;
-		else if (res[0] == L":BOLD" || res[0] == L":bold")
-			fontWeight = FW_BOLD;
-		else if ((res[0] == L":EXTRA_BOLD" || res[0] == L":extra_bold") || (res[0] == L":ULTRA_BOLD" || res[0] == L":ultra_bold"))
-			fontWeight = FW_EXTRABOLD;
-		else if ((res[0] == L":BLACK" || res[0] == L":black") 
-			|| (res[0] == L":HEAVY" || res[0] == L":heavy") 
-			|| (res[0] == L":EXTRA_BLACK" || res[0] == L":extra_black") 
-			|| (res[0] == L":ULTRA_BLACK" || res[0] == L":ultra_black"))
-			fontWeight = FW_BLACK;
-		else
-			fontWeight = FW_NORMAL;
-	}
+	if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":thin", boost::wregex::icase)))
+		fontWeight = FW_THIN;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":(extra_light|ultra_light)", boost::wregex::icase)))
+		fontWeight = FW_EXTRALIGHT;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":(light|semi_light|demi_light)", boost::wregex::icase)))
+		fontWeight = FW_LIGHT;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":medium", boost::wregex::icase)))
+		fontWeight = FW_MEDIUM;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":bold", boost::wregex::icase)))
+		fontWeight = FW_BOLD;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":(semi_bold|demi_bold)", boost::wregex::icase)))
+		fontWeight = FW_SEMIBOLD;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":(extra_bold|ultra_bold)", boost::wregex::icase)))
+		fontWeight = FW_EXTRABOLD;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":(extra_black|ultra_black|heavy|black)", boost::wregex::icase)))
+		fontWeight = FW_BLACK;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":normal", boost::wregex::icase)))
+		fontWeight = FW_NORMAL;
 	else
 		fontWeight = FW_DONTCARE;
 }
