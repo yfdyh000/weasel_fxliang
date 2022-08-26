@@ -665,11 +665,9 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	if (RimeConfigGetBool(config, "style/color_font", &color_font) || initialize)
 	{
 		style.color_font = !!color_font;
-		// if system version lower than windows 8.1, color_font disable
-		style.color_font = style.color_font && ISWINVERSIONGREATERTHAN8P1();
 	}
-	else
-		style.color_font = ISWINVERSIONGREATERTHAN8P1();
+	// if system version lower than 8.1, disable color_font
+	style.color_font = style.color_font && ISWINVERSIONGREATERTHAN8P1();
 
 	char preedit_type[20] = { 0 };
 	if (RimeConfigGetString(config, "style/preedit_type", preedit_type, sizeof(preedit_type) - 1))
