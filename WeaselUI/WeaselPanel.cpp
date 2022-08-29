@@ -32,8 +32,8 @@ static CRect OffsetRect(const CRect rc, int offsetx, int offsety)
 	  pDWR(NULL),
 	  pFonts(NULL),
 	  m_blurer(NULL),
-	 offsetX(0),
-	 offsetY(0),
+	  offsetX(0),
+	  offsetY(0),
 	  _m_gdiplusToken(0)
 {
 	m_iconDisabled.LoadIconW(IDI_RELOAD, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
@@ -363,11 +363,10 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				// zzz
 				std::wstring str_before(t.substr(0, range.start));
 				CRect rc_before(x, rc.top, rc.left + selStart.cx, rc.bottom);
-				dc.SetTextColor(m_style.text_color);
 				if(m_style.color_font)
-					_TextOut(dc, x, rc.top, rc_before, str_before.c_str(), str_before.length(), pDWR->pTextFormat, NULL);
+					_TextOut(dc, x, rc.top, rc_before, str_before.c_str(), str_before.length(), pDWR->pTextFormat, NULL, m_style.text_color);
 				else
-					_TextOut(dc, x, rc.top, rc_before, str_before.c_str(), str_before.length(), NULL, &pFonts->m_TextFont);
+					_TextOut(dc, x, rc.top, rc_before, str_before.c_str(), str_before.length(), NULL, &pFonts->m_TextFont, m_style.text_color);
 				x += selStart.cx + m_style.hilite_spacing;
 			}
 			{
@@ -378,13 +377,10 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				rc_hi.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 				OffsetRect(rc_hi, -m_style.hilite_padding, 0);
 				_HighlightTextEx(dc, rc_hi, m_style.hilited_back_color, m_style.hilited_shadow_color, offsetX * 2, offsetY * 2, m_style.round_corner);
-				dc.SetTextColor(m_style.hilited_text_color);
 				if(m_style.color_font) 
-					_TextOut(dc, x, rc.top, rct, str_highlight.c_str(), str_highlight.length(), pDWR->pTextFormat, NULL);
+					_TextOut(dc, x, rc.top, rct, str_highlight.c_str(), str_highlight.length(), pDWR->pTextFormat, NULL, m_style.hilited_text_color);
 				else
-					_TextOut(dc, x, rc.top, rct, str_highlight.c_str(), str_highlight.length(), NULL, &pFonts->m_TextFont);
-				dc.SetTextColor(m_style.text_color);
-				dc.SetBkColor(m_style.back_color);
+					_TextOut(dc, x, rc.top, rct, str_highlight.c_str(), str_highlight.length(), NULL, &pFonts->m_TextFont, m_style.hilited_text_color);
 				x += (selEnd.cx - selStart.cx);
 			}
 			if (range.end < static_cast<int>(t.length()))
@@ -392,23 +388,21 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				// zzz[yyy]xxx
 				x += m_style.hilite_spacing;
 				std::wstring str_after(t.substr(range.end));
-				dc.SetTextColor(m_style.text_color);
 				CRect rc_after(x, rc.top, rc.right, rc.bottom);
 				if(m_style.color_font) 
-					_TextOut(dc, x, rc.top, rc_after, str_after.c_str(), str_after.length(), pDWR->pTextFormat, NULL);
+					_TextOut(dc, x, rc.top, rc_after, str_after.c_str(), str_after.length(), pDWR->pTextFormat, NULL, m_style.text_color);
 				else
-					_TextOut(dc, x, rc.top, rc_after, str_after.c_str(), str_after.length(), NULL, &pFonts->m_TextFont);
+					_TextOut(dc, x, rc.top, rc_after, str_after.c_str(), str_after.length(), NULL, &pFonts->m_TextFont, m_style.text_color);
 
 			}
 		}
 		else
 		{
 			CRect rcText(rc.left, rc.top, rc.right, rc.bottom);
-			dc.SetTextColor(m_style.text_color);
 			if (m_style.color_font)
-				_TextOut(dc, rc.left, rc.top, rcText, t.c_str(), t.length(), pDWR->pTextFormat, NULL);
+				_TextOut(dc, rc.left, rc.top, rcText, t.c_str(), t.length(), pDWR->pTextFormat, NULL, m_style.text_color);
 			else
-				_TextOut(dc, rc.left, rc.top, rcText, t.c_str(), t.length(), NULL, &pFonts->m_TextFont);
+				_TextOut(dc, rc.left, rc.top, rcText, t.c_str(), t.length(), NULL, &pFonts->m_TextFont, m_style.text_color);
 		}
 		drawn = true;
 	}
@@ -437,59 +431,54 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 		CRect rect;
 		rect = OffsetRect(m_layout->GetCandidateRect(i), offsetX, offsetY);
 		rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
+		int txtColor, txtLabelColor, txtCommentColor;
 		if (i == m_ctx.cinfo.highlighted)
 		{
 			_HighlightTextEx(dc, rect, m_style.hilited_candidate_back_color, m_style.hilited_candidate_shadow_color, bkx, bky, m_style.round_corner, bkType);
-			dc.SetTextColor(m_style.hilited_label_text_color);
+			txtColor = m_style.hilited_candidate_text_color;
+			txtLabelColor = m_style.hilited_label_text_color;
+			txtCommentColor = m_style.hilited_comment_text_color;
 		}
 		else
 		{
 			_HighlightTextEx(dc, rect, m_style.candidate_back_color, m_style.candidate_shadow_color, bkx, bky, m_style.round_corner, bkType);
-			dc.SetTextColor(m_style.label_text_color);
+			txtColor = m_style.candidate_text_color;
+			txtLabelColor = m_style.label_text_color;
+			txtCommentColor = m_style.comment_text_color;
 		}
-
 		// Draw label
 		std::wstring label = m_layout->GetLabelText(labels, i, m_style.label_text_format.c_str());
 		rect = m_layout->GetCandidateLabelRect(i);
 		rect = OffsetRect(rect, offsetX, offsetY);
 
 		if (m_style.color_font)
-			_TextOut(dc, rect.left, rect.top, rect, label.c_str(), label.length(), pDWR->pLabelTextFormat, NULL);
+			_TextOut(dc, rect.left, rect.top, rect, label.c_str(), label.length(), pDWR->pLabelTextFormat, NULL, txtLabelColor);
 		else
-			_TextOut(dc, rect.left, rect.top, rect, label.c_str(), label.length(), NULL, &pFonts->m_LabelFont);
+			_TextOut(dc, rect.left, rect.top, rect, label.c_str(), label.length(), NULL, &pFonts->m_LabelFont, txtLabelColor);
 
 		// Draw text
 		std::wstring text = candidates.at(i).str;
-		if (i == m_ctx.cinfo.highlighted)
-			dc.SetTextColor(m_style.hilited_candidate_text_color);
-		else
-			dc.SetTextColor(m_style.candidate_text_color);
 		rect = m_layout->GetCandidateTextRect(i);
 		rect = OffsetRect(rect, offsetX, offsetY);
 		if (m_style.color_font)
-			_TextOut(dc, rect.left, rect.top, rect, text.c_str(), text.length(), pDWR->pTextFormat, NULL);
+			_TextOut(dc, rect.left, rect.top, rect, text.c_str(), text.length(), pDWR->pTextFormat, NULL, txtColor);
 		else
-			_TextOut(dc, rect.left, rect.top, rect, text.c_str(), text.length(), NULL, &pFonts->m_TextFont);
+			_TextOut(dc, rect.left, rect.top, rect, text.c_str(), text.length(), NULL, &pFonts->m_TextFont, txtColor);
 		
 		// Draw comment
 		std::wstring comment = comments.at(i).str;
 		if (!comment.empty())
 		{
-			if (i == m_ctx.cinfo.highlighted)
-				dc.SetTextColor(m_style.hilited_comment_text_color);
-			else
-				dc.SetTextColor(m_style.comment_text_color);
 			rect = m_layout->GetCandidateCommentRect(i);
 			rect = OffsetRect(rect, offsetX, offsetY);
 			if(m_style.color_font)
-				_TextOut(dc, rect.left, rect.top, rect, comment.c_str(), comment.length(), pDWR->pCommentTextFormat, NULL);
+				_TextOut(dc, rect.left, rect.top, rect, comment.c_str(), comment.length(), pDWR->pCommentTextFormat, NULL, txtCommentColor);
 			else
-				_TextOut(dc, rect.left, rect.top, rect, comment.c_str(), comment.length(), NULL, &pFonts->m_CommentFont);
+				_TextOut(dc, rect.left, rect.top, rect, comment.c_str(), comment.length(), NULL, &pFonts->m_CommentFont, txtCommentColor);
 		}
 		drawn = true;
 	}
 
-	dc.SetTextColor(m_style.text_color);
 	return drawn;
 }
 
@@ -957,20 +946,21 @@ HRESULT WeaselPanel::_TextOutWithFallback_D2D (CDCHandle dc, CRect const rc, wst
 	return S_OK;
 }
 
-void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch, IDWriteTextFormat* pTextFormat, FontInfo* pFontInfo)
+void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch, IDWriteTextFormat* pTextFormat, FontInfo* pFontInfo, int inColor)
 {
+	if (!(inColor & 0xff000000)) return;	// transparent, no need to draw
 	if (m_style.color_font )
 	{
-		_TextOutWithFallback_D2D(dc, rc, psz, cch, dc.GetTextColor(), pTextFormat);
+		_TextOutWithFallback_D2D(dc, rc, psz, cch, inColor, pTextFormat);
 	}
 	else
 	{ 
 		CFont font;
 		CSize size;
 		long height = -MulDiv(pFontInfo->m_FontPoint, dc.GetDeviceCaps(LOGPIXELSY), 72);
+		dc.SetTextColor(inColor & 0x00ffffff);
 		font.CreateFontW(height, 0, 0, 0, pFontInfo->m_FontWeight, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, pFontInfo->m_FontFace.c_str());
 		dc.SelectFont(font);
-		COLORREF inColor = dc.GetTextColor();
 		BYTE alpha = (inColor >> 24) & 255 ;
 		int offset = 0;
 		// split strings with \r, for multiline string drawing
