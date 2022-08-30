@@ -32,8 +32,6 @@ static CRect OffsetRect(const CRect rc, int offsetx, int offsety)
 	  pDWR(NULL),
 	  pFonts(NULL),
 	  m_blurer(NULL),
-	  offsetX(0),
-	  offsetY(0),
 	  _m_gdiplusToken(0)
 {
 	m_iconDisabled.LoadIconW(IDI_RELOAD, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
@@ -57,20 +55,6 @@ void WeaselPanel::_ResizeWindow()
 {
 	CDCHandle dc = GetDC();
 	CSize size = m_layout->GetContentSize();
-	int offsetX = 0;
-	int offsetY = 0;
-	if(m_style.shadow_color & 0xff000000 && m_style.shadow_radius != 0)
-	{
-		offsetX = abs(m_style.shadow_offset_x) + m_style.shadow_radius*2;
-		offsetY = abs(m_style.shadow_offset_y) + m_style.shadow_radius*2;
-		if((!m_style.shadow_offset_x) && (!m_style.shadow_offset_y))
-		{
-			offsetX *= 2;
-			offsetY *= 2;
-		}
-	}
-	size.cx += offsetX * 2 + m_style.border * 2;// +6;
-	size.cy += offsetY*2 + m_style.border*2;// + 6;
 	SetWindowPos(NULL, 0, 0, size.cx, size.cy, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
 	ReleaseDC(dc);
 }
@@ -112,7 +96,6 @@ void WeaselPanel::Refresh()
 	ReleaseDC(dc);
 
 	_ResizeWindow();
-	// avoid reposition twice
 	_RepositionWindow();
 	RedrawWindow();
 }
@@ -376,7 +359,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				CRect rct = rc_hi;
 				rc_hi.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 				OffsetRect(rc_hi, -m_style.hilite_padding, 0);
-				_HighlightTextEx(dc, rc_hi, m_style.hilited_back_color, m_style.hilited_shadow_color, offsetX * 2, offsetY * 2, m_style.round_corner);
+				_HighlightTextEx(dc, rc_hi, m_style.hilited_back_color, m_style.hilited_shadow_color, m_layout->offsetX * 2, m_layout->offsetY * 2, m_style.round_corner);
 				if(m_style.color_font) 
 					_TextOut(dc, x, rc.top, rct, str_highlight.c_str(), str_highlight.length(), pDWR->pTextFormat, NULL, m_style.hilited_text_color);
 				else
@@ -416,8 +399,8 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 	const std::vector<Text> &comments(m_ctx.cinfo.comments);
 	const std::vector<Text> &labels(m_ctx.cinfo.labels);
 
-	int bkx = 2 * offsetX;
-	int bky = 2 * offsetY;
+	int bkx = 2 * m_layout->offsetX;
+	int bky = 2 * m_layout->offsetY;
 
 	BackType bkType = FIRST_CAND;
 	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
@@ -516,7 +499,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		Graphics gBack(memDC);
 		gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
 		trc = rc;
-		trc.DeflateRect(offsetX-m_style.border/2, offsetY-m_style.border/2);
+		trc.DeflateRect(m_layout->offsetX-m_style.border/2, m_layout->offsetY-m_style.border/2);
 		bgRc = trc;
 		bgRc.DeflateRect(m_style.border / 2 + 1, m_style.border / 2 + 1);
 		GraphicsRoundRectPath bgPath(trc, m_style.round_corner_ex);
@@ -524,7 +507,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		Color border_color = Color::MakeARGB(alpha, GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
 		Pen gPenBorder(border_color, (Gdiplus::REAL)m_style.border);
 		trc.InflateRect(m_style.border / 2, m_style.border / 2);
-		_HighlightTextEx(memDC, trc, m_style.back_color, m_style.shadow_color, offsetX * 2, offsetY * 2, m_style.round_corner_ex + m_style.border / 2, NOT_CAND);
+		_HighlightTextEx(memDC, trc, m_style.back_color, m_style.shadow_color, m_layout->offsetX * 2, m_layout->offsetY * 2, m_style.round_corner_ex + m_style.border / 2, NOT_CAND);
 		if(m_style.border)
 			gBack.DrawPath(&gPenBorder, &bgPath);
 		gBack.ReleaseHDC(memDC);
@@ -536,7 +519,6 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	// draw preedit string
 	if (!m_layout->IsInlinePreedit() && !hide_candidates)
 	{
-		//trc = OffsetRect(m_layout->GetPreeditRect(), offsetX, offsetY);
 		trc =m_layout->GetPreeditRect();
 		drawn |= _DrawPreedit(m_ctx.preedit, memDC, trc);
 	}
@@ -602,20 +584,6 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 		pFonts = new GDIFonts(&m_style);
 	}
 	m_blurer = new GdiplusBlur();
-	// main offset because of window shadow
-	offsetX = offsetY = 0;
-	if(m_style.shadow_color & 0xff000000 && m_style.shadow_radius != 0)
-	{
-		offsetX = abs(m_style.shadow_offset_x) + m_style.shadow_radius*2;
-		offsetY = abs(m_style.shadow_offset_y) + m_style.shadow_radius*2;
-		if((!m_style.shadow_offset_x) && (!m_style.shadow_offset_y))
-		{
-			offsetX *= 2;
-			offsetY *= 2;
-		}
-	}
-	offsetX += m_style.border; // +3;
-	offsetY += m_style.border; //+ 3;
 
 	Refresh();
 	return TRUE;
@@ -637,11 +605,10 @@ void WeaselPanel::MoveTo(RECT const& rc)
 	const int distance = 3;
 	m_inputPos = rc;
 	//m_inputPos.OffsetRect(0, distance);
-	//Refresh();
+	_ResizeWindow();
 	_RepositionWindow();
 	// invalidate for drawing right after keydown got, for layeredwindow
 	Invalidate();
-	//UpdateWindow();
 }
 
 void WeaselPanel::_RepositionWindow()

@@ -15,6 +15,6 @@ Layout::Layout(const UIStyle& style, const Context& context, const Status& statu
 			offsetY *= 2;
 		}
 	}
-	offsetX += _style.border;
-	offsetY += _style.border;
+	offsetX += _style.border + 2;
+	offsetY += _style.border + 2;
 }

@@ -150,11 +150,11 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts )
 		height = max(height, _style.min_height);
 	}
 	UpdateStatusIconLayout(&width, &height);
-	_contentSize.SetSize(width, height);
+	_contentSize.SetSize(width + 2 * offsetX, height + 2 * offsetY);
 
-	_candidateRects[candidates.size() - 1].right = width - _style.margin_x;
+	_candidateRects[candidates.size() - 1].right = width - _style.margin_x + offsetX;
 	if (id == candidates.size() - 1)
-		_highlightRect.right = width - _style.margin_x;
+		_highlightRect.right = width - _style.margin_x + offsetX;
 
 	labelFont.DeleteObject();
 	textFont.DeleteObject();
@@ -292,10 +292,10 @@ void weasel::HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 		height = max(height, _style.min_height);
 	}
 	UpdateStatusIconLayout(&width, &height);
-	_contentSize.SetSize(width, height);
+	_contentSize.SetSize(width + 2 * offsetX, height + 2 * offsetY);
 
-	_candidateRects[candidates.size() - 1].right = width - _style.margin_x;
+	_candidateRects[candidates.size() - 1].right = width - _style.margin_x + offsetX;
 	if (id == candidates.size() - 1)
-		_highlightRect.right = width - _style.margin_x;
+		_highlightRect.right = width - _style.margin_x + offsetX;
 
 }

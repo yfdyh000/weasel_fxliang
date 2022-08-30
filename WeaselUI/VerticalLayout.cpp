@@ -32,6 +32,7 @@ void VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts)
 	{
 		size = GetPreeditSize(dc);
 		_preeditRect.SetRect(_style.margin_x, height, _style.margin_x + size.cx, height + size.cy);
+		_preeditRect.OffsetRect(offsetX, offsetY);
 		width = max(width, _style.margin_x + size.cx + _style.margin_x);
 		height += size.cy + _style.spacing;
 	}
@@ -61,6 +62,7 @@ void VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts)
 		std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
 		GetTextExtentDCMultiline(dc, label, label.length(), &size);
 		_candidateLabelRects[i].SetRect(w, height, w + size.cx, height + size.cy);
+		_candidateLabelRects[i].OffsetRect(offsetX, offsetY);
 		w += size.cx + space, h = max(h, size.cy);
 		candidate_width += size.cx + space;
 
@@ -69,6 +71,7 @@ void VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts)
 		const std::wstring& text = candidates.at(i).str;
 		GetTextExtentDCMultiline(dc, text, text.length(), &size);
 		_candidateTextRects[i].SetRect(w, height, w + size.cx, height + size.cy);
+		_candidateTextRects[i].OffsetRect(offsetX, offsetY);
 		w += size.cx, h = max(h, size.cy);
 		candidate_width += size.cx;
 		max_candidate_width = max(max_candidate_width, candidate_width);
@@ -83,6 +86,7 @@ void VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts)
 			const std::wstring& comment = comments.at(i).str;
 			GetTextExtentDCMultiline(dc, comment, comment.length(), &size);
 			_candidateCommentRects[i].SetRect(0, height, size.cx, height + size.cy);
+			_candidateCommentRects[i].OffsetRect(offsetX, offsetY);
 			w += size.cx, h = max(h, size.cy);
 			comment_width += size.cx;
 			max_comment_width = max(max_comment_width, comment_width);
@@ -131,7 +135,7 @@ void VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts)
 		height = max(height, _style.min_height);
 	}
 	UpdateStatusIconLayout(&width, &height);
-	_contentSize.SetSize(width, height);
+	_contentSize.SetSize(width + offsetX * 2, height + offsetY * 2);
 
 	/* Highlighted Candidate */
 	int id = _context.cinfo.highlighted;
@@ -150,7 +154,7 @@ void VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts)
 			hlTop = min(hlTop, _candidateCommentRects[i].top);
 			hlBot = max(hlBot, _candidateCommentRects[i].bottom);
 		}
-		_candidateRects[i].SetRect(_style.margin_x, hlTop, width - _style.margin_x, hlBot);
+		_candidateRects[i].SetRect(_style.margin_x + offsetX, hlTop, width - _style.margin_x + offsetX, hlBot);
 	}
 	_highlightRect = _candidateRects[id];
 
@@ -177,6 +181,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 	{
 		size = GetPreeditSize(dc, pDWR->pTextFormat, pDWR->pDWFactory);
 		_preeditRect.SetRect(_style.margin_x, height, _style.margin_x + size.cx, height + size.cy);
+		_preeditRect.OffsetRect(offsetX, offsetY);
 		width = max(width, _style.margin_x + size.cx + _style.margin_x);
 		height += size.cy + _style.spacing;
 	}
@@ -186,6 +191,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 	{
 		GetTextExtentDCMultiline(dc, _context.aux.str, _context.aux.str.length(), &size);
 		_auxiliaryRect.SetRect(_style.margin_x, height, _style.margin_x + size.cx, height + size.cy);
+		_auxiliaryRect.OffsetRect(offsetX, offsetY);
 		width = max(width, _style.margin_x + size.cx + _style.margin_x);
 		height += size.cy + _style.spacing;
 	}
@@ -205,6 +211,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 		std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
 		GetTextSizeDW(label, label.length(), pDWR->pLabelTextFormat, pDWR->pDWFactory, &size);
 		_candidateLabelRects[i].SetRect(w, height, w + size.cx, height + size.cy);
+		_candidateLabelRects[i].OffsetRect(offsetX, offsetY);
 		w += size.cx + space, h = max(h, size.cy);
 		candidate_width += size.cx + space;
 
@@ -212,6 +219,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 		const std::wstring& text = candidates.at(i).str;
 		GetTextSizeDW(text, text.length(), pDWR->pTextFormat, pDWR->pDWFactory, &size);
 		_candidateTextRects[i].SetRect(w, height, w + size.cx, height + size.cy);
+		_candidateTextRects[i].OffsetRect(offsetX, offsetY);
 		w += size.cx, h = max(h, size.cy);
 		candidate_width += size.cx;
 		max_candidate_width = max(max_candidate_width, candidate_width);
@@ -225,6 +233,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 			const std::wstring& comment = comments.at(i).str;
 			GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat, pDWR->pDWFactory, &size);
 			_candidateCommentRects[i].SetRect(0, height, size.cx, height + size.cy);
+			_candidateCommentRects[i].OffsetRect(offsetX, offsetY);
 			w += size.cx, h = max(h, size.cy);
 			comment_width += size.cx;
 			max_comment_width = max(max_comment_width, comment_width);
@@ -275,7 +284,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 		height = max(height, _style.min_height);
 	}
 	UpdateStatusIconLayout(&width, &height);
-	_contentSize.SetSize(width, height);
+	_contentSize.SetSize(width + offsetX*2, height + offsetY*2);
 
 	/* Highlighted Candidate */
 	int id = _context.cinfo.highlighted;
@@ -294,7 +303,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 			hlTop = min(hlTop, _candidateCommentRects[i].top);
 			hlBot = max(hlBot, _candidateCommentRects[i].bottom);
 		}
-		_candidateRects[i].SetRect(_style.margin_x, hlTop, width - _style.margin_x, hlBot);
+		_candidateRects[i].SetRect(_style.margin_x + offsetX, hlTop, width - _style.margin_x + offsetX, hlBot);
 	}
 	_highlightRect = _candidateRects[id];
 }
