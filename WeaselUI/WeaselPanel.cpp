@@ -69,8 +69,8 @@ void WeaselPanel::_ResizeWindow()
 			offsetY *= 2;
 		}
 	}
-	size.cx += offsetX*2 + m_style.border*2 + 6;
-	size.cy += offsetY*2 + m_style.border*2 + 6;
+	size.cx += offsetX * 2 + m_style.border * 2;// +6;
+	size.cy += offsetY*2 + m_style.border*2;// + 6;
 	SetWindowPos(NULL, 0, 0, size.cx, size.cy, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
 	ReleaseDC(dc);
 }
@@ -113,7 +113,7 @@ void WeaselPanel::Refresh()
 
 	_ResizeWindow();
 	// avoid reposition twice
-	//_RepositionWindow();
+	_RepositionWindow();
 	RedrawWindow();
 }
 bool WeaselPanel::_IsHighlightOverCandidateWindow(CRect rc, CRect bg, Gdiplus::Graphics* g)
@@ -429,7 +429,8 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 		else if (i == candidates.size() - 1)
 			bkType = LAST_CAND;
 		CRect rect;
-		rect = OffsetRect(m_layout->GetCandidateRect(i), offsetX, offsetY);
+		//rect = OffsetRect(m_layout->GetCandidateRect(i), offsetX, offsetY);
+		rect = m_layout->GetCandidateRect(i);
 		rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 		int txtColor, txtLabelColor, txtCommentColor;
 		if (i == m_ctx.cinfo.highlighted)
@@ -449,7 +450,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 		// Draw label
 		std::wstring label = m_layout->GetLabelText(labels, i, m_style.label_text_format.c_str());
 		rect = m_layout->GetCandidateLabelRect(i);
-		rect = OffsetRect(rect, offsetX, offsetY);
+		//rect = OffsetRect(rect, offsetX, offsetY);
 
 		if (m_style.color_font)
 			_TextOut(dc, rect.left, rect.top, rect, label.c_str(), label.length(), pDWR->pLabelTextFormat, NULL, txtLabelColor);
@@ -459,7 +460,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 		// Draw text
 		std::wstring text = candidates.at(i).str;
 		rect = m_layout->GetCandidateTextRect(i);
-		rect = OffsetRect(rect, offsetX, offsetY);
+		//rect = OffsetRect(rect, offsetX, offsetY);
 		if (m_style.color_font)
 			_TextOut(dc, rect.left, rect.top, rect, text.c_str(), text.length(), pDWR->pTextFormat, NULL, txtColor);
 		else
@@ -470,7 +471,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 		if (!comment.empty())
 		{
 			rect = m_layout->GetCandidateCommentRect(i);
-			rect = OffsetRect(rect, offsetX, offsetY);
+			//rect = OffsetRect(rect, offsetX, offsetY);
 			if(m_style.color_font)
 				_TextOut(dc, rect.left, rect.top, rect, comment.c_str(), comment.length(), pDWR->pCommentTextFormat, NULL, txtCommentColor);
 			else
@@ -535,7 +536,8 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	// draw preedit string
 	if (!m_layout->IsInlinePreedit() && !hide_candidates)
 	{
-		trc = OffsetRect(m_layout->GetPreeditRect(), offsetX, offsetY);
+		//trc = OffsetRect(m_layout->GetPreeditRect(), offsetX, offsetY);
+		trc =m_layout->GetPreeditRect();
 		drawn |= _DrawPreedit(m_ctx.preedit, memDC, trc);
 	}
 	
@@ -545,7 +547,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	// status icon (I guess Metro IME stole my idea :)
 	if (m_layout->ShouldDisplayStatusIcon())
 	{
-		const CRect iconRect(OffsetRect(m_layout->GetStatusIconRect(), offsetX, offsetY));
+		const CRect iconRect(m_layout->GetStatusIconRect());
 		CIcon& icon(m_status.disabled ? m_iconDisabled : m_status.ascii_mode ? m_iconAlpha : m_iconEnabled);
 		memDC.DrawIconEx(iconRect.left, iconRect.top, icon, 0, 0);
 		drawn = true;
@@ -612,8 +614,8 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 			offsetY *= 2;
 		}
 	}
-	offsetX += m_style.border + 3;
-	offsetY += m_style.border + 3;
+	offsetX += m_style.border; // +3;
+	offsetY += m_style.border; //+ 3;
 
 	Refresh();
 	return TRUE;
@@ -634,10 +636,12 @@ void WeaselPanel::MoveTo(RECT const& rc)
 {
 	const int distance = 3;
 	m_inputPos = rc;
-	m_inputPos.OffsetRect(0, distance);
+	//m_inputPos.OffsetRect(0, distance);
+	//Refresh();
 	_RepositionWindow();
 	// invalidate for drawing right after keydown got, for layeredwindow
 	Invalidate();
+	//UpdateWindow();
 }
 
 void WeaselPanel::_RepositionWindow()
@@ -676,6 +680,7 @@ void WeaselPanel::_RepositionWindow()
 	if (y < rcWorkArea.top)
 		y = rcWorkArea.top;
 	// memorize adjusted position (to avoid window bouncing on height change)
+#if 0
 	bool backShadowEnable = (m_style.shadow_color & 0xff000000 && m_style.shadow_radius != 0);
 	if (m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN || m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
 	{
@@ -702,7 +707,7 @@ void WeaselPanel::_RepositionWindow()
 			y -= offsety;
 		}
 	}
-
+#endif
 	m_inputPos.bottom = y;
 	SetWindowPos(HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE|SWP_NOACTIVATE);
 }

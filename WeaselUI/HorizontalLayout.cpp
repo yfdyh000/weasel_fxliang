@@ -34,6 +34,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts )
 	{
 		size = GetPreeditSize(dc);
 		_preeditRect.SetRect(_style.margin_x, height, _style.margin_x + size.cx, height + size.cy);
+		_preeditRect.OffsetRect(offsetX, offsetY);
 		width = max(width, _style.margin_x + size.cx + _style.margin_x);
 		height += size.cy + _style.spacing;
 	}
@@ -43,6 +44,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts )
 	{
 		GetTextExtentDCMultiline(dc, _context.aux.str, _context.aux.str.length(), &size);
 		_auxiliaryRect.SetRect(_style.margin_x, height, _style.margin_x + size.cx, height + size.cy);
+		_auxiliaryRect.OffsetRect(offsetX, offsetY);
 		width = max(width, _style.margin_x + size.cx + _style.margin_x);
 		height += size.cy + _style.spacing;
 	}
@@ -59,6 +61,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts )
 		std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
 		GetTextExtentDCMultiline(dc, label, label.length(), &size);
 		_candidateLabelRects[i].SetRect(w, height, w + size.cx, height + size.cy);
+		_candidateLabelRects[i].OffsetRect(offsetX, offsetY);
 		w += size.cx, h = max(h, size.cy);
 		w += space;
 
@@ -67,6 +70,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts )
 		const std::wstring& text = candidates.at(i).str;
 		GetTextExtentDCMultiline(dc, text, text.length(), &size);
 		_candidateTextRects[i].SetRect(w, height, w + size.cx, height + size.cy);
+		_candidateTextRects[i].OffsetRect(offsetX, offsetY);
 		w += size.cx + space, h = max(h, size.cy);
 
 		/* Comment */
@@ -76,11 +80,13 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts )
 			const std::wstring& comment = comments.at(i).str;
 			GetTextExtentDCMultiline(dc, comment, comment.length(), &size);
 			_candidateCommentRects[i].SetRect(w, height, w + size.cx + space, height + size.cy);
+			_candidateCommentRects[i].OffsetRect(offsetX, offsetY);
 			w += size.cx + space, h = max(h, size.cy);
 		}
 		else /* Used for highlighted candidate calculation below */
 		{
 			_candidateCommentRects[i].SetRect(w, height, w, height + size.cy);
+			_candidateCommentRects[i].OffsetRect(offsetX, offsetY);
 		}
 	}
 	dc.SelectFont(oldFont);
@@ -173,6 +179,7 @@ void weasel::HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 	{
 		size = GetPreeditSize(dc, pDWR->pTextFormat, pDWR->pDWFactory);
 		_preeditRect.SetRect(_style.margin_x, height, _style.margin_x + size.cx, height + size.cy);
+		_preeditRect.OffsetRect(offsetX, offsetY);
 		width = max(width, _style.margin_x + size.cx + _style.margin_x);
 		height += size.cy + _style.spacing;
 	}
@@ -182,6 +189,7 @@ void weasel::HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 	{
 		GetTextExtentDCMultiline(dc, _context.aux.str, _context.aux.str.length(), &size);
 		_auxiliaryRect.SetRect(_style.margin_x, height, _style.margin_x + size.cx, height + size.cy);
+		_auxiliaryRect.OffsetRect(offsetX, offsetY);
 		width = max(width, _style.margin_x + size.cx + _style.margin_x);
 		height += size.cy + _style.spacing;
 	}
@@ -197,6 +205,7 @@ void weasel::HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 		std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
 		GetTextSizeDW(label, label.length(), pDWR->pLabelTextFormat, pDWR->pDWFactory, &size);
 		_candidateLabelRects[i].SetRect(w, height, w + size.cx, height + size.cy);
+		_candidateLabelRects[i].OffsetRect(offsetX, offsetY);
 		w += size.cx, h = max(h, size.cy);
 		w += space;
 
@@ -204,6 +213,7 @@ void weasel::HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 		const std::wstring& text = candidates.at(i).str;
 		GetTextSizeDW(text, text.length(), pDWR->pTextFormat, pDWR->pDWFactory, &size);
 		_candidateTextRects[i].SetRect(w, height, w + size.cx, height + size.cy);
+		_candidateTextRects[i].OffsetRect(offsetX, offsetY);
 		w += size.cx + space, h = max(h, size.cy);
 
 		/* Comment */
@@ -212,11 +222,13 @@ void weasel::HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 			const std::wstring& comment = comments.at(i).str;
 			GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat, pDWR->pDWFactory, &size);
 			_candidateCommentRects[i].SetRect(w, height, w + size.cx + space, height + size.cy);
+			_candidateCommentRects[i].OffsetRect(offsetX, offsetY);
 			w += size.cx + space, h = max(h, size.cy);
 		}
 		else /* Used for highlighted candidate calculation below */
 		{
 			_candidateCommentRects[i].SetRect(w, height, w, height + size.cy);
+			_candidateCommentRects[i].OffsetRect(offsetX, offsetY);
 		}
 	}
 

@@ -32,6 +32,8 @@ namespace weasel
 		virtual void GetTextSizeDW(const wstring text, int nCount, IDWriteTextFormat* pTextFormat, IDWriteFactory* pDWFactaory,  LPSIZE lpSize) const = 0;
 		
 		virtual wstring Layout::ConvertCRLF(wstring strString, wstring strCRLF) const = 0;
+		int offsetX = 0;
+		int offsetY = 0;
 	protected:
 		const UIStyle &_style;
 		const Context &_context;
