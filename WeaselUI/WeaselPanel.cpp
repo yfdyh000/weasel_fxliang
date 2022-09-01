@@ -55,7 +55,11 @@ void WeaselPanel::_ResizeWindow()
 {
 	CDCHandle dc = GetDC();
 	CSize size = m_layout->GetContentSize();
-	SetWindowPos(NULL, 0, 0, size.cx, size.cy, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
+	if (size != m_oldSize)
+	{
+		SetWindowPos(NULL, 0, 0, size.cx, size.cy, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
+		m_oldSize = size;
+	}
 	ReleaseDC(dc);
 }
 
@@ -96,6 +100,7 @@ void WeaselPanel::Refresh()
 	ReleaseDC(dc);
 
 	_ResizeWindow();
+	RedrawWindow();
 	_RepositionWindow();
 	RedrawWindow();
 }
@@ -602,10 +607,7 @@ void WeaselPanel::CloseDialog(int nVal)
 
 void WeaselPanel::MoveTo(RECT const& rc)
 {
-	const int distance = 3;
 	m_inputPos = rc;
-	//m_inputPos.OffsetRect(0, distance);
-	_ResizeWindow();
 	_RepositionWindow();
 	// invalidate for drawing right after keydown got, for layeredwindow
 	Invalidate();
@@ -647,36 +649,12 @@ void WeaselPanel::_RepositionWindow()
 	if (y < rcWorkArea.top)
 		y = rcWorkArea.top;
 	// memorize adjusted position (to avoid window bouncing on height change)
-#if 0
-	bool backShadowEnable = (m_style.shadow_color & 0xff000000 && m_style.shadow_radius != 0);
-	if (m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN || m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
-	{
-		x -= (offsetX + 1) * (int)backShadowEnable + 3 * (int)(!backShadowEnable);
-		y -= (offsetY + 1) * (int)backShadowEnable + 3 * (int)(!backShadowEnable);
-	}
-	else 
-	{
-		bool roundShadowEnable = m_style.shadow_offset_x == 0 && m_style.shadow_offset_y == 0;
-		int offsetx = 0;
-		int offsety = 0;
-		if(backShadowEnable)
-		{
-			if (roundShadowEnable)
-			{
-				offsetx = offsety = m_style.shadow_radius*2;
-			}
-			else
-			{
-				offsetx = (m_style.shadow_offset_x < 0) ? m_style.shadow_radius*2 : (m_style.shadow_offset_x + m_style.shadow_radius*2);
-				offsety = (m_style.shadow_offset_y < 0) ? m_style.shadow_radius*2 : (m_style.shadow_offset_y + m_style.shadow_radius*2);
-			}
-			x -= offsetx;
-			y -= offsety;
-		}
-	}
-#endif
 	m_inputPos.bottom = y;
-	SetWindowPos(HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE|SWP_NOACTIVATE);
+	if (x != m_oldDrawPos.x || y != m_oldDrawPos.y)
+	{
+		m_oldDrawPos = CPoint(x, y);
+		SetWindowPos(HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE);
+	}
 }
 
 static HRESULT _TextOutWithFallback(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch)
