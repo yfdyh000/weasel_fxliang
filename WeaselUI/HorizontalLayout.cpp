@@ -60,34 +60,33 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts )
 		oldFont = dc.SelectFont(labelFont);
 		std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
 		GetTextExtentDCMultiline(dc, label, label.length(), &size);
-		_candidateLabelRects[i].SetRect(w, height, w + size.cx, height + size.cy);
+		_candidateLabelRects[i].SetRect(w, height, w + size.cx * ((int)(pFonts->m_LabelFont.m_FontPoint > 0)), height + size.cy);
 		_candidateLabelRects[i].OffsetRect(offsetX, offsetY);
-		w += size.cx, h = max(h, size.cy);
-		w += space;
+		w += (size.cx + space) * ((int)(pFonts->m_LabelFont.m_FontPoint > 0)), h = max(h, size.cy);
+		//w += space;
 
 		/* Text */
 		oldFont = dc.SelectFont(textFont);
 		const std::wstring& text = candidates.at(i).str;
 		GetTextExtentDCMultiline(dc, text, text.length(), &size);
-		_candidateTextRects[i].SetRect(w, height, w + size.cx, height + size.cy);
+		_candidateTextRects[i].SetRect(w, height, w + size.cx * ((int)(pFonts->m_TextFont.m_FontPoint > 0)), height + size.cy);
 		_candidateTextRects[i].OffsetRect(offsetX, offsetY);
-		w += size.cx + space, h = max(h, size.cy);
+		w += (size.cx + space) * ((int)(pFonts->m_TextFont.m_FontPoint > 0)), h = max(h, size.cy);
 
 		/* Comment */
 		oldFont = dc.SelectFont(commentFont);
-		if (!comments.at(i).str.empty())
+		if (!comments.at(i).str.empty() && pFonts->m_CommentFont.m_FontPoint > 0)
 		{
 			const std::wstring& comment = comments.at(i).str;
 			GetTextExtentDCMultiline(dc, comment, comment.length(), &size);
 			_candidateCommentRects[i].SetRect(w, height, w + size.cx + space, height + size.cy);
-			_candidateCommentRects[i].OffsetRect(offsetX, offsetY);
-			w += size.cx + space, h = max(h, size.cy);
+			w += (size.cx + space) * ((int)(pFonts->m_CommentFont.m_FontPoint > 0)), h = max(h, size.cy);
 		}
 		else /* Used for highlighted candidate calculation below */
 		{
 			_candidateCommentRects[i].SetRect(w, height, w, height + size.cy);
-			_candidateCommentRects[i].OffsetRect(offsetX, offsetY);
 		}
+		_candidateCommentRects[i].OffsetRect(offsetX, offsetY);
 	}
 	dc.SelectFont(oldFont);
 	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
@@ -131,7 +130,6 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts )
 		}
 		_candidateRects[i].SetRect(_candidateLabelRects[i].left, hlTop, _candidateCommentRects[i].right, hlBot);
 	}
-	_highlightRect = _candidateRects[id];
 
 	width = max(width, w);
 	height += h;
@@ -153,8 +151,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts )
 	_contentSize.SetSize(width + 2 * offsetX, height + 2 * offsetY);
 
 	_candidateRects[candidates.size() - 1].right = width - _style.margin_x + offsetX;
-	if (id == candidates.size() - 1)
-		_highlightRect.right = width - _style.margin_x + offsetX;
+	_highlightRect = _candidateRects[id];
 
 	labelFont.DeleteObject();
 	textFont.DeleteObject();
@@ -206,30 +203,29 @@ void weasel::HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 		GetTextSizeDW(label, label.length(), pDWR->pLabelTextFormat, pDWR->pDWFactory, &size);
 		_candidateLabelRects[i].SetRect(w, height, w + size.cx, height + size.cy);
 		_candidateLabelRects[i].OffsetRect(offsetX, offsetY);
-		w += size.cx, h = max(h, size.cy);
-		w += space;
+		w += size.cx + space*((int)(size.cx != 0)), h = max(h, size.cy);
+		//w += space;
 
 		/* Text */
 		const std::wstring& text = candidates.at(i).str;
 		GetTextSizeDW(text, text.length(), pDWR->pTextFormat, pDWR->pDWFactory, &size);
 		_candidateTextRects[i].SetRect(w, height, w + size.cx, height + size.cy);
 		_candidateTextRects[i].OffsetRect(offsetX, offsetY);
-		w += size.cx + space, h = max(h, size.cy);
+		w += size.cx + space*((int)(size.cx != 0)), h = max(h, size.cy);
 
 		/* Comment */
-		if (!comments.at(i).str.empty())
+		if (!comments.at(i).str.empty() && pDWR->pCommentTextFormat != NULL)
 		{
 			const std::wstring& comment = comments.at(i).str;
 			GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat, pDWR->pDWFactory, &size);
 			_candidateCommentRects[i].SetRect(w, height, w + size.cx + space, height + size.cy);
-			_candidateCommentRects[i].OffsetRect(offsetX, offsetY);
-			w += size.cx + space, h = max(h, size.cy);
+			w += size.cx + space*((int)(size.cx != 0)), h = max(h, size.cy);
 		}
 		else /* Used for highlighted candidate calculation below */
 		{
 			_candidateCommentRects[i].SetRect(w, height, w, height + size.cy);
-			_candidateCommentRects[i].OffsetRect(offsetX, offsetY);
 		}
+		_candidateCommentRects[i].OffsetRect(offsetX, offsetY);
 	}
 
 	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
@@ -273,7 +269,6 @@ void weasel::HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 		}
 		_candidateRects[i].SetRect(_candidateLabelRects[i].left, hlTop, _candidateCommentRects[i].right, hlBot);
 	}
-	_highlightRect = _candidateRects[id];
 
 	width = max(width, w);
 	height += h;
@@ -295,7 +290,6 @@ void weasel::HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 	_contentSize.SetSize(width + 2 * offsetX, height + 2 * offsetY);
 
 	_candidateRects[candidates.size() - 1].right = width - _style.margin_x + offsetX;
-	if (id == candidates.size() - 1)
-		_highlightRect.right = width - _style.margin_x + offsetX;
+	_highlightRect = _candidateRects[id];
 
 }

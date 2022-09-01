@@ -64,6 +64,12 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, int nCount, 
 	D2D1_SIZE_F sz;
 	HRESULT hr = S_OK;
 	IDWriteTextLayout* pTextLayout = NULL;
+	if (pTextFormat == NULL)
+	{
+		lpSize->cx = 0;
+		lpSize->cy = 0;
+		return;
+	}
 
 	// 创建文本布局 
 	if (pTextFormat != NULL)

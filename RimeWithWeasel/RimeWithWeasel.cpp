@@ -639,6 +639,8 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 		style.comment_font_face = tmp;
 	}
 	RimeConfigGetInt(config, "style/font_point", &style.font_point);
+	if (style.font_point <= 0)
+		style.font_point = 12;
 	if (!RimeConfigGetInt(config, "style/label_font_point", &style.label_font_point))
 	{
 		RimeConfigGetInt(config, "style/font_point", &style.label_font_point);
@@ -647,10 +649,6 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	{
 		RimeConfigGetInt(config, "style/font_point", &style.comment_font_point);
 	}
-	if (style.label_font_point > style.font_point)
-		style.label_font_point = style.font_point;
-	if (style.comment_font_point > style.font_point)
-		style.comment_font_point = style.font_point;
 	Bool inline_preedit = False;
 	if (RimeConfigGetBool(config, "style/inline_preedit", &inline_preedit) || initialize)
 	{
@@ -822,12 +820,6 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 		}
 		RimeConfigGetColor32b(config, (prefix + "/hilited_comment_text_color").c_str(), &style.hilited_comment_text_color);
 	}
-	if (style.font_point <= 0)
-		style.font_point = 1;
-	if (style.label_font_point <= 0)
-		style.label_font_point = 1;
-	if (style.comment_font_point <= 0)
-		style.comment_font_point = 1;
 }
 
 

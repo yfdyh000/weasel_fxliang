@@ -100,7 +100,6 @@ void WeaselPanel::Refresh()
 	ReleaseDC(dc);
 
 	_ResizeWindow();
-	RedrawWindow();
 	_RepositionWindow();
 	RedrawWindow();
 }
@@ -170,11 +169,11 @@ void WeaselPanel::_HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLOR
 		{
 			int pensize = 1;
 			int alpha = ((shadowColor >> 24) & 255);
-			int step = alpha / m_style.shadow_radius;
+			int step = alpha / (m_style.shadow_radius/2);
 			Color scolor = Color::MakeARGB(alpha, GetRValue(shadowColor), GetGValue(shadowColor), GetBValue(shadowColor));
 			Pen penShadow(scolor, (Gdiplus::REAL)pensize);
 			CRect rcShadowEx = rect;
-			for (int i = 0; i < m_style.shadow_radius; i++)
+			for (int i = 0; i < m_style.shadow_radius/2; i++)
 			{
 				GraphicsRoundRectPath path(rcShadowEx, radius + 1 + i);
 				gg.DrawPath(&penShadow, &path);
@@ -486,7 +485,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	ReleaseDC(hdc);
 	
 	// background start
-	/* inline_preedit and candidate size 1 and preedit_type preview, and hide_candidates_when_single is set */
+	/* inline_preedit and candidate size 1 and preedit_type preview, and hide_candidates_when_single is set ， hide candidate window */
 	const std::vector<Text> &candidates(m_ctx.cinfo.candies);
 	m_candidateCount = candidates.size();
 	bool hide_candidates = false;
@@ -608,12 +607,12 @@ void WeaselPanel::CloseDialog(int nVal)
 void WeaselPanel::MoveTo(RECT const& rc)
 {
 	m_inputPos = rc;
-	_RepositionWindow();
+	_RepositionWindow(true);
 	// invalidate for drawing right after keydown got, for layeredwindow
 	Invalidate();
 }
 
-void WeaselPanel::_RepositionWindow()
+void WeaselPanel::_RepositionWindow(bool adj)
 {
 	RECT rcWorkArea;
 	//SystemParametersInfo(SPI_GETWORKAREA, 0, &rcWorkArea, 0);
@@ -637,6 +636,32 @@ void WeaselPanel::_RepositionWindow()
 	rcWorkArea.bottom -= height;
 	int x = m_inputPos.left;
 	int y = m_inputPos.bottom;
+	if (m_style.shadow_color & 0xff000000 && m_style.shadow_radius > 0)
+	{
+		// adjust y in MoveTo, not in Refresh, for flicker handling
+		// round shadow
+		if (m_style.shadow_offset_x == 0 && m_style.shadow_offset_y == 0)
+		{
+			x -= m_style.shadow_radius / 2;
+			if (adj)
+				y -= m_style.shadow_radius / 2;
+		}
+		// dropshadow
+		else
+		{
+			if (m_style.shadow_offset_x >= 0)
+				x -= m_style.shadow_offset_x + 1.5 * m_style.shadow_radius;
+			else
+				x -= m_style.shadow_radius / 2;
+			if (adj)
+			{
+				if (m_style.shadow_offset_y >= 0)
+					y -= m_style.shadow_offset_y + 1.5 * m_style.shadow_radius;
+				else
+					y -= m_style.shadow_radius / 2;
+			}
+		}
+	}
 	if (x > rcWorkArea.right)
 		x = rcWorkArea.right;
 	if (x < rcWorkArea.left)
@@ -901,10 +926,16 @@ void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR 
 	if (!(inColor & 0xff000000)) return;	// transparent, no need to draw
 	if (m_style.color_font )
 	{
+		// invalid text format, no need to draw 
+		if (pTextFormat == NULL)	
+			return;
 		_TextOutWithFallback_D2D(dc, rc, psz, cch, inColor, pTextFormat);
 	}
 	else
 	{ 
+		// invalid font point, no need to draw 
+		if (pFontInfo->m_FontPoint <= 0)
+			return;
 		CFont font;
 		CSize size;
 		long height = -MulDiv(pFontInfo->m_FontPoint, dc.GetDeviceCaps(LOGPIXELSY), 72);

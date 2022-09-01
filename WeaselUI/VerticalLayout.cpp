@@ -61,24 +61,24 @@ void VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts)
 		oldFont = dc.SelectFont(labelFont);
 		std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
 		GetTextExtentDCMultiline(dc, label, label.length(), &size);
-		_candidateLabelRects[i].SetRect(w, height, w + size.cx, height + size.cy);
+		_candidateLabelRects[i].SetRect(w, height, w + size.cx * ((int)(pFonts->m_LabelFont.m_FontPoint > 0)), height + size.cy);
 		_candidateLabelRects[i].OffsetRect(offsetX, offsetY);
-		w += size.cx + space, h = max(h, size.cy);
-		candidate_width += size.cx + space;
+		w += (size.cx + space) * ((int)(pFonts->m_LabelFont.m_FontPoint > 0)), h = max(h, size.cy);
+		candidate_width += (size.cx + space) * ((int)(pFonts->m_LabelFont.m_FontPoint > 0));
 
 		/* Text */
 		oldFont = dc.SelectFont(textFont);
 		const std::wstring& text = candidates.at(i).str;
 		GetTextExtentDCMultiline(dc, text, text.length(), &size);
-		_candidateTextRects[i].SetRect(w, height, w + size.cx, height + size.cy);
+		_candidateTextRects[i].SetRect(w, height, w + size.cx * ((int)(pFonts->m_TextFont.m_FontPoint > 0)), height + size.cy);
 		_candidateTextRects[i].OffsetRect(offsetX, offsetY);
-		w += size.cx, h = max(h, size.cy);
-		candidate_width += size.cx;
+		w += size.cx * ((int)(pFonts->m_LabelFont.m_FontPoint > 0)), h = max(h, size.cy);
+		candidate_width += size.cx * ((int)(pFonts->m_TextFont.m_FontPoint > 0));
 		max_candidate_width = max(max_candidate_width, candidate_width);
 
 		/* Comment */
 		oldFont = dc.SelectFont(commentFont);
-		if (!comments.at(i).str.empty())
+		if (!comments.at(i).str.empty() && pFonts->m_CommentFont.m_FontPoint > 0)
 		{
 			w += space;
 			comment_shift_width = max(comment_shift_width, w - _style.margin_x);
@@ -212,8 +212,8 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 		GetTextSizeDW(label, label.length(), pDWR->pLabelTextFormat, pDWR->pDWFactory, &size);
 		_candidateLabelRects[i].SetRect(w, height, w + size.cx, height + size.cy);
 		_candidateLabelRects[i].OffsetRect(offsetX, offsetY);
-		w += size.cx + space, h = max(h, size.cy);
-		candidate_width += size.cx + space;
+		w += size.cx + space * ((int)(size.cx != 0)), h = max(h, size.cy);
+		candidate_width += size.cx + space * ((int)(size.cx != 0));
 
 		/* Text */
 		const std::wstring& text = candidates.at(i).str;
@@ -225,7 +225,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 		max_candidate_width = max(max_candidate_width, candidate_width);
 
 		/* Comment */
-		if (!comments.at(i).str.empty())
+		if (!comments.at(i).str.empty() && pDWR->pCommentTextFormat != NULL)
 		{
 			w += space;
 			comment_shift_width = max(comment_shift_width, w - _style.margin_x);
