@@ -53,6 +53,7 @@ private:
 	void _CreateLayout();
 	void _ResizeWindow();
 	void _RepositionWindow(bool adj = false);
+	void _ResizeAndPosition(bool adj = false);
 	bool _DrawPreedit(weasel::Text const& text, CDCHandle dc, CRect const& rc);
 	bool _DrawCandidates(CDCHandle dc);
 	void _HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLORREF shadowColor, int blurOffsetX, int blurOffsetY, int radius, BackType type );
@@ -65,10 +66,12 @@ private:
 	weasel::Context &m_ctx;
 	weasel::Status &m_status;
 	weasel::UIStyle &m_style;
+	weasel::Context m_oldctx;
 
 	CRect m_inputPos;
 	CPoint m_oldDrawPos;
 	CSize m_oldSize;
+	bool m_isToRedraw;
 
 	CIcon m_iconDisabled;
 	CIcon m_iconEnabled;
@@ -87,8 +90,6 @@ private:
 	DirectWriteResources* pDWR;
 	GDIFonts* pFonts;
 
-	int offsetX;
-	int offsetY;
 
 };
 

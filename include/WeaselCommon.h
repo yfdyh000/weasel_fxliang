@@ -23,6 +23,14 @@ namespace weasel
 	{
 		TextRange() : start(0), end(0) {}
 		TextRange(int _start, int _end) : start(_start), end(_end) {}
+		bool operator==(const TextRange& tr)
+		{
+			return (start == tr.start && end == tr.end);
+		}
+		bool operator!=(const TextRange& tr)
+		{
+			return (start != tr.start || end != tr.end);
+		}
 		int start;
 		int end;
 	};
@@ -31,6 +39,14 @@ namespace weasel
 	{
 		TextAttribute() : type(NONE) {}
 		TextAttribute(int _start, int _end, TextAttributeType _type) : range(_start, _end), type(_type) {}
+		bool operator==(const TextAttribute& ta)
+		{
+			return (range == ta.range && type == ta.type);
+		}
+		bool operator!=(const TextAttribute& ta)
+		{
+			return (range != ta.range || type != ta.type);
+		}
 		TextRange range;
 		TextAttributeType type;
 	};
@@ -47,6 +63,28 @@ namespace weasel
 		bool empty() const
 		{
 			return str.empty();
+		}
+		bool operator==(const Text& txt)
+		{
+			if (str != txt.str || (attributes.size() != txt.attributes.size()))
+				return false;
+			for (int i = 0; i < attributes.size(); i++)
+			{
+				if ((attributes[i] != txt.attributes[i]))
+					return false;
+			}
+			return true;
+		}
+		bool operator!=(const Text& txt)
+		{
+			if (str != txt.str || (attributes.size() != txt.attributes.size()))
+				return true;
+			for (int i = 0; i < attributes.size(); i++)
+			{
+				if ((attributes[i] != txt.attributes[i]))
+					return true;
+			}
+			return false;
 		}
 		std::wstring str;
 		std::vector<TextAttribute> attributes;
@@ -72,6 +110,40 @@ namespace weasel
 		{
 			return candies.empty();
 		}
+		bool operator==(const CandidateInfo& ci)
+		{
+			if (currentPage != ci.currentPage
+				|| totalPages != ci.totalPages
+				|| highlighted != ci.highlighted
+				|| notequal(candies, ci.candies)
+				|| notequal(comments, ci.comments)
+				|| notequal(labels, ci.labels)
+				)
+				return false;
+			return true;
+		}
+		bool operator!=(const CandidateInfo& ci)
+		{
+			if (currentPage != ci.currentPage
+				|| totalPages != ci.totalPages
+				|| highlighted != ci.highlighted
+				|| notequal(candies, ci.candies)
+				|| notequal(comments, ci.comments)
+				|| notequal(labels, ci.labels)
+				)
+				return true;
+			return false;
+		}
+		bool notequal(std::vector<Text> txtSrc, std::vector<Text> txtDst)
+		{
+			if (txtSrc.size() != txtDst.size()) return true;
+			for (int i = 0; i < txtSrc.size(); i++)
+			{
+				if (txtSrc[i] != txtDst[i])
+					return true;
+			}
+			return false;
+		}
 		int currentPage;
 		int totalPages;
 		int highlighted;
@@ -92,6 +164,16 @@ namespace weasel
 		bool empty() const
 		{
 			return preedit.empty() && aux.empty() && cinfo.empty();
+		}
+		bool operator==(const Context& ctx)
+		{
+			if (preedit == ctx.preedit && aux == ctx.aux || cinfo == ctx.cinfo)
+				return true;
+			return false;
+		}
+		bool operator!=(const Context& ctx)
+		{
+			return !(operator==(ctx));
 		}
 		Text preedit;
 		Text aux;

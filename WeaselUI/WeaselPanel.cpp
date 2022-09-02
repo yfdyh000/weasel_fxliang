@@ -4,7 +4,9 @@
 #include <vector>
 #include <string>
 #include <boost/algorithm/string.hpp>
-
+#ifdef _DEBUG_
+	#include <fstream>
+#endif
 #include "VerticalLayout.h"
 #include "HorizontalLayout.h"
 #include "FullScreenLayout.h"
@@ -23,17 +25,19 @@ static CRect OffsetRect(const CRect rc, int offsetx, int offsety)
 	return res;
 }
 
- WeaselPanel::WeaselPanel(weasel::UI &ui)
-	: m_layout(NULL), 
-	  m_ctx(ui.ctx()), 
-	  m_status(ui.status()), 
-	  m_style(ui.style()),
-	  m_candidateCount(0),
-	  pDWR(NULL),
-	  pFonts(NULL),
-	  m_blurer(NULL),
-	  _m_gdiplusToken(0)
+WeaselPanel::WeaselPanel(weasel::UI& ui)
+	: m_layout(NULL),
+	m_ctx(ui.ctx()),
+	m_status(ui.status()),
+	m_style(ui.style()),
+	m_candidateCount(0),
+	pDWR(NULL),
+	pFonts(NULL),
+	m_blurer(NULL),
+	m_isToRedraw(false),
+	_m_gdiplusToken(0)
 {
+	m_oldctx = m_ctx;
 	m_iconDisabled.LoadIconW(IDI_RELOAD, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 	m_iconEnabled.LoadIconW(IDI_ZH, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 	m_iconAlpha.LoadIconW(IDI_EN, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
@@ -60,6 +64,84 @@ void WeaselPanel::_ResizeWindow()
 		SetWindowPos(NULL, 0, 0, size.cx, size.cy, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
 		m_oldSize = size;
 	}
+	ReleaseDC(dc);
+}
+
+void WeaselPanel::_ResizeAndPosition(bool adj)
+{
+	CDCHandle dc = GetDC();
+	CSize size = m_layout->GetContentSize();
+	RECT rcWorkArea;
+	//SystemParametersInfo(SPI_GETWORKAREA, 0, &rcWorkArea, 0);
+	memset(&rcWorkArea, 0, sizeof(rcWorkArea));
+	HMONITOR hMonitor = MonitorFromRect(m_inputPos, MONITOR_DEFAULTTONEAREST);
+	if (hMonitor)
+	{
+		MONITORINFO info;
+		info.cbSize = sizeof(MONITORINFO);
+		if (GetMonitorInfo(hMonitor, &info))
+		{
+			rcWorkArea = info.rcWork;
+		}
+	}
+	int width = size.cx;
+	int height = size.cy;
+	// keep panel visible
+	rcWorkArea.right -= width;
+	rcWorkArea.bottom -= height;
+	int x = m_inputPos.left;
+	int y = m_inputPos.bottom;
+#if 1
+	if (m_style.shadow_color & 0xff000000 && m_style.shadow_radius > 0)
+	{
+		// adjust y in MoveTo, not in Refresh, for flicker handling
+		// round shadow
+		if (m_style.shadow_offset_x == 0 && m_style.shadow_offset_y == 0)
+		{
+			x -= m_style.shadow_radius / 2;
+			if (adj)
+				y -= m_style.shadow_radius / 2;
+		}
+		// dropshadow
+		else
+		{
+			if (m_style.shadow_offset_x >= 0)
+				x -= m_style.shadow_offset_x + 1.5 * m_style.shadow_radius;
+			else
+				x -= m_style.shadow_radius / 2;
+			if (adj)
+			{
+				if (m_style.shadow_offset_y >= 0)
+					y -= m_style.shadow_offset_y + 1.5 * m_style.shadow_radius;
+				else
+					y -= m_style.shadow_radius / 2;
+			}
+		}
+	}
+#endif
+	if (x > rcWorkArea.right)
+		x = rcWorkArea.right;
+	if (x < rcWorkArea.left)
+		x = rcWorkArea.left;
+	// show panel above the input focus if we're around the bottom
+	if (y > rcWorkArea.bottom)
+		y = m_inputPos.top - height;
+	if (y > rcWorkArea.bottom)
+		y = rcWorkArea.bottom;
+	if (y < rcWorkArea.top)
+		y = rcWorkArea.top;
+	// memorize adjusted position (to avoid window bouncing on height change)
+	m_inputPos.bottom = y;
+	// redraw only when size changed, position changed or context changed
+	if (x != m_oldDrawPos.x || y != m_oldDrawPos.y || size != m_oldSize || (m_ctx != m_oldctx) )
+	{
+		m_oldDrawPos = CPoint(x, y);
+		m_isToRedraw = true;
+		m_oldSize = size;
+		SetWindowPos(HWND_TOPMOST, x, y, size.cx, size.cy, SWP_NOACTIVATE);
+	}
+	else
+		m_isToRedraw = false;
 	ReleaseDC(dc);
 }
 
@@ -99,9 +181,17 @@ void WeaselPanel::Refresh()
 		m_layout->DoLayout(dc, pFonts);
 	ReleaseDC(dc);
 
-	_ResizeWindow();
-	_RepositionWindow();
-	RedrawWindow();
+	_ResizeAndPosition();
+	if (m_isToRedraw)
+	{
+		RedrawWindow();
+#ifdef _DEBUG_
+		ofstream o;
+		o.open("C:\\Users\\vm10\\Desktop\\log.txt", ios::app);
+		o << "Redraw in Refresh "<< endl;
+		o.close();
+#endif
+	}
 }
 bool WeaselPanel::_IsHighlightOverCandidateWindow(CRect rc, CRect bg, Gdiplus::Graphics* g)
 {
@@ -416,7 +506,6 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 		else if (i == candidates.size() - 1)
 			bkType = LAST_CAND;
 		CRect rect;
-		//rect = OffsetRect(m_layout->GetCandidateRect(i), offsetX, offsetY);
 		rect = m_layout->GetCandidateRect(i);
 		rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 		int txtColor, txtLabelColor, txtCommentColor;
@@ -437,7 +526,6 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 		// Draw label
 		std::wstring label = m_layout->GetLabelText(labels, i, m_style.label_text_format.c_str());
 		rect = m_layout->GetCandidateLabelRect(i);
-		//rect = OffsetRect(rect, offsetX, offsetY);
 
 		if (m_style.color_font)
 			_TextOut(dc, rect.left, rect.top, rect, label.c_str(), label.length(), pDWR->pLabelTextFormat, NULL, txtLabelColor);
@@ -447,7 +535,6 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 		// Draw text
 		std::wstring text = candidates.at(i).str;
 		rect = m_layout->GetCandidateTextRect(i);
-		//rect = OffsetRect(rect, offsetX, offsetY);
 		if (m_style.color_font)
 			_TextOut(dc, rect.left, rect.top, rect, text.c_str(), text.length(), pDWR->pTextFormat, NULL, txtColor);
 		else
@@ -458,7 +545,6 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 		if (!comment.empty())
 		{
 			rect = m_layout->GetCandidateCommentRect(i);
-			//rect = OffsetRect(rect, offsetX, offsetY);
 			if(m_style.color_font)
 				_TextOut(dc, rect.left, rect.top, rect, comment.c_str(), comment.length(), pDWR->pCommentTextFormat, NULL, txtCommentColor);
 			else
@@ -588,13 +674,24 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 		pFonts = new GDIFonts(&m_style);
 	}
 	m_blurer = new GdiplusBlur();
-
+#ifdef _DEBUG_
+	ofstream o;
+	o.open("C:\\Users\\vm10\\Desktop\\log.txt", ios::app);
+	o << "OnCreate" << endl;
+	o.close();
+#endif
 	Refresh();
 	return TRUE;
 }
 
 LRESULT WeaselPanel::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+#ifdef _DEBUG_
+	ofstream o;
+	o.open("C:\\Users\\vm10\\Desktop\\log.txt", ios::app);
+	o << "OnDestroy" << endl;
+	o.close();
+#endif
 	GdiplusShutdown(_m_gdiplusToken);
 	return 0;
 }
@@ -607,9 +704,17 @@ void WeaselPanel::CloseDialog(int nVal)
 void WeaselPanel::MoveTo(RECT const& rc)
 {
 	m_inputPos = rc;
-	_RepositionWindow(true);
-	// invalidate for drawing right after keydown got, for layeredwindow
-	Invalidate();
+	_ResizeAndPosition(true);
+	if(m_isToRedraw)
+	{
+		RedrawWindow();
+#ifdef _DEBUG_
+		ofstream o;
+		o.open("C:\\Users\\vm10\\Desktop\\log.txt", ios::app);
+		o << "Redraw in MoveTo" << endl;
+		o.close();
+#endif
+	}
 }
 
 void WeaselPanel::_RepositionWindow(bool adj)

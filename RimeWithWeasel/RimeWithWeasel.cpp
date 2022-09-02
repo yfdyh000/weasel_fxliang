@@ -7,7 +7,9 @@
 #include <VersionHelpers.hpp>
 #include <math.h>
 #include <regex>
-
+#ifdef _DEBUG_
+	#include <fstream>
+#endif
 #include <rime_api.h>
 #define ISWINVERSIONGREATERTHAN8P1() IsWinVersionGreaterThan(6, 3)
 
@@ -140,6 +142,12 @@ BOOL RimeWithWeaselHandler::ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT sess
 		 << ", session_id = " << session_id;
 	if (m_disabled) return FALSE;
 	Bool handled = RimeProcessKey(session_id, keyEvent.keycode, expand_ibus_modifier(keyEvent.mask));
+#ifdef _DEBUG_
+	std::ofstream o;
+	o.open("C:\\Users\\vm10\\Desktop\\log.txt", std::ios::app);
+	o << "\nm_evtCnt in RimeWithWeasel: " << keyEvent.keycode << ",\t" << keyEvent.mask << std::endl;
+	o.close();
+#endif
 	_Respond(session_id, eat);
 	_UpdateUI(session_id);
 	m_active_session = session_id;
