@@ -8,7 +8,6 @@
 
 typedef std::map<std::string, bool> AppOptions;
 typedef std::map<std::string, AppOptions> AppOptionsByAppName;
-//#define _DEBUG_
 class RimeWithWeaselHandler :
 	public weasel::RequestHandler
 {

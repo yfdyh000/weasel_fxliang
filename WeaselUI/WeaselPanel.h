@@ -69,9 +69,9 @@ private:
 	weasel::Context m_oldctx;
 
 	CRect m_inputPos;
-	CPoint m_oldDrawPos;
 	CSize m_oldSize;
-	bool m_isToRedraw;
+	CPoint m_oldInputPos;
+	bool m_reposed;
 
 	CIcon m_iconDisabled;
 	CIcon m_iconEnabled;

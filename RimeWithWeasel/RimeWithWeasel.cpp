@@ -144,7 +144,7 @@ BOOL RimeWithWeaselHandler::ProcessKeyEvent(weasel::KeyEvent keyEvent, UINT sess
 	Bool handled = RimeProcessKey(session_id, keyEvent.keycode, expand_ibus_modifier(keyEvent.mask));
 #ifdef _DEBUG_
 	std::ofstream o;
-	o.open("C:\\Users\\vm10\\Desktop\\log.txt", std::ios::app);
+	o.open("log.txt", std::ios::app);
 	o << "\nm_evtCnt in RimeWithWeasel: " << keyEvent.keycode << ",\t" << keyEvent.mask << std::endl;
 	o.close();
 #endif

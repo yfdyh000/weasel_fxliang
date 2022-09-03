@@ -9,6 +9,7 @@
 #define WEASEL_REG_KEY L"Software\\Rime\\Weasel"
 #define RIME_REG_KEY L"Software\\Rime"
 
+//#define _DEBUG_
 namespace weasel
 {
 
@@ -174,6 +175,18 @@ namespace weasel
 		bool operator!=(const Context& ctx)
 		{
 			return !(operator==(ctx));
+		}
+
+		bool operator!()
+		{
+			if (preedit.str.empty()
+				&& aux.str.empty()
+				&& cinfo.candies.empty()
+				&& cinfo.labels.empty()
+				&& cinfo.comments.empty())
+				return true;
+			else
+				return false;
 		}
 		Text preedit;
 		Text aux;
