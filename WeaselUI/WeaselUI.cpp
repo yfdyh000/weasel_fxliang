@@ -13,6 +13,8 @@ public:
 
 	void Refresh() {
 		if (!panel.IsWindow()) return;
+		if (!panel.CheckResOK())
+			panel.InitFontRes();
 		panel.Refresh();
 	}
 	void Show();
@@ -140,8 +142,6 @@ void UIImpl::Hide()
 
 void UIImpl::ShowWithTimeout(DWORD millisec)
 {
-	// when candidate windows is not shown, keybiding might crash by panel.ShowWindow(SW_SHOWNA)
-	return;
 	if (!panel.IsWindow()) return;
 	DLOG(INFO) << "ShowWithTimeout: " << millisec;
 	panel.ShowWindow(SW_SHOWNA);

@@ -413,9 +413,15 @@ bool RimeWithWeaselHandler::_ShowMessage(weasel::Context& ctx, weasel::Status& s
 	}
 	else if (m_message_type == "option") {
 		if (m_message_value == "!ascii_mode")
-			show_icon = true;  //tips = L"中文";
+		{
+			show_icon = true;  
+			tips = L"中文";
+		}
 		else if (m_message_value == "ascii_mode")
-			show_icon = true;  //tips = L"西文";
+		{
+			show_icon = true;  
+			tips = L"西文";
+		}
 		else if (m_message_value == "!full_shape")
 			tips = L"半角";
 		else if (m_message_value == "full_shape")

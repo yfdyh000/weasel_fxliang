@@ -56,7 +56,7 @@ namespace weasel
 	public:
 		~GDIFonts() {}
 		//GDIFonts(wstring labelFontFace, int labelFontPoint, wstring textFontFace, int textFontPoint, wstring commentFontFace, int commentFontPoint);
-		GDIFonts(const UIStyle* style);
+		GDIFonts(const UIStyle& style);
 		void _ParseFontFace(const std::wstring fontFaceStr, std::wstring& fontFace, int& fontWeight);
 		FontInfo m_LabelFont;
 		FontInfo m_TextFont;

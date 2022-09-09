@@ -39,7 +39,9 @@ namespace weasel
 	protected:
 		/* Utility functions */
 		CSize GetPreeditSize(CDCHandle dc) const;
+		CSize GetAuxSize(CDCHandle dc) const;
 		CSize GetPreeditSize(CDCHandle dc, IDWriteTextFormat* pTextFormat, IDWriteFactory* pDWFactory) const;
+		CSize GetAuxSize(CDCHandle dc, IDWriteTextFormat* pTextFormat, IDWriteFactory* pDWFactory) const;
 		void UpdateStatusIconLayout(int* width, int* height);
 
 		CSize _contentSize;

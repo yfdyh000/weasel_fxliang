@@ -184,7 +184,8 @@ void weasel::HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 	/* Auxiliary */
 	if (!_context.aux.str.empty())
 	{
-		GetTextExtentDCMultiline(dc, _context.aux.str, _context.aux.str.length(), &size);
+		//GetTextExtentDCMultiline(dc, _context.aux.str, _context.aux.str.length(), &size);
+		size = GetAuxSize(dc, pDWR->pTextFormat, pDWR->pDWFactory);
 		_auxiliaryRect.SetRect(_style.margin_x, height, _style.margin_x + size.cx, height + size.cy);
 		_auxiliaryRect.OffsetRect(offsetX, offsetY);
 		width = max(width, _style.margin_x + size.cx + _style.margin_x);

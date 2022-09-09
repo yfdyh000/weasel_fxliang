@@ -291,22 +291,22 @@ void DirectWriteResources::_SetFontFallback(IDWriteTextFormat1* pTextFormat, vec
 }
 
 
-GDIFonts::GDIFonts(const UIStyle* style) 
+GDIFonts::GDIFonts(const UIStyle& style) 
 {
 	vector<wstring> fontFaceStrVector;
-	split(fontFaceStrVector, style->label_font_face, is_any_of(L","));
+	split(fontFaceStrVector, style.label_font_face, is_any_of(L","));
 	_ParseFontFace(fontFaceStrVector[0], m_LabelFont.m_FontFace, m_LabelFont.m_FontWeight);
-	m_LabelFont.m_FontPoint = style->label_font_point;
+	m_LabelFont.m_FontPoint = style.label_font_point;
 	fontFaceStrVector.swap(vector<wstring>());
 
-	split(fontFaceStrVector, style->font_face, is_any_of(L","));
+	split(fontFaceStrVector, style.font_face, is_any_of(L","));
 	_ParseFontFace(fontFaceStrVector[0], m_TextFont.m_FontFace, m_TextFont.m_FontWeight);
-	m_TextFont.m_FontPoint = style->font_point;
+	m_TextFont.m_FontPoint = style.font_point;
 	fontFaceStrVector.swap(vector<wstring>());
 
-	split(fontFaceStrVector, style->comment_font_face, is_any_of(L","));
+	split(fontFaceStrVector, style.comment_font_face, is_any_of(L","));
 	_ParseFontFace(fontFaceStrVector[0], m_CommentFont.m_FontFace, m_CommentFont.m_FontWeight);
-	m_CommentFont.m_FontPoint = style->comment_font_point;
+	m_CommentFont.m_FontPoint = style.comment_font_point;
 	fontFaceStrVector.swap(vector<wstring>());
 }
 

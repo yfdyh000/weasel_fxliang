@@ -34,12 +34,8 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
 	pDWR(NULL),
 	pFonts(NULL),
 	m_blurer(NULL),
-	m_reposed(true),
-	m_oldInputPos(CPoint(0,0)),
-	m_oldSize(CSize(0,0)),
 	_m_gdiplusToken(0)
 {
-	m_oldctx = m_ctx;
 	m_iconDisabled.LoadIconW(IDI_RELOAD, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 	m_iconEnabled.LoadIconW(IDI_ZH, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 	m_iconAlpha.LoadIconW(IDI_EN, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
@@ -61,11 +57,7 @@ void WeaselPanel::_ResizeWindow()
 {
 	CDCHandle dc = GetDC();
 	CSize size = m_layout->GetContentSize();
-	if (m_oldSize != size)
-	{
-		m_oldSize = size;
-		SetWindowPos(NULL, 0, 0, size.cx, size.cy, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
-	}
+	SetWindowPos(NULL, 0, 0, size.cx, size.cy, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
 	ReleaseDC(dc);
 }
 
@@ -106,10 +98,8 @@ void WeaselPanel::Refresh()
 	ReleaseDC(dc);
 
 	_ResizeWindow();
-	RedrawWindow();
 	_RepositionWindow();
-	if(m_reposed)
-		RedrawWindow();
+	RedrawWindow();
 #ifdef _DEBUG_
 		ofstream o;
 		o.open("log.txt", ios::app);
@@ -117,6 +107,29 @@ void WeaselPanel::Refresh()
 		o.close();
 #endif
 }
+
+bool WeaselPanel::CheckResOK(void)
+{
+	return ((m_style.color_font) && (pDWR != NULL)) || ((!m_style.color_font) && (pFonts != NULL));
+}
+
+bool WeaselPanel::InitFontRes(void)
+{
+	if (m_style.color_font)
+	{
+		// prepare d2d1 resources
+		if(pDWR == NULL)
+			pDWR = new DirectWriteResources(m_style);
+		return (pDWR != NULL);
+	}
+	else
+	{
+		if(pFonts == NULL)
+			pFonts = new GDIFonts(m_style);
+		return (pFonts != NULL);
+	}
+}
+
 bool WeaselPanel::_IsHighlightOverCandidateWindow(CRect rc, CRect bg, Gdiplus::Graphics* g)
 {
 	GraphicsRoundRectPath bgPath(bg, m_style.round_corner_ex);
@@ -590,15 +603,7 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	::SetWindowLong(m_hWnd, GWL_EXSTYLE, t);
 	GdiplusStartup(&_m_gdiplusToken, &_m_gdiplusStartupInput, NULL);
 	GetWindowRect(&m_inputPos);
-	if (m_style.color_font)
-	{
-		// prepare d2d1 resources
-		pDWR = new DirectWriteResources(m_style);
-	}
-	else
-	{
-		pFonts = new GDIFonts(&m_style);
-	}
+	InitFontRes();
 	m_blurer = new GdiplusBlur();
 #ifdef _DEBUG_
 	ofstream o;
@@ -703,15 +708,7 @@ void WeaselPanel::_RepositionWindow(bool adj)
 		y = rcWorkArea.top;
 	// memorize adjusted position (to avoid window bouncing on height change)
 	m_inputPos.bottom = y;
-	if (x != m_oldInputPos.x || y != m_oldInputPos.y)
-	{
-		m_oldInputPos = CPoint(x, y);
-		m_reposed = true;
-		SetWindowPos(HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE);
-	}
-	else
-		m_reposed = false;
-
+	SetWindowPos(HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE);
 }
 
 static HRESULT _TextOutWithFallback(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch)

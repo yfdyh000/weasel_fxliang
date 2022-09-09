@@ -46,6 +46,8 @@ public:
 
 	void MoveTo(RECT const& rc);
 	void Refresh();
+	bool CheckResOK(void);
+	bool InitFontRes(void);
 
 	void DoPaint(CDCHandle dc);
 
@@ -66,12 +68,8 @@ private:
 	weasel::Context &m_ctx;
 	weasel::Status &m_status;
 	weasel::UIStyle &m_style;
-	weasel::Context m_oldctx;
 
 	CRect m_inputPos;
-	CSize m_oldSize;
-	CPoint m_oldInputPos;
-	bool m_reposed;
 
 	CIcon m_iconDisabled;
 	CIcon m_iconEnabled;
