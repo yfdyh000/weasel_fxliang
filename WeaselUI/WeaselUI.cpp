@@ -15,6 +15,12 @@ public:
 		if (!panel.IsWindow()) return;
 		if (!panel.CheckResOK())
 			panel.InitFontRes();
+		if (timer)
+		{
+			Hide();
+			KillTimer(panel.m_hWnd, AUTOHIDE_TIMER);
+			timer = 0;
+		}
 		panel.Refresh();
 	}
 	void Show();
@@ -32,6 +38,59 @@ public:
 	static UINT_PTR timer;
 	bool shown;
 };
+
+UINT_PTR UIImpl::timer = 0;
+
+void UIImpl::Show()
+{
+	if (!panel.IsWindow()) return;
+	panel.ShowWindow(SW_SHOWNA);
+	shown = true;
+	if (timer)
+	{
+		KillTimer(panel.m_hWnd, AUTOHIDE_TIMER);
+		timer = 0;
+	}
+}
+
+void UIImpl::Hide()
+{
+	if (!panel.IsWindow()) return;
+	panel.ShowWindow(SW_HIDE);
+	shown = false;
+	if (timer)
+	{
+		KillTimer(panel.m_hWnd, AUTOHIDE_TIMER);
+		timer = 0;
+	}
+}
+
+void UIImpl::ShowWithTimeout(DWORD millisec)
+{
+	if (!panel.IsWindow()) return;
+	DLOG(INFO) << "ShowWithTimeout: " << millisec;
+	panel.ShowWindow(SW_SHOWNA);
+	shown = true;
+	SetTimer(panel.m_hWnd, AUTOHIDE_TIMER, millisec, &UIImpl::OnTimer);
+	timer = UINT_PTR(this);
+}
+VOID CALLBACK UIImpl::OnTimer(
+  _In_  HWND hwnd,
+  _In_  UINT uMsg,
+  _In_  UINT_PTR idEvent,
+  _In_  DWORD dwTime
+)
+{
+	DLOG(INFO) << "OnTimer:";
+	KillTimer(hwnd, idEvent);
+	UIImpl* self = (UIImpl*)timer;
+	timer = 0;
+	if (self)
+	{
+		self->Hide();
+		self->shown = false;
+	}
+}
 
 bool UI::Create(HWND parent)
 {
@@ -112,56 +171,4 @@ void UI::Update(const Context &ctx, const Status &status)
 	ctx_ = ctx;
 	status_ = status;
 	Refresh();
-}
-
-UINT_PTR UIImpl::timer = 0;
-
-void UIImpl::Show()
-{
-	if (!panel.IsWindow()) return;
-	panel.ShowWindow(SW_SHOWNA);
-	shown = true;
-	if (timer)
-	{
-		KillTimer(panel.m_hWnd, AUTOHIDE_TIMER);
-		timer = 0;
-	}
-}
-
-void UIImpl::Hide()
-{
-	if (!panel.IsWindow()) return;
-	panel.ShowWindow(SW_HIDE);
-	shown = false;
-	if (timer)
-	{
-		KillTimer(panel.m_hWnd, AUTOHIDE_TIMER);
-		timer = 0;
-	}
-}
-
-void UIImpl::ShowWithTimeout(DWORD millisec)
-{
-	if (!panel.IsWindow()) return;
-	DLOG(INFO) << "ShowWithTimeout: " << millisec;
-	panel.ShowWindow(SW_SHOWNA);
-	SetTimer(panel.m_hWnd, AUTOHIDE_TIMER, millisec, &UIImpl::OnTimer);
-	timer = UINT_PTR(this);
-}
-
-VOID CALLBACK UIImpl::OnTimer(
-  _In_  HWND hwnd,
-  _In_  UINT uMsg,
-  _In_  UINT_PTR idEvent,
-  _In_  DWORD dwTime
-)
-{
-	DLOG(INFO) << "OnTimer:";
-	KillTimer(hwnd, idEvent);
-	UIImpl* self = (UIImpl*)timer;
-	timer = 0;
-	if (self)
-	{
-		self->Hide();
-	}
 }
