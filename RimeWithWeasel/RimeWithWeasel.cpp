@@ -11,7 +11,31 @@
 	#include <fstream>
 #endif
 #include <rime_api.h>
-#define ISWINVERSIONGREATERTHAN8P1() IsWinVersionGreaterThan(6, 3)
+static inline BOOL GetVersionEx2(LPOSVERSIONINFOW lpVersionInformation)
+{
+	HMODULE hNtDll = GetModuleHandleW(L"NTDLL"); // 获取ntdll.dll的句柄
+	typedef NTSTATUS(NTAPI* tRtlGetVersion)(PRTL_OSVERSIONINFOW povi); // RtlGetVersion的原型
+	tRtlGetVersion pRtlGetVersion = NULL;
+	if (hNtDll)
+	{
+		pRtlGetVersion = (tRtlGetVersion)GetProcAddress(hNtDll, "RtlGetVersion"); // 获取RtlGetVersion地址
+	}
+	if (pRtlGetVersion)
+	{
+		return pRtlGetVersion((PRTL_OSVERSIONINFOW)lpVersionInformation) >= 0; // 调用RtlGetVersion
+	}
+	return FALSE;
+}
+
+static bool IsWindows8Point10OrGreaterEx()
+{
+	OSVERSIONINFOEXW ovi = { sizeof ovi };
+	GetVersionEx2((LPOSVERSIONINFOW)&ovi);
+	if ((ovi.dwMajorVersion == 6 && ovi.dwMinorVersion >= 3) || ovi.dwMajorVersion > 6)
+		return true;
+	else
+		return false;
+}
 
 int expand_ibus_modifier(int m)
 {
@@ -674,12 +698,15 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 		style.hide_candidates_when_single = !!hide_candidates_when_single;
 	}
 	Bool color_font = True;
+	//std::wstring sstr = (IsWindows8Point10OrGreaterEx()) ? L"高于windows 8.1" : L"低于Windows 8.1";
+
 	if (RimeConfigGetBool(config, "style/color_font", &color_font) || initialize)
 	{
 		style.color_font = !!color_font;
 	}
+
 	// if system version lower than 8.1, disable color_font
-	style.color_font = style.color_font && ISWINVERSIONGREATERTHAN8P1();
+	style.color_font = style.color_font && IsWindows8Point10OrGreaterEx();
 
 	char preedit_type[20] = { 0 };
 	if (RimeConfigGetString(config, "style/preedit_type", preedit_type, sizeof(preedit_type) - 1))
