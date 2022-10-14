@@ -196,13 +196,14 @@ namespace weasel
 	// 由ime管理
 	struct Status
 	{
-		Status() : ascii_mode(false), composing(false), disabled(false) {}
+		Status() : ascii_mode(false), composing(false), disabled(false), full_shape(false) {}
 		void reset()
 		{
 			schema_name.clear();
 			ascii_mode = false;
 			composing = false;
 			disabled = false;
+			full_shape = false;
 		}
 		// 輸入方案
 		std::wstring schema_name;
@@ -212,6 +213,8 @@ namespace weasel
 		bool composing;
 		// 維護模式（暫停輸入功能）
 		bool disabled;
+		// 全角状态
+		bool full_shape;
 	};
 
 	// 用於向前端告知設置信息

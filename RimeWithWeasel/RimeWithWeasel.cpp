@@ -900,6 +900,7 @@ void RimeWithWeaselHandler::_GetStatus(weasel::Status & stat, UINT session_id)
 		stat.ascii_mode = !!status.is_ascii_mode;
 		stat.composing = !!status.is_composing;
 		stat.disabled = !!status.is_disabled;
+		stat.full_shape = !!status.is_full_shape;
 		RimeFreeStatus(&status);
 	}
 

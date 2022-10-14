@@ -39,6 +39,8 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
 	m_iconDisabled.LoadIconW(IDI_RELOAD, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 	m_iconEnabled.LoadIconW(IDI_ZH, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 	m_iconAlpha.LoadIconW(IDI_EN, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
+	m_iconFull.LoadIconW(IDI_FULL_SHAPE, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
+	m_iconHalf.LoadIconW(IDI_HALF_SHAPE, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 }
 
 WeaselPanel::~WeaselPanel()
@@ -559,7 +561,8 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	if (m_layout->ShouldDisplayStatusIcon())
 	{
 		const CRect iconRect(m_layout->GetStatusIconRect());
-		CIcon& icon(m_status.disabled ? m_iconDisabled : m_status.ascii_mode ? m_iconAlpha : m_iconEnabled);
+		CIcon& icon(m_status.disabled ? m_iconDisabled : m_status.ascii_mode ? m_iconAlpha :
+			(m_ctx.aux.str != L"全角" && m_ctx.aux.str != L"半角") ? m_iconEnabled: m_status.full_shape? m_iconFull: m_iconHalf);
 		memDC.DrawIconEx(iconRect.left, iconRect.top, icon, 0, 0);
 		drawn = true;
 	}
