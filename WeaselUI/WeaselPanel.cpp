@@ -601,9 +601,6 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 
 LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-	LONG t = ::GetWindowLong(m_hWnd, GWL_EXSTYLE);
-	t |= WS_EX_LAYERED|WS_EX_TRANSPARENT;
-	::SetWindowLong(m_hWnd, GWL_EXSTYLE, t);
 	GdiplusStartup(&_m_gdiplusToken, &_m_gdiplusStartupInput, NULL);
 	GetWindowRect(&m_inputPos);
 	InitFontRes();
