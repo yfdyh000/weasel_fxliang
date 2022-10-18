@@ -601,9 +601,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 
 void WeaselPanel::Clear()
 {
-	m_ctx.aux.clear();
-	m_ctx.preedit.clear();
-	m_ctx.cinfo.candies.clear();
+	m_ctx.clear();
 }
 
 LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
