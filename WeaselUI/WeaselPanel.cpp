@@ -599,6 +599,13 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 
 }
 
+void WeaselPanel::Clear()
+{
+	m_ctx.aux.clear();
+	m_ctx.preedit.clear();
+	m_ctx.cinfo.candies.clear();
+}
+
 LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 	GdiplusStartup(&_m_gdiplusToken, &_m_gdiplusStartupInput, NULL);

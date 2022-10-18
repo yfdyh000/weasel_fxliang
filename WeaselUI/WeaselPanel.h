@@ -50,6 +50,7 @@ public:
 	bool InitFontRes(void);
 
 	void DoPaint(CDCHandle dc);
+	void Clear();
 
 private:
 	void _CreateLayout();

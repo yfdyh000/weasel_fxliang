@@ -95,7 +95,11 @@ VOID CALLBACK UIImpl::OnTimer(
 bool UI::Create(HWND parent)
 {
 	if (pimpl_)
+	{
+		// re create panel cause destroied before
+		pimpl_->panel.Create(parent, 0, 0, WS_POPUP, WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_TRANSPARENT | WS_EX_LAYERED, 0U, 0);
 		return true;
+	}
 
 	pimpl_ = new UIImpl(*this);
 	if (!pimpl_)
@@ -109,10 +113,13 @@ void UI::Destroy()
 {
 	if (pimpl_)
 	{
+		// clear ctx, refresh and destroy panel not delete it, avoiding re initialization font resources
+		pimpl_->panel.Clear();
+		pimpl_->panel.Refresh();
 		if (pimpl_->panel.IsWindow())
 			pimpl_->panel.DestroyWindow();
-		delete pimpl_;
-		pimpl_ = 0;
+		//delete pimpl_;
+		//pimpl_ = 0;
 	}
 }
 
