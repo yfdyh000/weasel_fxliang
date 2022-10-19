@@ -34,6 +34,7 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
 	pDWR(NULL),
 	pFonts(NULL),
 	m_blurer(NULL),
+	pBrush(NULL),
 	_m_gdiplusToken(0)
 {
 	m_iconDisabled.LoadIconW(IDI_RELOAD, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
@@ -53,6 +54,8 @@ WeaselPanel::~WeaselPanel()
 		delete pFonts;
 	if (m_blurer != NULL)
 		delete m_blurer;
+	if (pBrush != NULL)
+		SafeRelease(&pBrush);
 }
 
 void WeaselPanel::_ResizeWindow()
@@ -110,11 +113,11 @@ void WeaselPanel::Refresh()
 #endif
 }
 
-bool WeaselPanel::CheckResOK(void)
+void WeaselPanel::SetStyle(weasel::UIStyle& style)
 {
-	return ((m_style.color_font) && (pDWR != NULL)) || ((!m_style.color_font) && (pFonts != NULL));
+	m_style = style;
+	InitFontRes();
 }
-
 bool WeaselPanel::InitFontRes(void)
 {
 	if (m_style.color_font)
@@ -122,12 +125,21 @@ bool WeaselPanel::InitFontRes(void)
 		// prepare d2d1 resources
 		if(pDWR == NULL)
 			pDWR = new DirectWriteResources(m_style);
+		// switch from difrent style font size settings
+		if (pDWR->pTextFormat->GetFontSize() != m_style.font_point * pDWR->dpiScaleX_
+			|| pDWR->pLabelTextFormat->GetFontSize() != m_style.label_font_point * pDWR->dpiScaleX_
+			|| pDWR->pCommentTextFormat->GetFontSize() != m_style.comment_font_point * pDWR->dpiScaleX_)
+		{
+			pDWR->InitResources(m_style);
+		}
+		if(pBrush == NULL)
+			pDWR->pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(1.0, 1.0, 1.0, 1.0), &pBrush);
 		return (pDWR != NULL);
 	}
 	else
 	{
-		if(pFonts == NULL)
-			pFonts = new GDIFonts(m_style);
+		delete pFonts;
+		pFonts = new GDIFonts(m_style);
 		return (pFonts != NULL);
 	}
 }
@@ -924,11 +936,9 @@ HRESULT WeaselPanel::_TextOutWithFallback_D2D (CDCHandle dc, CRect const rc, wst
 	float r = (float)(GetRValue(gdiColor))/255.0f;
 	float g = (float)(GetGValue(gdiColor))/255.0f;
 	float b = (float)(GetBValue(gdiColor))/255.0f;
-
-	// alpha 
 	float alpha = (float)((gdiColor >> 24) & 255) / 255.0f;
-	ID2D1SolidColorBrush* pBrush = NULL;
-	pDWR->pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(r, g, b, alpha), &pBrush);
+	pBrush->SetColor(D2D1::ColorF(r, g, b, alpha));
+
 	if (NULL != pBrush && NULL != pDWR->pTextFormat)
 	{
 		IDWriteTextLayout* pTextLayout = NULL;
@@ -937,6 +947,7 @@ HRESULT WeaselPanel::_TextOutWithFallback_D2D (CDCHandle dc, CRect const rc, wst
 		pDWR->pDWFactory->CreateTextLayout( psz.c_str(), psz.size(), pTextFormat, rc.Width(), rc.Height(), &pTextLayout);
 		float offsetx = 0;
 		float offsety = 0;
+		// offsetx for font glyph over left
 		DWRITE_OVERHANG_METRICS omt;
 		pTextLayout->GetOverhangMetrics(&omt);
 		if (omt.left > 0)
@@ -951,7 +962,6 @@ HRESULT WeaselPanel::_TextOutWithFallback_D2D (CDCHandle dc, CRect const rc, wst
 		pDWR->pRenderTarget->EndDraw();
 		SafeRelease(&pTextLayout);
 	}
-	pBrush->Release();
 	return S_OK;
 }
 

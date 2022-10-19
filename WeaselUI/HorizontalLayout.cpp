@@ -42,7 +42,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts )
 	/* Auxiliary */
 	if (!_context.aux.str.empty())
 	{
-		GetTextExtentDCMultiline(dc, _context.aux.str, _context.aux.str.length(), &size);
+		size = GetAuxSize(dc);
 		_auxiliaryRect.SetRect(_style.margin_x, height, _style.margin_x + size.cx, height + size.cy);
 		_auxiliaryRect.OffsetRect(offsetX, offsetY);
 		width = max(width, _style.margin_x + size.cx + _style.margin_x);
@@ -148,6 +148,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts )
 		height = max(height, _style.min_height);
 	}
 	UpdateStatusIconLayout(&width, &height);
+	_statusIconRect.OffsetRect(offsetX / 2, offsetY / 2);
 	_contentSize.SetSize(width + 2 * offsetX, height + 2 * offsetY);
 
 	_candidateRects[candidates.size() - 1].right = width - _style.margin_x + offsetX;
@@ -184,7 +185,6 @@ void weasel::HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 	/* Auxiliary */
 	if (!_context.aux.str.empty())
 	{
-		//GetTextExtentDCMultiline(dc, _context.aux.str, _context.aux.str.length(), &size);
 		size = GetAuxSize(dc, pDWR->pTextFormat, pDWR->pDWFactory);
 		_auxiliaryRect.SetRect(_style.margin_x, height, _style.margin_x + size.cx, height + size.cy);
 		_auxiliaryRect.OffsetRect(offsetX, offsetY);
@@ -288,6 +288,7 @@ void weasel::HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 		height = max(height, _style.min_height);
 	}
 	UpdateStatusIconLayout(&width, &height);
+	_statusIconRect.OffsetRect(offsetX / 2, offsetY / 2);
 	_contentSize.SetSize(width + 2 * offsetX, height + 2 * offsetY);
 
 	_candidateRects[candidates.size() - 1].right = width - _style.margin_x + offsetX;

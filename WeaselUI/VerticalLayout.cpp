@@ -40,8 +40,9 @@ void VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts)
 	/* Auxiliary */
 	if (!_context.aux.str.empty())
 	{
-		GetTextExtentDCMultiline(dc, _context.aux.str, _context.aux.str.length(), &size);
+		size = GetAuxSize(dc);
 		_auxiliaryRect.SetRect(_style.margin_x, height, _style.margin_x + size.cx, height + size.cy);
+		_auxiliaryRect.OffsetRect(offsetX, offsetY);
 		width = max(width, _style.margin_x + size.cx + _style.margin_x);
 		height += size.cy + _style.spacing;
 	}
@@ -135,6 +136,7 @@ void VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts)
 		height = max(height, _style.min_height);
 	}
 	UpdateStatusIconLayout(&width, &height);
+	_statusIconRect.OffsetRect(offsetX / 2, offsetY / 2);
 	_contentSize.SetSize(width + offsetX * 2, height + offsetY * 2);
 
 	/* Highlighted Candidate */
@@ -284,6 +286,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 		height = max(height, _style.min_height);
 	}
 	UpdateStatusIconLayout(&width, &height);
+	_statusIconRect.OffsetRect(offsetX / 2, offsetY / 2);
 	_contentSize.SetSize(width + offsetX*2, height + offsetY*2);
 
 	/* Highlighted Candidate */

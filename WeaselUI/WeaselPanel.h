@@ -46,9 +46,8 @@ public:
 
 	void MoveTo(RECT const& rc);
 	void Refresh();
-	bool CheckResOK(void);
 	bool InitFontRes(void);
-
+	void SetStyle(weasel::UIStyle& style);
 	void DoPaint(CDCHandle dc);
 	void Clear();
 
@@ -56,7 +55,6 @@ private:
 	void _CreateLayout();
 	void _ResizeWindow();
 	void _RepositionWindow(bool adj = false);
-	void _ResizeAndPosition(bool adj = false);
 	bool _DrawPreedit(weasel::Text const& text, CDCHandle dc, CRect const& rc);
 	bool _DrawCandidates(CDCHandle dc);
 	void _HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLORREF shadowColor, int blurOffsetX, int blurOffsetY, int radius, BackType type );
@@ -91,7 +89,7 @@ private:
 	DirectWriteResources* pDWR;
 	GDIFonts* pFonts;
 
-
+	ID2D1SolidColorBrush* pBrush;
 };
 
 class GraphicsRoundRectPath : public Gdiplus::GraphicsPath

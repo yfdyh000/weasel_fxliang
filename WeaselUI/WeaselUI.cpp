@@ -13,8 +13,7 @@ public:
 
 	void Refresh() {
 		if (!panel.IsWindow()) return;
-		if (!panel.CheckResOK())
-			panel.InitFontRes();
+		panel.InitFontRes();
 		if (timer)
 		{
 			Hide();
@@ -97,6 +96,7 @@ bool UI::Create(HWND parent)
 	if (pimpl_)
 	{
 		// re create panel cause destroied before
+		pimpl_->panel.SetStyle(style_);
 		pimpl_->panel.Create(parent, 0, 0, WS_POPUP, WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_TRANSPARENT | WS_EX_LAYERED, 0U, 0);
 		return true;
 	}
