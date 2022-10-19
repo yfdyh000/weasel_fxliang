@@ -136,7 +136,6 @@ void VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts)
 		height = max(height, _style.min_height);
 	}
 	UpdateStatusIconLayout(&width, &height);
-	_statusIconRect.OffsetRect(offsetX / 2, offsetY / 2);
 	_contentSize.SetSize(width + offsetX * 2, height + offsetY * 2);
 
 	/* Highlighted Candidate */
@@ -286,7 +285,6 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 		height = max(height, _style.min_height);
 	}
 	UpdateStatusIconLayout(&width, &height);
-	_statusIconRect.OffsetRect(offsetX / 2, offsetY / 2);
 	_contentSize.SetSize(width + offsetX*2, height + offsetY*2);
 
 	/* Highlighted Candidate */
