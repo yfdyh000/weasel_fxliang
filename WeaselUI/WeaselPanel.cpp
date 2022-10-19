@@ -125,13 +125,8 @@ bool WeaselPanel::InitFontRes(void)
 		// prepare d2d1 resources
 		if(pDWR == NULL)
 			pDWR = new DirectWriteResources(m_style);
-		// switch from difrent style font size settings
-		if (pDWR->pTextFormat->GetFontSize() != m_style.font_point * pDWR->dpiScaleX_
-			|| pDWR->pLabelTextFormat->GetFontSize() != m_style.label_font_point * pDWR->dpiScaleX_
-			|| pDWR->pCommentTextFormat->GetFontSize() != m_style.comment_font_point * pDWR->dpiScaleX_)
-		{
+		else
 			pDWR->InitResources(m_style);
-		}
 		if(pBrush == NULL)
 			pDWR->pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(1.0, 1.0, 1.0, 1.0), &pBrush);
 		return (pDWR != NULL);
