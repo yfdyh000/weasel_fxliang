@@ -275,6 +275,7 @@
     <ClInclude Include="VerticalLayout.h" />
     <ClInclude Include="WeaselPanel.h" />
     <ClInclude Include="..\include\WeaselUI.h" />
+    <ClInclude Include="WindowCompositionAttribute.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />

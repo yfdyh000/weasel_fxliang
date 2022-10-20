@@ -105,7 +105,6 @@ void WeaselPanel::Refresh()
 
 	_ResizeWindow();
 	_RepositionWindow();
-	_BlurBackground();
 	RedrawWindow();
 #ifdef _DEBUG_
 		ofstream o;
@@ -548,7 +547,9 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	// background start
 	CRect rc;
 	GetClientRect(&rc);
+
 #if 1
+	_BlurBackground();
 	SIZE sz = { rc.right - rc.left, rc.bottom - rc.top };
 	CDCHandle hdc = ::GetDC(m_hWnd);
 	CDCHandle memDC = ::CreateCompatibleDC(hdc);
