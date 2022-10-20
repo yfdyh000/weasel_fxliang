@@ -10,6 +10,7 @@
 #include "VerticalLayout.h"
 #include "HorizontalLayout.h"
 #include "FullScreenLayout.h"
+#include "WindowCompositionAttribute.h"
 
 // for IDI_ZH, IDI_EN
 #include <resource.h>
@@ -104,6 +105,7 @@ void WeaselPanel::Refresh()
 
 	_ResizeWindow();
 	_RepositionWindow();
+	_BlurBackground();
 	RedrawWindow();
 #ifdef _DEBUG_
 		ofstream o;
@@ -502,6 +504,42 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 	return drawn;
 }
 
+void WeaselPanel::_BlurBackground()
+{
+	if (!m_style.blur_background)
+		return;
+	CRect rc;
+	GetClientRect(&rc);
+	if (((m_style.shadow_color & 0xff000000) == 0) || m_style.shadow_radius == 0)
+	{
+		HMODULE hUser = GetModuleHandle(TEXT("user32.dll"));
+		if (hUser)
+		{
+			pfnSetWindowCompositionAttribute setWindowCompositionAttribute = (pfnSetWindowCompositionAttribute)GetProcAddress(hUser, "SetWindowCompositionAttribute");
+			if (setWindowCompositionAttribute)
+			{
+
+				//ACCENT_POLICY accent { ACCENT_ENABLE_ACRYLICBLURBEHIND,0, 0, 0 };
+				ACCENT_POLICY accent{ ACCENT_ENABLE_BLURBEHIND,0, 0, 0 };
+
+				// $AABBGGRR
+				accent.GradientColor = m_style.back_color;
+
+				SetWindowRgn(CreateRoundRectRgn(rc.left + 1, rc.top + 1, rc.right, rc.bottom, m_style.round_corner_ex + m_style.border, m_style.round_corner_ex + m_style.border), true);
+				//SetWindowRgn(CreateRectRgn(rc.left, rc.top, rc.right, rc.bottom), true);
+				accent.AccentFlags = 0xff;   //喵喵喵?
+
+				WINDOWCOMPOSITIONATTRIBDATA data;
+				data.Attrib = WCA_ACCENT_POLICY;
+				data.pvData = &accent;
+				data.cbData = sizeof(accent);
+
+				setWindowCompositionAttribute(m_hWnd, &data);
+			}
+		}
+	}
+
+}
 //draw client area
 void WeaselPanel::DoPaint(CDCHandle dc)
 {
@@ -510,7 +548,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	// background start
 	CRect rc;
 	GetClientRect(&rc);
-
+#if 1
 	SIZE sz = { rc.right - rc.left, rc.bottom - rc.top };
 	CDCHandle hdc = ::GetDC(m_hWnd);
 	CDCHandle memDC = ::CreateCompatibleDC(hdc);
@@ -603,6 +641,97 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	::DeleteDC(memDC);
 	::DeleteObject(memBitmap);
 	ReleaseDC(screenDC);
+#else
+	
+	// background alpha == 0xff, m_style.round_corner_ex == 0 && (m_style.shadow_color alpha = 0x00 || m_style.shadow_radius == 0)
+	if((m_style.back_color & 0xff000000 == 0xff000000) && (m_style.shadow_radius == 0 || (m_style.shadow_color & 0xff000000)) )
+
+	// background start
+	/* inline_preedit and candidate size 1 and preedit_type preview, and hide_candidates_when_single is set ， hide candidate window */
+	const std::vector<Text> &candidates(m_ctx.cinfo.candies);
+	m_candidateCount = candidates.size();
+	bool hide_candidates = false;
+	if (m_style.hide_candidates_when_single == True 
+		&& m_style.inline_preedit == True 
+		&& candidates.size() == 1 )
+		hide_candidates = True;
+
+	CRect trc;
+	/* (candidate not empty or (input not empty and not inline_preedit)) and not hide_candidates */
+	if( (!(candidates.size()==0) 
+			|| ((!m_ctx.aux.str.empty() || !m_ctx.preedit.str.empty()) && !m_style.inline_preedit)) 
+		&& !hide_candidates)
+	{
+		Graphics gBack(dc);
+		gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
+		trc = rc;
+		trc.DeflateRect(m_layout->offsetX-m_style.border/2, m_layout->offsetY-m_style.border/2);
+		bgRc = trc;
+		bgRc.DeflateRect(m_style.border / 2 + 1, m_style.border / 2 + 1);
+		GraphicsRoundRectPath bgPath(trc, m_style.round_corner_ex);
+		int alpha = ((m_style.border_color >> 24) & 255);
+		Color border_color = Color::MakeARGB(alpha, GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
+		Pen gPenBorder(border_color, (Gdiplus::REAL)m_style.border);
+		trc.InflateRect(m_style.border / 2, m_style.border / 2);
+		_HighlightTextEx(dc, trc, m_style.back_color, m_style.shadow_color, m_layout->offsetX * 2, m_layout->offsetY * 2, m_style.round_corner_ex + m_style.border / 2, NOT_CAND);
+		if(m_style.border)
+			gBack.DrawPath(&gPenBorder, &bgPath);
+		gBack.ReleaseHDC(dc);
+	}
+	// background end
+
+	bool drawn = false;
+
+	// draw preedit string
+	if (!m_layout->IsInlinePreedit() && !hide_candidates)
+	{
+		trc =m_layout->GetPreeditRect();
+		drawn |= _DrawPreedit(m_ctx.preedit, dc, trc);
+	}
+	
+	// draw auxiliary string
+	drawn |= _DrawPreedit(m_ctx.aux, dc, m_layout->GetAuxiliaryRect());
+
+	// status icon (I guess Metro IME stole my idea :)
+	if (m_layout->ShouldDisplayStatusIcon())
+	{
+		const CRect iconRect(m_layout->GetStatusIconRect());
+		CIcon& icon(m_status.disabled ? m_iconDisabled : m_status.ascii_mode ? m_iconAlpha :
+			(m_ctx.aux.str != L"全角" && m_ctx.aux.str != L"半角") ? m_iconEnabled: m_status.full_shape? m_iconFull: m_iconHalf);
+		dc.DrawIconEx(iconRect.left, iconRect.top, icon, 0, 0);
+		drawn = true;
+	}
+
+	// draw candidates
+	if(!hide_candidates)
+		drawn |= _DrawCandidates(dc);
+
+	/* Nothing drawn, hide candidate window */
+	if (!drawn)
+		ShowWindow(SW_HIDE);
+
+	//HDC screenDC = ::GetDC(NULL);
+	//CRect rect;
+	//GetWindowRect(&rect);
+	//POINT ptSrc = {
+	//	rect.left,
+	//	rect.top 
+	//};
+	//POINT ptDest = {
+	//	rc.left,
+	//	rc.top 
+	//};
+
+	//BLENDFUNCTION bf;
+	//bf.AlphaFormat = AC_SRC_ALPHA;
+	//bf.BlendFlags = 0;
+	//bf.BlendOp = AC_SRC_OVER;
+	//bf.SourceConstantAlpha = 255;
+	//::UpdateLayeredWindow(m_hWnd, screenDC, &ptSrc, &sz, memDC, &ptDest, RGB(0,0,0), &bf, ULW_ALPHA);
+	//::DeleteDC(memDC);
+	//::DeleteObject(memBitmap);
+	//ReleaseDC(screenDC);
+#endif
 
 }
 
