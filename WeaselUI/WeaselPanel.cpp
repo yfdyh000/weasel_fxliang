@@ -94,6 +94,7 @@ void WeaselPanel::_CreateLayout()
 //更新界面
 void WeaselPanel::Refresh()
 {
+	m_candidateCount = m_ctx.cinfo.candies.size();
 	_CreateLayout();
 
 	CDCHandle dc = GetDC();
@@ -106,12 +107,6 @@ void WeaselPanel::Refresh()
 	_ResizeWindow();
 	_RepositionWindow();
 	RedrawWindow();
-#ifdef _DEBUG_
-		ofstream o;
-		o.open("log.txt", ios::app);
-		o << "Redraw in Refresh "<< endl;
-		o.close();
-#endif
 }
 
 void WeaselPanel::SetStyle(weasel::UIStyle& style)
@@ -542,49 +537,42 @@ void WeaselPanel::_BlurBackground()
 //draw client area
 void WeaselPanel::DoPaint(CDCHandle dc)
 {
-	if(!m_ctx)
-		return;
-	// background start
+	if(!m_ctx) return;
 	CRect rc;
 	GetClientRect(&rc);
 
+	// background start
 #if 1
 	_BlurBackground();
-	SIZE sz = { rc.right - rc.left, rc.bottom - rc.top };
 	CDCHandle hdc = ::GetDC(m_hWnd);
 	CDCHandle memDC = ::CreateCompatibleDC(hdc);
-	HBITMAP memBitmap = ::CreateCompatibleBitmap(hdc, sz.cx, sz.cy);
+	HBITMAP memBitmap = ::CreateCompatibleBitmap(hdc, rc.Width(), rc.Height());
 	::SelectObject(memDC, memBitmap);
 	ReleaseDC(hdc);
 	
 	// background start
 	/* inline_preedit and candidate size 1 and preedit_type preview, and hide_candidates_when_single is set ， hide candidate window */
-	const std::vector<Text> &candidates(m_ctx.cinfo.candies);
-	m_candidateCount = candidates.size();
-	bool hide_candidates = false;
-	if (m_style.hide_candidates_when_single == True 
-		&& m_style.inline_preedit == True 
-		&& candidates.size() == 1 )
-		hide_candidates = True;
+	bool hide_candidates = m_style.hide_candidates_when_single && m_style.inline_preedit && (m_ctx.cinfo.candies.size() == 1);
 
-	CRect trc;
+	CRect trc(rc);
 	/* (candidate not empty or (input not empty and not inline_preedit)) and not hide_candidates */
-	if( (!(candidates.size()==0) 
-			|| ((!m_ctx.aux.str.empty() || !m_ctx.preedit.str.empty()) && !m_style.inline_preedit)) 
-		&& !hide_candidates)
+	//if( (!(m_ctx.cinfo.candies.size()==0) || ((!m_ctx.aux.empty() || !m_ctx.preedit.empty()) && !m_style.inline_preedit)) && !hide_candidates)
+	if(!hide_candidates)
 	{
-		Graphics gBack(memDC);
-		gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
-		trc = rc;
-		trc.DeflateRect(m_layout->offsetX-m_style.border/2, m_layout->offsetY-m_style.border/2);
+		trc.DeflateRect(m_layout->offsetX - m_style.border / 2, m_layout->offsetY - m_style.border / 2);
 		bgRc = trc;
 		bgRc.DeflateRect(m_style.border / 2 + 1, m_style.border / 2 + 1);
+
 		GraphicsRoundRectPath bgPath(trc, m_style.round_corner_ex);
-		int alpha = ((m_style.border_color >> 24) & 255);
+		int alpha = ((m_style.border_color >> 24) & 0xff);
 		Color border_color = Color::MakeARGB(alpha, GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
 		Pen gPenBorder(border_color, (Gdiplus::REAL)m_style.border);
+
 		trc.InflateRect(m_style.border / 2, m_style.border / 2);
 		_HighlightTextEx(memDC, trc, m_style.back_color, m_style.shadow_color, m_layout->offsetX * 2, m_layout->offsetY * 2, m_style.round_corner_ex + m_style.border / 2, NOT_CAND);
+
+		Graphics gBack(memDC);
+		gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
 		if(m_style.border)
 			gBack.DrawPath(&gPenBorder, &bgPath);
 		gBack.ReleaseHDC(memDC);
@@ -592,56 +580,37 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	// background end
 
 	bool drawn = false;
-
-	// draw preedit string
-	if (!m_layout->IsInlinePreedit() && !hide_candidates)
-	{
-		trc =m_layout->GetPreeditRect();
-		drawn |= _DrawPreedit(m_ctx.preedit, memDC, trc);
-	}
-	
 	// draw auxiliary string
 	drawn |= _DrawPreedit(m_ctx.aux, memDC, m_layout->GetAuxiliaryRect());
 
+	if (!hide_candidates)
+	{
+		// draw preedit string
+		if (!m_layout->IsInlinePreedit())
+			drawn |= _DrawPreedit(m_ctx.preedit, memDC, m_layout->GetPreeditRect());
+
+		// draw candidates
+		drawn |= _DrawCandidates(memDC);
+
+	}
 	// status icon (I guess Metro IME stole my idea :)
 	if (m_layout->ShouldDisplayStatusIcon())
 	{
 		const CRect iconRect(m_layout->GetStatusIconRect());
 		CIcon& icon(m_status.disabled ? m_iconDisabled : m_status.ascii_mode ? m_iconAlpha :
-			(m_ctx.aux.str != L"全角" && m_ctx.aux.str != L"半角") ? m_iconEnabled: m_status.full_shape? m_iconFull: m_iconHalf);
+			((m_ctx.aux.str != L"全角" && m_ctx.aux.str != L"半角") ? m_iconEnabled : (m_status.full_shape? m_iconFull: m_iconHalf))
+		);
 		memDC.DrawIconEx(iconRect.left, iconRect.top, icon, 0, 0);
 		drawn = true;
 	}
-
-	// draw candidates
-	if(!hide_candidates)
-		drawn |= _DrawCandidates(memDC);
 
 	/* Nothing drawn, hide candidate window */
 	if (!drawn)
 		ShowWindow(SW_HIDE);
 
-	HDC screenDC = ::GetDC(NULL);
-	CRect rect;
-	GetWindowRect(&rect);
-	POINT ptSrc = {
-		rect.left,
-		rect.top 
-	};
-	POINT ptDest = {
-		rc.left,
-		rc.top 
-	};
-
-	BLENDFUNCTION bf;
-	bf.AlphaFormat = AC_SRC_ALPHA;
-	bf.BlendFlags = 0;
-	bf.BlendOp = AC_SRC_OVER;
-	bf.SourceConstantAlpha = 255;
-	::UpdateLayeredWindow(m_hWnd, screenDC, &ptSrc, &sz, memDC, &ptDest, RGB(0,0,0), &bf, ULW_ALPHA);
+	_LayerUpdate(rc, memDC);
 	::DeleteDC(memDC);
 	::DeleteObject(memBitmap);
-	ReleaseDC(screenDC);
 #else
 	
 	// background alpha == 0xff, m_style.round_corner_ex == 0 && (m_style.shadow_color alpha = 0x00 || m_style.shadow_radius == 0)
@@ -734,6 +703,20 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	//ReleaseDC(screenDC);
 #endif
 
+}
+
+void WeaselPanel::_LayerUpdate(const CRect& rc, CDCHandle dc)
+{
+	HDC screenDC = ::GetDC(NULL);
+	CRect rect;
+	GetWindowRect(&rect);
+	POINT ptSrc = { rect.left, rect.top };
+	POINT ptDest = { rc.left, rc.top };
+	SIZE sz = { rc.Width(), rc.Height() };
+
+	BLENDFUNCTION bf = {AC_SRC_OVER, 0, 0XFF, AC_SRC_ALPHA};
+	UpdateLayeredWindow(m_hWnd, screenDC, &ptSrc, &sz, dc, &ptDest, RGB(0,0,0), &bf, ULW_ALPHA);
+	ReleaseDC(screenDC);
 }
 
 void WeaselPanel::Clear()

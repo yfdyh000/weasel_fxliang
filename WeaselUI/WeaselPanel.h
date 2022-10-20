@@ -63,6 +63,7 @@ private:
 
 	bool _IsHighlightOverCandidateWindow(CRect rc, CRect bg, Gdiplus::Graphics* g);
 	void _BlurBackground();
+	void _LayerUpdate(const CRect& rc, CDCHandle dc);
 
 	weasel::Layout *m_layout;
 	weasel::Context &m_ctx;
