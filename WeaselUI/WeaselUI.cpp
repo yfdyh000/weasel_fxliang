@@ -113,7 +113,7 @@ void UI::Destroy()
 	if (pimpl_)
 	{
 		// clear ctx, refresh and destroy panel not delete it, avoiding re initialization font resources
-		pimpl_->panel.Clear();
+		ctx_.clear();
 		pimpl_->panel.Refresh();
 		if (pimpl_->panel.IsWindow())
 			pimpl_->panel.DestroyWindow();

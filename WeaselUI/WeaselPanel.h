@@ -1,10 +1,10 @@
 #pragma once
 #include <WeaselCommon.h>
 #include <WeaselUI.h>
-#include "Layout.h"
 #include <Usp10.h>
 #include <gdiplus.h>
 
+#include "Layout.h"
 #include "GdiplusBlur.h"
 
 #pragma comment(lib, "gdiplus.lib")
@@ -38,8 +38,6 @@ public:
 
 	LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-	LRESULT OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-	void CloseDialog(int nVal);
 
 	WeaselPanel(weasel::UI &ui);
 	~WeaselPanel();
@@ -47,9 +45,7 @@ public:
 	void MoveTo(RECT const& rc);
 	void Refresh();
 	bool InitFontRes(void);
-	void SetStyle(weasel::UIStyle& style);
 	void DoPaint(CDCHandle dc);
-	void Clear();
 
 private:
 	void _CreateLayout();
@@ -57,7 +53,7 @@ private:
 	void _RepositionWindow(bool adj = false);
 	bool _DrawPreedit(weasel::Text const& text, CDCHandle dc, CRect const& rc);
 	bool _DrawCandidates(CDCHandle dc);
-	void _HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLORREF shadowColor, int blurOffsetX, int blurOffsetY, int radius, BackType type );
+	void _HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORREF shadowColor, int blurOffsetX, int blurOffsetY, int radius, BackType type );
 	void _TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch, IDWriteTextFormat* pTextFormat, FontInfo* pFontInfo, int inColor);
 	HRESULT _TextOutWithFallback_D2D(CDCHandle dc, CRect const rc, std::wstring psz, int cch, COLORREF gdiColor, IDWriteTextFormat* pTextFormat);
 
@@ -97,9 +93,17 @@ private:
 class GraphicsRoundRectPath : public Gdiplus::GraphicsPath
 {
 public:
-	GraphicsRoundRectPath();
-	GraphicsRoundRectPath(int left, int top, int width, int height, int cornerx, int cornery);
-	GraphicsRoundRectPath(const CRect rc, int corner);
+	GraphicsRoundRectPath() {};
+	GraphicsRoundRectPath(int left, int top, int width, int height, int cornerx, int cornery) : Gdiplus::GraphicsPath()
+	{
+		AddRoundRect(left, top, width, height, cornerx, cornery);
+	}
+	GraphicsRoundRectPath(const CRect rc, int corner)
+	{
+		if (corner > 0) AddRoundRect(rc.left, rc.top, rc.Width(), rc.Height(), corner, corner);
+		else AddRectangle(Gdiplus::Rect(rc.left, rc.top, rc.Width(), rc.Height()));
+	}
+
 	GraphicsRoundRectPath(const CRect rc, int corner, bool roundTopLeft, bool roundTopRight, bool roundBottomRight, bool roundBottomLeft);
 
 public:

@@ -23,6 +23,39 @@ template <class T> void SafeRelease(T** ppT)
 
 namespace weasel
 {
+	enum FONT_WEIGHT_ENUM
+	{
+		FONT_WEIGHT_THIN = 0,
+		FONT_WEIGHT_EXTRA_LIGHT,
+		FONT_WEIGHT_ULTRA_LIGHT,
+		FONT_WEIGHT_LIGHT,
+		FONT_WEIGHT_SEMI_LIGHT,
+		FONT_WEIGHT_MEDIUM,
+		FONT_WEIGHT_DEMI_BOLD,
+		FONT_WEIGHT_SEMI_BOLD,
+		FONT_WEIGHT_BOLD,
+		FONT_WEIGHT_EXTRA_BOLD,
+		FONT_WEIGHT_ULTRA_BOLD,
+		FONT_WEIGHT_BLACK,
+		FONT_WEIGHT_HEAVY,
+		FONT_WEIGHT_EXTRA_BLACK,
+		FONT_WEIGHT_ULTRA_BLACK,
+		FONT_WEIGHT_NORMAL
+	};
+	enum FONT_STYLE
+	{
+		FONT_STYLE_NORMAL = 0,
+		FONT_STYLE_ITALIC,
+		FONT_STYLE_OBLIQUE
+	};
+	class FontInfo
+	{
+	public:
+		wstring m_FontFace;
+		int m_FontPoint;
+		int m_FontWeight;
+		int m_FontStyle;
+	};
 	class DirectWriteResources
 	{
 	public:
@@ -40,16 +73,13 @@ namespace weasel
 		IDWriteTextFormat1* pTextFormat;
 		IDWriteTextFormat1* pLabelTextFormat;
 		IDWriteTextFormat1* pCommentTextFormat;
+		FontInfo TextFontInfo;
+		FontInfo LabelTextFontInfo;
+		FontInfo CommentTextFontInfo;
+		bool VerifyChanged(const weasel::UIStyle& style);
 	private:
-		void _ParseFontFace(const std::wstring fontFaceStr, std::wstring& fontFace, DWRITE_FONT_WEIGHT& fontWeight, DWRITE_FONT_STYLE& fontStyle);
+		void _ParseFontFace(const std::wstring fontFaceStr, std::wstring& fontFace, DWRITE_FONT_WEIGHT& fontWeight, DWRITE_FONT_STYLE& fontStyle, FontInfo& fontInfo);
 		void _SetFontFallback(IDWriteTextFormat1* pTextFormat, vector<wstring> fontVector);
-	};
-	class FontInfo
-	{
-	public:
-		wstring m_FontFace;
-		int m_FontPoint;
-		int m_FontWeight;
 	};
 	class GDIFonts
 	{
