@@ -114,18 +114,15 @@ bool WeaselPanel::InitFontRes(void)
 		if(pDWR == NULL)
 			pDWR = new DirectWriteResources(m_style);
 		else if((m_ostyle != m_style) || pDWR->VerifyChanged(m_style))
-		//else if(pDWR->VerifyChanged(m_style))
 			pDWR->InitResources(m_style);
 
 		if(pBrush == NULL)
 			pDWR->pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(1.0, 1.0, 1.0, 1.0), &pBrush);
-		return (pDWR != NULL);
 	}
-	else
 	{
 		delete pFonts;
 		pFonts = new GDIFonts(m_style);
-		return (pFonts != NULL);
+		return (pFonts != NULL) && (m_style.color_font ? pDWR != NULL : 1);
 	}
 }
 
@@ -342,6 +339,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 {
 	bool drawn = false;
 	std::wstring const& t = text.str;
+	IDWriteTextFormat1* txtFormat = m_style.color_font? pDWR->pTextFormat : NULL;
 	if (!t.empty())
 	{
 		weasel::TextRange range;
@@ -377,10 +375,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				// zzz
 				std::wstring str_before(t.substr(0, range.start));
 				CRect rc_before(x, rc.top, rc.left + selStart.cx, rc.bottom);
-				if(m_style.color_font)
-					_TextOut(dc, x, rc.top, rc_before, str_before.c_str(), str_before.length(), NULL, m_style.text_color, pDWR->pTextFormat);
-				else
-					_TextOut(dc, x, rc.top, rc_before, str_before.c_str(), str_before.length(), &pFonts->m_TextFont, m_style.text_color, NULL);
+				_TextOut(dc, x, rc.top, rc_before, str_before.c_str(), str_before.length(), &pFonts->m_TextFont, m_style.text_color, txtFormat);
 				x += selStart.cx + m_style.hilite_spacing;
 			}
 			{
@@ -391,10 +386,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				rc_hi.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 				rc_hi.OffsetRect(-m_style.hilite_padding, 0);
 				_HighlightText(dc, rc_hi, m_style.hilited_back_color, m_style.hilited_shadow_color, m_layout->offsetX * 2, m_layout->offsetY * 2, m_style.round_corner);
-				if(m_style.color_font) 
-					_TextOut(dc, x, rc.top, rct, str_highlight.c_str(), str_highlight.length(), NULL, m_style.hilited_text_color, pDWR->pTextFormat);
-				else
-					_TextOut(dc, x, rc.top, rct, str_highlight.c_str(), str_highlight.length(), &pFonts->m_TextFont, m_style.hilited_text_color, NULL);
+				_TextOut(dc, x, rc.top, rct, str_highlight.c_str(), str_highlight.length(), &pFonts->m_TextFont, m_style.hilited_text_color, txtFormat);
 				x += (selEnd.cx - selStart.cx);
 			}
 			if (range.end < static_cast<int>(t.length()))
@@ -403,20 +395,14 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				x += m_style.hilite_spacing;
 				std::wstring str_after(t.substr(range.end));
 				CRect rc_after(x, rc.top, rc.right, rc.bottom);
-				if(m_style.color_font) 
-					_TextOut(dc, x, rc.top, rc_after, str_after.c_str(), str_after.length(), NULL, m_style.text_color, pDWR->pTextFormat);
-				else
-					_TextOut(dc, x, rc.top, rc_after, str_after.c_str(), str_after.length(), &pFonts->m_TextFont, m_style.text_color, NULL);
+				_TextOut(dc, x, rc.top, rc_after, str_after.c_str(), str_after.length(), &pFonts->m_TextFont, m_style.text_color, txtFormat);
 
 			}
 		}
 		else
 		{
 			CRect rcText(rc.left, rc.top, rc.right, rc.bottom);
-			if (m_style.color_font)
-				_TextOut(dc, rc.left, rc.top, rcText, t.c_str(), t.length(), NULL, m_style.text_color, pDWR->pTextFormat);
-			else
-				_TextOut(dc, rc.left, rc.top, rcText, t.c_str(), t.length(), &pFonts->m_TextFont, m_style.text_color, NULL);
+			_TextOut(dc, rc.left, rc.top, rcText, t.c_str(), t.length(), &pFonts->m_TextFont, m_style.text_color, txtFormat);
 		}
 		drawn = true;
 	}
@@ -434,6 +420,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 	int bky = 2 * m_layout->offsetY;
 
 	BackType bkType = FIRST_CAND;
+	IDWriteTextFormat1* txtFormat = NULL;
 	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
 	{
 		if (candidates.size() == 1)
@@ -463,29 +450,25 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 		// Draw label
 		std::wstring label = m_layout->GetLabelText(labels, i, m_style.label_text_format.c_str());
 		rect = m_layout->GetCandidateLabelRect(i);
-
-		if (m_style.color_font)
-			_TextOut(dc, rect.left, rect.top, rect, label.c_str(), label.length(), NULL, txtLabelColor, pDWR->pLabelTextFormat);
-		else
-			_TextOut(dc, rect.left, rect.top, rect, label.c_str(), label.length(), &pFonts->m_LabelFont, txtLabelColor, NULL);
+		if (m_style.color_font)	txtFormat = pDWR->pLabelTextFormat;
+		else txtFormat = NULL;
+		_TextOut(dc, rect.left, rect.top, rect, label.c_str(), label.length(), &pFonts->m_LabelFont, txtLabelColor, txtFormat);
 
 		// Draw text
 		std::wstring text = candidates.at(i).str;
 		rect = m_layout->GetCandidateTextRect(i);
-		if (m_style.color_font)
-			_TextOut(dc, rect.left, rect.top, rect, text.c_str(), text.length(), NULL, txtColor, pDWR->pTextFormat);
-		else
-			_TextOut(dc, rect.left, rect.top, rect, text.c_str(), text.length(), &pFonts->m_TextFont, txtColor, NULL);
+		if (m_style.color_font)	txtFormat = pDWR->pTextFormat;
+		else txtFormat = NULL;
+		_TextOut(dc, rect.left, rect.top, rect, text.c_str(), text.length(), &pFonts->m_TextFont, txtColor, txtFormat);
 		
 		// Draw comment
 		std::wstring comment = comments.at(i).str;
 		if (!comment.empty())
 		{
 			rect = m_layout->GetCandidateCommentRect(i);
-			if(m_style.color_font)
-				_TextOut(dc, rect.left, rect.top, rect, comment.c_str(), comment.length(), NULL, txtCommentColor, pDWR->pCommentTextFormat);
-			else
-				_TextOut(dc, rect.left, rect.top, rect, comment.c_str(), comment.length(), &pFonts->m_CommentFont, txtCommentColor, NULL);
+			if (m_style.color_font)	txtFormat = pDWR->pCommentTextFormat;
+			else txtFormat = NULL;
+			_TextOut(dc, rect.left, rect.top, rect, comment.c_str(), comment.length(), &pFonts->m_CommentFont, txtCommentColor, txtFormat);
 		}
 		drawn = true;
 	}
