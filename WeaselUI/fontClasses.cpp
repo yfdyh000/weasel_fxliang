@@ -47,14 +47,6 @@ DirectWriteResources::~DirectWriteResources()
 	SafeRelease(&pD2d1Factory);
 }
 
-static void AddAMapping(IDWriteFontFallbackBuilder* pFontFallbackBuilder, const wchar_t* fname, const unsigned int start, const unsigned int end)
-{
-	DWRITE_UNICODE_RANGE rng;
-	rng.first = start;
-	rng.last = end;
-	pFontFallbackBuilder->AddMapping(&rng, 1, &fname, 1);
-}
-
 HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int label_font_point,
 	std::wstring font_face, int font_point,
 	std::wstring comment_font_face, int comment_font_point) 
@@ -356,7 +348,9 @@ void DirectWriteResources::_SetFontFallback(IDWriteTextFormat1* pTextFormat, std
 		catch(...){
 			first = 0x10ffff;
 		}
-		AddAMapping(pFontFallbackBuilder, _fontFaceWstr.c_str(), first, last);
+		DWRITE_UNICODE_RANGE range = { first, last };
+		const  WCHAR* familys = { _fontFaceWstr.c_str() };
+		pFontFallbackBuilder->AddMapping(&range, 1, &familys, 1);
 		fallbackFontsVector.swap(std::vector<std::wstring>());
 	}
 	pFontFallbackBuilder->AddMappings(pSysFallback);
