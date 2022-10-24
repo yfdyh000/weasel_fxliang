@@ -4,9 +4,6 @@
 #include <vector>
 #include <string>
 #include <boost/algorithm/string.hpp>
-#ifdef _DEBUG_
-	#include <fstream>
-#endif
 #include "VerticalLayout.h"
 #include "HorizontalLayout.h"
 #include "FullScreenLayout.h"
@@ -14,10 +11,6 @@
 // for IDI_ZH, IDI_EN
 #include <resource.h>
 
-using namespace Gdiplus;
-using namespace weasel;
-using namespace std;
-using namespace boost::algorithm;
 
 WeaselPanel::WeaselPanel(weasel::UI& ui)
 	: m_layout(NULL),
@@ -43,7 +36,7 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
 
 WeaselPanel::~WeaselPanel()
 {
-	GdiplusShutdown(_m_gdiplusToken);
+	Gdiplus::GdiplusShutdown(_m_gdiplusToken);
 	if (m_layout != NULL)
 		delete m_layout;
 	if (pDWR != NULL)
@@ -131,9 +124,9 @@ bool WeaselPanel::_IsHighlightOverCandidateWindow(CRect rc, CRect bg, Gdiplus::G
 	GraphicsRoundRectPath bgPath(bg, m_style.round_corner_ex);
 	GraphicsRoundRectPath hlPath(rc, m_style.round_corner);
 
-	Region bgRegion(&bgPath);
-	Region hlRegion(&hlPath);
-	Region* tmpRegion = hlRegion.Clone();
+	Gdiplus::Region bgRegion(&bgPath);
+	Gdiplus::Region hlRegion(&hlPath);
+	Gdiplus::Region* tmpRegion = hlRegion.Clone();
 
 	tmpRegion->Xor(&bgRegion);
 	tmpRegion->Exclude(&bgRegion);
@@ -144,8 +137,8 @@ bool WeaselPanel::_IsHighlightOverCandidateWindow(CRect rc, CRect bg, Gdiplus::G
 
 void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORREF shadowColor, int blurOffsetX, int blurOffsetY, int radius, BackType type = TEXT)
 {
-	Graphics gBack(dc);
-	gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
+	Gdiplus::Graphics gBack(dc);
+	gBack.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
 	bool rtl = false;
 	bool rtr = false;
 	bool rbr = false;
@@ -177,16 +170,16 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 		BYTE r = GetRValue(shadowColor);
 		BYTE g = GetGValue(shadowColor);
 		BYTE b = GetBValue(shadowColor);
-		Color brc = Color::MakeARGB((BYTE)(shadowColor >> 24), r, g, b);
-		static Bitmap* pBitmapDropShadow;
+		Gdiplus::Color brc = Gdiplus::Color::MakeARGB((BYTE)(shadowColor >> 24), r, g, b);
+		static Gdiplus::Bitmap* pBitmapDropShadow;
 		pBitmapDropShadow = new Gdiplus::Bitmap((INT)rc.Width() + blurOffsetX * 2, (INT)rc.Height() + blurOffsetY * 2, PixelFormat32bppARGB);
 		Gdiplus::Graphics gg(pBitmapDropShadow);
-		gg.SetSmoothingMode(SmoothingModeHighQuality);
+		gg.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
 
 		if (m_style.shadow_offset_x != 0 || m_style.shadow_offset_y != 0)
 		{
 			GraphicsRoundRectPath path(rect, radius);
-			SolidBrush br(brc);
+			Gdiplus::SolidBrush br(brc);
 			gg.FillPath(&br, &path);
 		}
 		else
@@ -194,14 +187,14 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 			int pensize = 1;
 			int alpha = ((shadowColor >> 24) & 255);
 			int step = alpha / (m_style.shadow_radius/2);
-			Color scolor = Color::MakeARGB(alpha, GetRValue(shadowColor), GetGValue(shadowColor), GetBValue(shadowColor));
-			Pen penShadow(scolor, (Gdiplus::REAL)pensize);
+			Gdiplus::Color scolor = Gdiplus::Color::MakeARGB(alpha, GetRValue(shadowColor), GetGValue(shadowColor), GetBValue(shadowColor));
+			Gdiplus::Pen penShadow(scolor, (Gdiplus::REAL)pensize);
 			CRect rcShadowEx = rect;
 			for (int i = 0; i < m_style.shadow_radius/2; i++)
 			{
 				GraphicsRoundRectPath path(rcShadowEx, radius + 1 + i);
 				gg.DrawPath(&penShadow, &path);
-				scolor = Color::MakeARGB(alpha - i * step, GetRValue(shadowColor), GetGValue(shadowColor), GetBValue(shadowColor));
+				scolor = Gdiplus::Color::MakeARGB(alpha - i * step, GetRValue(shadowColor), GetGValue(shadowColor), GetBValue(shadowColor));
 				penShadow.SetColor(scolor);
 				rcShadowEx.InflateRect(2, 2);
 			}
@@ -212,8 +205,8 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 	}
 	if (color & 0xff000000)	// 必须back_color非完全透明才绘制
 	{
-		Color back_color = Color::MakeARGB((color >> 24), GetRValue(color), GetGValue(color), GetBValue(color));
-		SolidBrush gBrBack(back_color);
+		Gdiplus::Color back_color = Gdiplus::Color::MakeARGB((color >> 24), GetRValue(color), GetGValue(color), GetBValue(color));
+		Gdiplus::SolidBrush gBrBack(back_color);
 		GraphicsRoundRectPath* bgPath;
 		if (m_hemispherical_dome && type!= NOT_CAND && m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN && m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
 		{
@@ -505,14 +498,14 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 
 		GraphicsRoundRectPath bgPath(trc, m_style.round_corner_ex);
 		int alpha = ((m_style.border_color >> 24) & 0xff);
-		Color border_color = Color::MakeARGB(alpha, GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
-		Pen gPenBorder(border_color, (Gdiplus::REAL)m_style.border);
+		Gdiplus::Color border_color = Gdiplus::Color::MakeARGB(alpha, GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
+		Gdiplus::Pen gPenBorder(border_color, (Gdiplus::REAL)m_style.border);
 
 		trc.InflateRect(m_style.border / 2, m_style.border / 2);
 		_HighlightText(memDC, trc, m_style.back_color, m_style.shadow_color, m_layout->offsetX * 2, m_layout->offsetY * 2, m_style.round_corner_ex + m_style.border / 2, NOT_CAND);
 
-		Graphics gBack(memDC);
-		gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
+		Gdiplus::Graphics gBack(memDC);
+		gBack.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
 		if(m_style.border)
 			gBack.DrawPath(&gPenBorder, &bgPath);
 		gBack.ReleaseHDC(memDC);
@@ -585,12 +578,6 @@ void WeaselPanel::MoveTo(RECT const& rc)
 	m_inputPos = rc;
 	_RepositionWindow(true);
 	RedrawWindow();
-#ifdef _DEBUG_
-		ofstream o;
-		o.open("log.txt", ios::app);
-		o << "Redraw in MoveTo" << endl;
-		o.close();
-#endif
 }
 
 void WeaselPanel::_RepositionWindow(bool adj)
@@ -797,7 +784,7 @@ static HRESULT _TextOutWithFallback_ULW(CDCHandle dc, int x, int y, CRect const 
 	return hr;
 }
 
-bool WeaselPanel::_TextOutWithFallback_D2D (CDCHandle dc, CRect const rc, wstring psz, int cch, COLORREF gdiColor, IDWriteTextFormat* pTextFormat)
+bool WeaselPanel::_TextOutWithFallback_D2D (CDCHandle dc, CRect const rc, std::wstring psz, int cch, COLORREF gdiColor, IDWriteTextFormat* pTextFormat)
 {
 	float r = (float)(GetRValue(gdiColor))/255.0f;
 	float g = (float)(GetGValue(gdiColor))/255.0f;
@@ -857,8 +844,8 @@ void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR 
 		int offset = 0;
 		// split strings with \r, for multiline string drawing
 		std::vector<std::wstring> lines;
-		split(lines, psz, is_any_of(L"\r"));
-		for (wstring line : lines)
+		boost::algorithm::split(lines, psz, boost::algorithm::is_any_of(L"\r"));
+		for (auto line : lines)
 		{
 			// calc line size, for y offset calc
 			dc.GetTextExtent(line.c_str(), line.length(), &size);
@@ -877,7 +864,7 @@ GraphicsRoundRectPath::GraphicsRoundRectPath(const CRect rc, int corner, bool ro
 {
 	if (!(roundTopLeft || roundTopRight || roundBottomRight || roundBottomLeft) || corner <= 0)
 	{
-		Rect& rcp = Rect(rc.left, rc.top, rc.Width()  , rc.Height());
+		Gdiplus::Rect& rcp = Gdiplus::Rect(rc.left, rc.top, rc.Width()  , rc.Height());
 		AddRectangle(rcp);
 	}
 	else

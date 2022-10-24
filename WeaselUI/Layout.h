@@ -25,13 +25,13 @@ namespace weasel
 		virtual CRect GetCandidateCommentRect(int id) const = 0;
 		virtual CRect GetStatusIconRect() const = 0;
 
-		virtual wstring GetLabelText(const vector<Text> &labels, int id, const wchar_t *format) const = 0;
+		virtual std::wstring GetLabelText(const std::vector<Text> &labels, int id, const wchar_t *format) const = 0;
 		virtual bool IsInlinePreedit() const = 0;
 		virtual bool ShouldDisplayStatusIcon() const = 0;
-		virtual void GetTextExtentDCMultiline(CDCHandle dc, wstring wszString, int nCount, LPSIZE lpSize) const = 0;
-		virtual void GetTextSizeDW(const wstring text, int nCount, IDWriteTextFormat* pTextFormat, IDWriteFactory* pDWFactaory,  LPSIZE lpSize) const = 0;
+		virtual void GetTextExtentDCMultiline(CDCHandle dc, std::wstring wszString, int nCount, LPSIZE lpSize) const = 0;
+		virtual void GetTextSizeDW(const std::wstring text, int nCount, IDWriteTextFormat* pTextFormat, IDWriteFactory* pDWFactaory,  LPSIZE lpSize) const = 0;
 		
-		virtual wstring Layout::ConvertCRLF(wstring strString, wstring strCRLF) const = 0;
+		virtual std::wstring Layout::ConvertCRLF(std::wstring strString, std::wstring strCRLF) const = 0;
 		int offsetX = 0;
 		int offsetY = 0;
 	protected:
