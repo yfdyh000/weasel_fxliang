@@ -263,7 +263,6 @@ namespace weasel
 		bool inline_preedit;
 		bool hide_candidates_when_single;
 		bool color_font;
-		bool blur_background;
 		bool display_tray_icon;
 		std::wstring label_text_format;
 		// layout
@@ -313,7 +312,6 @@ namespace weasel
 			align_type(ALIGN_BOTTOM),
 			preedit_type(COMPOSITION),
 			color_font(0),
-			blur_background(0),
 			display_tray_icon(false),
 			label_text_format(L"%s."),
 			layout_type(LAYOUT_VERTICAL),
@@ -416,7 +414,6 @@ namespace boost {
 			ar & s.hide_candidates_when_single;
 			ar & s.align_type;
 			ar & s.color_font;
-			ar & s.blur_background;
 			ar & s.preedit_type;
 			ar & s.display_tray_icon;
 			ar & s.label_text_format;

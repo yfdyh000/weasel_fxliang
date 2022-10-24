@@ -113,7 +113,8 @@ bool WeaselPanel::InitFontRes(void)
 		// prepare d2d1 resources
 		if(pDWR == NULL)
 			pDWR = new DirectWriteResources(m_style);
-		else if((m_style != m_ostyle) || pDWR->VerifyChanged(m_style))
+		else if((m_ostyle != m_style) || pDWR->VerifyChanged(m_style))
+		//else if(pDWR->VerifyChanged(m_style))
 			pDWR->InitResources(m_style);
 
 		if(pBrush == NULL)
@@ -679,6 +680,7 @@ void WeaselPanel::_LayerUpdate(const CRect& rc, CDCHandle dc)
 LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 	GetWindowRect(&m_inputPos);
+	InitFontRes();
 	Refresh();
 	return TRUE;
 }

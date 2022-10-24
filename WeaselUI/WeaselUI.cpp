@@ -161,8 +161,8 @@ void UI::Refresh()
 	if (pimpl_)
 	{
 		pimpl_->Refresh();
-		ostyle_ = style_;
 	}
+	ostyle_ = style_;
 }
 
 void UI::UpdateInputPosition(RECT const& rc)

@@ -705,12 +705,6 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 		style.color_font = !!color_font;
 	}
 
-	Bool blur_background = False;
-	if (RimeConfigGetBool(config, "style/blur_background", &blur_background) || initialize)
-	{
-		style.blur_background = !!blur_background;
-	}
-
 	// if system version lower than 8.1, disable color_font
 	style.color_font = style.color_font && IsWindows8Point10OrGreaterEx();
 
