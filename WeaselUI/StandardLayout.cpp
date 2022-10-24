@@ -236,10 +236,10 @@ void StandardLayout::UpdateStatusIconLayout(int* width, int* height)
 		}
 		if (left && middle)
 		{
-			int right_alignment = *width - _style.margin_x - STATUS_ICON_SIZE;
+			int right_alignment = *width - abs(_style.margin_x) - STATUS_ICON_SIZE;
 			if (left > right_alignment)
 			{
-				*width = left + STATUS_ICON_SIZE + _style.margin_x;
+				*width = left + STATUS_ICON_SIZE + abs(_style.margin_x);
 			}
 			else
 			{

@@ -261,7 +261,6 @@ namespace weasel
 		int label_font_point;
 		int comment_font_point;
 		bool inline_preedit;
-		bool hide_candidates_when_single;
 		bool color_font;
 		bool display_tray_icon;
 		std::wstring label_text_format;
@@ -308,7 +307,6 @@ namespace weasel
 			label_font_point(0),
 			comment_font_point(0),
 			inline_preedit(false),
-			hide_candidates_when_single(false),
 			align_type(ALIGN_BOTTOM),
 			preedit_type(COMPOSITION),
 			color_font(0),
@@ -360,7 +358,6 @@ namespace weasel
 				 label_font_point != st.label_font_point ||
 				 comment_font_point != st.comment_font_point ||
 				 inline_preedit != st.inline_preedit ||
-				 hide_candidates_when_single != st.hide_candidates_when_single ||
 				 color_font != st.color_font ||
 				 display_tray_icon != st.display_tray_icon ||
 				 label_text_format != st.label_text_format ||
@@ -411,7 +408,6 @@ namespace boost {
 			ar & s.label_font_point;
 			ar & s.comment_font_point;
 			ar & s.inline_preedit;
-			ar & s.hide_candidates_when_single;
 			ar & s.align_type;
 			ar & s.color_font;
 			ar & s.preedit_type;

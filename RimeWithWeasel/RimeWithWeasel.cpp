@@ -692,14 +692,7 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	{
 		style.inline_preedit = !!inline_preedit;
 	}
-	Bool hide_candidates_when_single = False;
-	if (RimeConfigGetBool(config, "style/hide_candidates_when_single", &hide_candidates_when_single) || initialize)
-	{
-		style.hide_candidates_when_single = !!hide_candidates_when_single;
-	}
 	Bool color_font = True;
-	//std::wstring sstr = (IsWindows8Point10OrGreaterEx()) ? L"高于windows 8.1" : L"低于Windows 8.1";
-
 	if (RimeConfigGetBool(config, "style/color_font", &color_font) || initialize)
 	{
 		style.color_font = !!color_font;
@@ -773,6 +766,7 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	RimeConfigGetInt(config, "style/layout/candidate_spacing", &style.candidate_spacing);
 	RimeConfigGetInt(config, "style/layout/hilite_spacing", &style.hilite_spacing);
 	RimeConfigGetInt(config, "style/layout/hilite_padding", &style.hilite_padding);
+	style.hilite_padding = abs(style.hilite_padding);
 	RimeConfigGetInt(config, "style/layout/shadow_radius", &style.shadow_radius);
 	RimeConfigGetInt(config, "style/layout/shadow_offset_x", &style.shadow_offset_x);
 	RimeConfigGetInt(config, "style/layout/shadow_offset_y", &style.shadow_offset_y);
@@ -789,9 +783,9 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 		style.spacing = style.hilite_padding * 2;
 	if (style.hilite_padding * 2 > style.candidate_spacing)		// if hilite_padding over candidate spacing, increase candidate spacing
 		style.candidate_spacing = style.hilite_padding * 2;
-	if (style.hilite_padding > style.margin_x)		// if hilite_padiing over margin_x, increase margin_x
+	if (style.hilite_padding > style.margin_x && style.margin_x >=0)		// if hilite_padiing over margin_x, increase margin_x
 		style.margin_x = style.hilite_padding;
-	if (style.hilite_padding > style.margin_y)		// if hilite_padiing over margin_y, increase margin_y
+	if (style.hilite_padding > style.margin_y && style.margin_y >=0)		// if hilite_padiing over margin_y, increase margin_y
 		style.margin_y = style.hilite_padding;
 	// color scheme
 	if (initialize && RimeConfigGetString(config, "style/color_scheme", buffer, BUF_SIZE))

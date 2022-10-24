@@ -17,7 +17,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts )
 	//dc.GetTextExtent(L"\x4e2d", 1, &size);
 	//const int space = size.cx / 4;
 	const int space = _style.hilite_spacing;
-	int width = 0, height = _style.margin_y;
+	int width = 0, height = abs(_style.margin_y);
 
 	CFont labelFont, textFont, commentFont;
 	CFontHandle oldFont;
@@ -33,9 +33,9 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts )
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
 	{
 		size = GetPreeditSize(dc);
-		_preeditRect.SetRect(_style.margin_x, height, _style.margin_x + size.cx, height + size.cy);
+		_preeditRect.SetRect(abs(_style.margin_x), height, abs(_style.margin_x) + size.cx, height + size.cy);
 		_preeditRect.OffsetRect(offsetX, offsetY);
-		width = max(width, _style.margin_x + size.cx + _style.margin_x);
+		width = max(width, abs(_style.margin_x) + size.cx + abs(_style.margin_x));
 		height += size.cy + _style.spacing;
 	}
 
@@ -43,14 +43,14 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts )
 	if (!_context.aux.str.empty())
 	{
 		size = GetAuxSize(dc);
-		_auxiliaryRect.SetRect(_style.margin_x, height, _style.margin_x + size.cx, height + size.cy);
+		_auxiliaryRect.SetRect(abs(_style.margin_x), height, abs(_style.margin_x) + size.cx, height + size.cy);
 		_auxiliaryRect.OffsetRect(offsetX, offsetY);
-		width = max(width, _style.margin_x + size.cx + _style.margin_x);
+		width = max(width, abs(_style.margin_x) + size.cx + abs(_style.margin_x));
 		height += size.cy + _style.spacing;
 	}
 
 	/* Candidates */
-	int w = _style.margin_x, h = 0;
+	int w = abs(_style.margin_x), h = 0;
 	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
 	{
 		if (i > 0)
@@ -109,7 +109,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts )
 		_candidateTextRects[i].OffsetRect(0, ot);
 		_candidateCommentRects[i].OffsetRect(0, oc);
 	}
-	w += _style.margin_x;
+	w += abs(_style.margin_x);
 
 	/* Highlighted Candidate */
 	int id = _context.cinfo.highlighted;
@@ -140,7 +140,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts )
 	/* Trim the last spacing */
 	if (height > 0)
 		height -= _style.spacing;
-	height += _style.margin_y;
+	height += abs(_style.margin_y);
 
 	if (!_context.preedit.str.empty() && !candidates.empty())
 	{
@@ -150,7 +150,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts )
 	UpdateStatusIconLayout(&width, &height);
 	_contentSize.SetSize(width + 2 * offsetX, height + 2 * offsetY);
 
-	_candidateRects[candidates.size() - 1].right = width - _style.margin_x + offsetX;
+	_candidateRects[candidates.size() - 1].right = width - abs(_style.margin_x) + offsetX;
 	_highlightRect = _candidateRects[id];
 
 	labelFont.DeleteObject();
@@ -169,15 +169,15 @@ void weasel::HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 	//dc.GetTextExtent(L"\x4e2d", 1, &size);
 	//const int space = size.cx / 4;
 	const int space = _style.hilite_spacing;
-	int width = 0, height = _style.margin_y;
+	int width = 0, height = abs(_style.margin_y);
 
 	/* Preedit */
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
 	{
 		size = GetPreeditSize(dc, pDWR->pTextFormat, pDWR->pDWFactory);
-		_preeditRect.SetRect(_style.margin_x, height, _style.margin_x + size.cx, height + size.cy);
+		_preeditRect.SetRect(abs(_style.margin_x), height, abs(_style.margin_x) + size.cx, height + size.cy);
 		_preeditRect.OffsetRect(offsetX, offsetY);
-		width = max(width, _style.margin_x + size.cx + _style.margin_x);
+		width = max(width, abs(_style.margin_x) + size.cx + abs(_style.margin_x));
 		height += size.cy + _style.spacing;
 	}
 
@@ -185,14 +185,14 @@ void weasel::HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 	if (!_context.aux.str.empty())
 	{
 		size = GetAuxSize(dc, pDWR->pTextFormat, pDWR->pDWFactory);
-		_auxiliaryRect.SetRect(_style.margin_x, height, _style.margin_x + size.cx, height + size.cy);
+		_auxiliaryRect.SetRect(abs(_style.margin_x), height, abs(_style.margin_x) + size.cx, height + size.cy);
 		_auxiliaryRect.OffsetRect(offsetX, offsetY);
-		width = max(width, _style.margin_x + size.cx + _style.margin_x);
+		width = max(width, abs(_style.margin_x) + size.cx + abs(_style.margin_x));
 		height += size.cy + _style.spacing;
 	}
 
 	/* Candidates */
-	int w = _style.margin_x, h = 0;
+	int w = abs(_style.margin_x), h = 0;
 	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
 	{
 		if (i > 0)
@@ -248,7 +248,7 @@ void weasel::HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 		_candidateTextRects[i].OffsetRect(0, ot);
 		_candidateCommentRects[i].OffsetRect(0, oc);
 	}
-	w += _style.margin_x;
+	w += abs(_style.margin_x);
 
 	/* Highlighted Candidate */
 	int id = _context.cinfo.highlighted;
@@ -279,7 +279,7 @@ void weasel::HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 	/* Trim the last spacing */
 	if (height > 0)
 		height -= _style.spacing;
-	height += _style.margin_y;
+	height += abs(_style.margin_y);
 
 	if (!_context.preedit.str.empty() && !candidates.empty())
 	{
@@ -289,7 +289,7 @@ void weasel::HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 	UpdateStatusIconLayout(&width, &height);
 	_contentSize.SetSize(width + 2 * offsetX, height + 2 * offsetY);
 
-	_candidateRects[candidates.size() - 1].right = width - _style.margin_x + offsetX;
+	_candidateRects[candidates.size() - 1].right = width - abs(_style.margin_x) + offsetX;
 	_highlightRect = _candidateRects[id];
 
 }

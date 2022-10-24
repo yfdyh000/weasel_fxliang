@@ -482,14 +482,14 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	HBITMAP memBitmap = ::CreateCompatibleBitmap(hdc, rc.Width(), rc.Height());
 	::SelectObject(memDC, memBitmap);
 	ReleaseDC(hdc);
+	CRect trc(rc);
 	
 	// background start
-	/* inline_preedit and candidate size 1 and preedit_type preview, and hide_candidates_when_single is set ， hide candidate window */
-	bool hide_candidates = m_style.hide_candidates_when_single && m_style.inline_preedit && (m_ctx.cinfo.candies.size() == 1);
-
-	CRect trc(rc);
-	/* (candidate not empty or (input not empty and not inline_preedit)) and not hide_candidates */
-	//if( (!(m_ctx.cinfo.candies.size()==0) || ((!m_ctx.aux.empty() || !m_ctx.preedit.empty()) && !m_style.inline_preedit)) && !hide_candidates)
+	// check if to hide candidates window
+	// if margin_x or margin_y negative, and not tip showing status, hide candidates window
+	bool show_tips = (!m_ctx.aux.empty() && m_ctx.cinfo.empty() && m_ctx.preedit.empty());
+	bool margin_negative = (m_style.margin_x < 0 || m_style.margin_y < 0);
+	bool hide_candidates = margin_negative && (!show_tips);
 	if(!hide_candidates)
 	{
 		trc.DeflateRect(m_layout->offsetX - m_style.border / 2, m_layout->offsetY - m_style.border / 2);
