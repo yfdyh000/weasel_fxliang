@@ -10,7 +10,6 @@
 #include "VerticalLayout.h"
 #include "HorizontalLayout.h"
 #include "FullScreenLayout.h"
-#include "WindowCompositionAttribute.h"
 
 // for IDI_ZH, IDI_EN
 #include <resource.h>
@@ -492,42 +491,6 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 	return drawn;
 }
 
-void WeaselPanel::_BlurBackground()
-{
-	if (!m_style.blur_background)
-		return;
-	CRect rc;
-	GetClientRect(&rc);
-	if (((m_style.shadow_color & 0xff000000) == 0) || m_style.shadow_radius == 0)
-	{
-		HMODULE hUser = GetModuleHandle(TEXT("user32.dll"));
-		if (hUser)
-		{
-			pfnSetWindowCompositionAttribute setWindowCompositionAttribute = (pfnSetWindowCompositionAttribute)GetProcAddress(hUser, "SetWindowCompositionAttribute");
-			if (setWindowCompositionAttribute)
-			{
-
-				//ACCENT_POLICY accent { ACCENT_ENABLE_ACRYLICBLURBEHIND,0, 0, 0 };
-				ACCENT_POLICY accent{ ACCENT_ENABLE_BLURBEHIND,0, 0, 0 };
-
-				// $AABBGGRR
-				accent.GradientColor = m_style.back_color;
-
-				SetWindowRgn(CreateRoundRectRgn(rc.left + 1, rc.top + 1, rc.right, rc.bottom, m_style.round_corner_ex + m_style.border, m_style.round_corner_ex + m_style.border), true);
-				//SetWindowRgn(CreateRectRgn(rc.left, rc.top, rc.right, rc.bottom), true);
-				accent.AccentFlags = 0xff;   //喵喵喵?
-
-				WINDOWCOMPOSITIONATTRIBDATA data;
-				data.Attrib = WCA_ACCENT_POLICY;
-				data.pvData = &accent;
-				data.cbData = sizeof(accent);
-
-				setWindowCompositionAttribute(m_hWnd, &data);
-			}
-		}
-	}
-
-}
 //draw client area
 void WeaselPanel::DoPaint(CDCHandle dc)
 {
@@ -537,7 +500,6 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 
 	// background start
 #if 1
-	_BlurBackground();
 	CDCHandle hdc = ::GetDC(m_hWnd);
 	CDCHandle memDC = ::CreateCompatibleDC(hdc);
 	HBITMAP memBitmap = ::CreateCompatibleBitmap(hdc, rc.Width(), rc.Height());

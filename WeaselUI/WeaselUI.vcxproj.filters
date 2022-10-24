@@ -89,9 +89,6 @@
     <ClInclude Include="fontClasses.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="WindowCompositionAttribute.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
