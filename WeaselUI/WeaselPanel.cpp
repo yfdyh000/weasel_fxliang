@@ -378,9 +378,9 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				std::wstring str_before(t.substr(0, range.start));
 				CRect rc_before(x, rc.top, rc.left + selStart.cx, rc.bottom);
 				if(m_style.color_font)
-					_TextOut(dc, x, rc.top, rc_before, str_before.c_str(), str_before.length(), pDWR->pTextFormat, NULL, m_style.text_color);
+					_TextOut(dc, x, rc.top, rc_before, str_before.c_str(), str_before.length(), NULL, m_style.text_color, pDWR->pTextFormat);
 				else
-					_TextOut(dc, x, rc.top, rc_before, str_before.c_str(), str_before.length(), NULL, &pFonts->m_TextFont, m_style.text_color);
+					_TextOut(dc, x, rc.top, rc_before, str_before.c_str(), str_before.length(), &pFonts->m_TextFont, m_style.text_color, NULL);
 				x += selStart.cx + m_style.hilite_spacing;
 			}
 			{
@@ -392,9 +392,9 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				rc_hi.OffsetRect(-m_style.hilite_padding, 0);
 				_HighlightText(dc, rc_hi, m_style.hilited_back_color, m_style.hilited_shadow_color, m_layout->offsetX * 2, m_layout->offsetY * 2, m_style.round_corner);
 				if(m_style.color_font) 
-					_TextOut(dc, x, rc.top, rct, str_highlight.c_str(), str_highlight.length(), pDWR->pTextFormat, NULL, m_style.hilited_text_color);
+					_TextOut(dc, x, rc.top, rct, str_highlight.c_str(), str_highlight.length(), NULL, m_style.hilited_text_color, pDWR->pTextFormat);
 				else
-					_TextOut(dc, x, rc.top, rct, str_highlight.c_str(), str_highlight.length(), NULL, &pFonts->m_TextFont, m_style.hilited_text_color);
+					_TextOut(dc, x, rc.top, rct, str_highlight.c_str(), str_highlight.length(), &pFonts->m_TextFont, m_style.hilited_text_color, NULL);
 				x += (selEnd.cx - selStart.cx);
 			}
 			if (range.end < static_cast<int>(t.length()))
@@ -404,9 +404,9 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				std::wstring str_after(t.substr(range.end));
 				CRect rc_after(x, rc.top, rc.right, rc.bottom);
 				if(m_style.color_font) 
-					_TextOut(dc, x, rc.top, rc_after, str_after.c_str(), str_after.length(), pDWR->pTextFormat, NULL, m_style.text_color);
+					_TextOut(dc, x, rc.top, rc_after, str_after.c_str(), str_after.length(), NULL, m_style.text_color, pDWR->pTextFormat);
 				else
-					_TextOut(dc, x, rc.top, rc_after, str_after.c_str(), str_after.length(), NULL, &pFonts->m_TextFont, m_style.text_color);
+					_TextOut(dc, x, rc.top, rc_after, str_after.c_str(), str_after.length(), &pFonts->m_TextFont, m_style.text_color, NULL);
 
 			}
 		}
@@ -414,9 +414,9 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 		{
 			CRect rcText(rc.left, rc.top, rc.right, rc.bottom);
 			if (m_style.color_font)
-				_TextOut(dc, rc.left, rc.top, rcText, t.c_str(), t.length(), pDWR->pTextFormat, NULL, m_style.text_color);
+				_TextOut(dc, rc.left, rc.top, rcText, t.c_str(), t.length(), NULL, m_style.text_color, pDWR->pTextFormat);
 			else
-				_TextOut(dc, rc.left, rc.top, rcText, t.c_str(), t.length(), NULL, &pFonts->m_TextFont, m_style.text_color);
+				_TextOut(dc, rc.left, rc.top, rcText, t.c_str(), t.length(), &pFonts->m_TextFont, m_style.text_color, NULL);
 		}
 		drawn = true;
 	}
@@ -465,17 +465,17 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 		rect = m_layout->GetCandidateLabelRect(i);
 
 		if (m_style.color_font)
-			_TextOut(dc, rect.left, rect.top, rect, label.c_str(), label.length(), pDWR->pLabelTextFormat, NULL, txtLabelColor);
+			_TextOut(dc, rect.left, rect.top, rect, label.c_str(), label.length(), NULL, txtLabelColor, pDWR->pLabelTextFormat);
 		else
-			_TextOut(dc, rect.left, rect.top, rect, label.c_str(), label.length(), NULL, &pFonts->m_LabelFont, txtLabelColor);
+			_TextOut(dc, rect.left, rect.top, rect, label.c_str(), label.length(), &pFonts->m_LabelFont, txtLabelColor, NULL);
 
 		// Draw text
 		std::wstring text = candidates.at(i).str;
 		rect = m_layout->GetCandidateTextRect(i);
 		if (m_style.color_font)
-			_TextOut(dc, rect.left, rect.top, rect, text.c_str(), text.length(), pDWR->pTextFormat, NULL, txtColor);
+			_TextOut(dc, rect.left, rect.top, rect, text.c_str(), text.length(), NULL, txtColor, pDWR->pTextFormat);
 		else
-			_TextOut(dc, rect.left, rect.top, rect, text.c_str(), text.length(), NULL, &pFonts->m_TextFont, txtColor);
+			_TextOut(dc, rect.left, rect.top, rect, text.c_str(), text.length(), &pFonts->m_TextFont, txtColor, NULL);
 		
 		// Draw comment
 		std::wstring comment = comments.at(i).str;
@@ -483,9 +483,9 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 		{
 			rect = m_layout->GetCandidateCommentRect(i);
 			if(m_style.color_font)
-				_TextOut(dc, rect.left, rect.top, rect, comment.c_str(), comment.length(), pDWR->pCommentTextFormat, NULL, txtCommentColor);
+				_TextOut(dc, rect.left, rect.top, rect, comment.c_str(), comment.length(), NULL, txtCommentColor, pDWR->pCommentTextFormat);
 			else
-				_TextOut(dc, rect.left, rect.top, rect, comment.c_str(), comment.length(), NULL, &pFonts->m_CommentFont, txtCommentColor);
+				_TextOut(dc, rect.left, rect.top, rect, comment.c_str(), comment.length(), &pFonts->m_CommentFont, txtCommentColor, NULL);
 		}
 		drawn = true;
 	}
@@ -501,7 +501,6 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	GetClientRect(&rc);
 
 	// background start
-#if 1
 	CDCHandle hdc = ::GetDC(m_hWnd);
 	CDCHandle memDC = ::CreateCompatibleDC(hdc);
 	HBITMAP memBitmap = ::CreateCompatibleBitmap(hdc, rc.Width(), rc.Height());
@@ -569,98 +568,6 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	_LayerUpdate(rc, memDC);
 	::DeleteDC(memDC);
 	::DeleteObject(memBitmap);
-#else
-	
-	// background alpha == 0xff, m_style.round_corner_ex == 0 && (m_style.shadow_color alpha = 0x00 || m_style.shadow_radius == 0)
-	if((m_style.back_color & 0xff000000 == 0xff000000) && (m_style.shadow_radius == 0 || (m_style.shadow_color & 0xff000000)) )
-
-	// background start
-	/* inline_preedit and candidate size 1 and preedit_type preview, and hide_candidates_when_single is set ， hide candidate window */
-	const std::vector<Text> &candidates(m_ctx.cinfo.candies);
-	m_candidateCount = candidates.size();
-	bool hide_candidates = false;
-	if (m_style.hide_candidates_when_single == True 
-		&& m_style.inline_preedit == True 
-		&& candidates.size() == 1 )
-		hide_candidates = True;
-
-	CRect trc;
-	/* (candidate not empty or (input not empty and not inline_preedit)) and not hide_candidates */
-	if( (!(candidates.size()==0) 
-			|| ((!m_ctx.aux.str.empty() || !m_ctx.preedit.str.empty()) && !m_style.inline_preedit)) 
-		&& !hide_candidates)
-	{
-		Graphics gBack(dc);
-		gBack.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
-		trc = rc;
-		trc.DeflateRect(m_layout->offsetX-m_style.border/2, m_layout->offsetY-m_style.border/2);
-		bgRc = trc;
-		bgRc.DeflateRect(m_style.border / 2 + 1, m_style.border / 2 + 1);
-		GraphicsRoundRectPath bgPath(trc, m_style.round_corner_ex);
-		int alpha = ((m_style.border_color >> 24) & 255);
-		Color border_color = Color::MakeARGB(alpha, GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
-		Pen gPenBorder(border_color, (Gdiplus::REAL)m_style.border);
-		trc.InflateRect(m_style.border / 2, m_style.border / 2);
-		_HighlightText(dc, trc, m_style.back_color, m_style.shadow_color, m_layout->offsetX * 2, m_layout->offsetY * 2, m_style.round_corner_ex + m_style.border / 2, NOT_CAND);
-		if(m_style.border)
-			gBack.DrawPath(&gPenBorder, &bgPath);
-		gBack.ReleaseHDC(dc);
-	}
-	// background end
-
-	bool drawn = false;
-
-	// draw preedit string
-	if (!m_layout->IsInlinePreedit() && !hide_candidates)
-	{
-		trc =m_layout->GetPreeditRect();
-		drawn |= _DrawPreedit(m_ctx.preedit, dc, trc);
-	}
-	
-	// draw auxiliary string
-	drawn |= _DrawPreedit(m_ctx.aux, dc, m_layout->GetAuxiliaryRect());
-
-	// status icon (I guess Metro IME stole my idea :)
-	if (m_layout->ShouldDisplayStatusIcon())
-	{
-		const CRect iconRect(m_layout->GetStatusIconRect());
-		CIcon& icon(m_status.disabled ? m_iconDisabled : m_status.ascii_mode ? m_iconAlpha :
-			(m_ctx.aux.str != L"全角" && m_ctx.aux.str != L"半角") ? m_iconEnabled: m_status.full_shape? m_iconFull: m_iconHalf);
-		dc.DrawIconEx(iconRect.left, iconRect.top, icon, 0, 0);
-		drawn = true;
-	}
-
-	// draw candidates
-	if(!hide_candidates)
-		drawn |= _DrawCandidates(dc);
-
-	/* Nothing drawn, hide candidate window */
-	if (!drawn)
-		ShowWindow(SW_HIDE);
-
-	//HDC screenDC = ::GetDC(NULL);
-	//CRect rect;
-	//GetWindowRect(&rect);
-	//POINT ptSrc = {
-	//	rect.left,
-	//	rect.top 
-	//};
-	//POINT ptDest = {
-	//	rc.left,
-	//	rc.top 
-	//};
-
-	//BLENDFUNCTION bf;
-	//bf.AlphaFormat = AC_SRC_ALPHA;
-	//bf.BlendFlags = 0;
-	//bf.BlendOp = AC_SRC_OVER;
-	//bf.SourceConstantAlpha = 255;
-	//::UpdateLayeredWindow(m_hWnd, screenDC, &ptSrc, &sz, memDC, &ptDest, RGB(0,0,0), &bf, ULW_ALPHA);
-	//::DeleteDC(memDC);
-	//::DeleteObject(memBitmap);
-	//ReleaseDC(screenDC);
-#endif
-
 }
 
 void WeaselPanel::_LayerUpdate(const CRect& rc, CDCHandle dc)
@@ -768,38 +675,6 @@ void WeaselPanel::_RepositionWindow(bool adj)
 	m_inputPos.bottom = y;
 	SetWindowPos(HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE);
 }
-/*
-static HRESULT _TextOutWithFallback(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch)
-{
-    SCRIPT_STRING_ANALYSIS ssa;
-    HRESULT hr;
-
-    hr = ScriptStringAnalyse(
-        dc,
-        psz, cch,
-        2 * cch + 16,
-        -1,
-        SSA_GLYPHS|SSA_FALLBACK|SSA_LINK,
-        0,
-        NULL, // control
-        NULL, // state
-        NULL, // piDx
-        NULL,
-        NULL, // pbInClass
-        &ssa);
-
-    if (SUCCEEDED(hr))
-    {
-        hr = ScriptStringOut(
-            ssa, x, y, 0,
-            &rc,
-            0, 0, FALSE);
-    }
-
-	hr = ScriptStringFree(&ssa);
-	return hr;
-}
-*/
 
 static inline BITMAPINFOHEADER PrepareBitmapInfoHeader(long biWidth, long biHeight)
 {
@@ -833,7 +708,6 @@ static inline void PreMutiplyBits(void* pvBits, const BITMAPINFOHEADER& BMIH, co
 		}
 	}
 }
-#if 1
 static HBITMAP _CreateAlphaTextBitmap(LPCWSTR inText, const CFont& inFont, COLORREF inColor, int cch)
 {
 	HDC hTextDC = CreateCompatibleDC(NULL);
@@ -864,76 +738,7 @@ static HBITMAP _CreateAlphaTextBitmap(LPCWSTR inText, const CFont& inFont, COLOR
 	DeleteDC(hTextDC);
 	return MyBMP;
 }
-#else
-static HBITMAP _CreateAlphaTextBitmap(LPCWSTR inText, const CFont& inFont, COLORREF inColor, int cch, HRESULT& hr, bool scriptOut = false, const CRect rc = { 0,0,0,0 })
-{
-	HDC hTextDC = CreateCompatibleDC(NULL);
-	HFONT hOldFont = (HFONT)SelectObject(hTextDC, inFont);
-	HBITMAP MyBMP = NULL;
 
-	long biWidth = 0, biHeight = 0;
-
-	RECT TextArea = { 0, 0, 0, 0 };
-	SCRIPT_STRING_ANALYSIS ssa;
-	//HRESULT hr;
-
-	if (scriptOut)
-	{
-		hr = ScriptStringAnalyse(
-			hTextDC,
-			inText, cch,
-			2 * cch + 16,
-			-1,
-			SSA_GLYPHS | SSA_FALLBACK | SSA_LINK,
-			0,
-			NULL, // control
-			NULL, // state
-			NULL, // piDx
-			NULL,
-			NULL, // pbInClass
-			&ssa);
-		biWidth = rc.Width();
-		biHeight = rc.Height();
-	}
-	else
-	{
-		// get text area
-		DrawText(hTextDC, inText, cch, &TextArea, DT_CALCRECT);
-		biWidth = TextArea.right - TextArea.left;
-		biHeight = TextArea.bottom - TextArea.top;
-	}
-	if (biWidth && biHeight)
-	{
-		void* pvBits = NULL;
-		BITMAPINFOHEADER BMIH = PrepareBitmapInfoHeader(biWidth, biHeight);
-		// create and select dib into dc
-		MyBMP = CreateDIBSection(hTextDC, (LPBITMAPINFO)&BMIH, 0, (LPVOID*)&pvBits, NULL, 0);
-		HBITMAP hOldBMP = (HBITMAP)SelectObject(hTextDC, MyBMP);
-		if (hOldBMP != NULL)
-		{
-			SetTextColor(hTextDC, 0x00FFFFFF);
-			SetBkColor(hTextDC, 0x00000000);
-			SetBkMode(hTextDC, OPAQUE);
-			// draw text to buffer
-			if (scriptOut)
-				hr = ScriptStringOut(ssa, 0, 0, 0, rc, 0, 0, FALSE);
-			else
-				DrawText(hTextDC, inText, cch, &TextArea, DT_NOCLIP);
-
-			PreMutiplyBits(pvBits, BMIH, inColor);
-			SelectObject(hTextDC, hOldBMP);
-		}
-		else
-			hr = S_FALSE;
-	}
-	if(scriptOut)
-		hr = ScriptStringFree(&ssa);
-	SelectObject(hTextDC, hOldFont);
-	DeleteDC(hTextDC);
-	return MyBMP;
-}
-
-#endif
 static void _AlphaBlendBmpToDC(CDCHandle& dc, const int x, const int y, const BYTE alpha, const HBITMAP& MyBMP)
 {
 	HDC hTempDC = CreateCompatibleDC(dc);
@@ -1009,7 +814,7 @@ static HRESULT _TextOutWithFallback_ULW(CDCHandle dc, int x, int y, CRect const 
 	return hr;
 }
 
-HRESULT WeaselPanel::_TextOutWithFallback_D2D (CDCHandle dc, CRect const rc, wstring psz, int cch, COLORREF gdiColor, IDWriteTextFormat* pTextFormat)
+bool WeaselPanel::_TextOutWithFallback_D2D (CDCHandle dc, CRect const rc, wstring psz, int cch, COLORREF gdiColor, IDWriteTextFormat* pTextFormat)
 {
 	float r = (float)(GetRValue(gdiColor))/255.0f;
 	float g = (float)(GetGValue(gdiColor))/255.0f;
@@ -1040,10 +845,12 @@ HRESULT WeaselPanel::_TextOutWithFallback_D2D (CDCHandle dc, CRect const rc, wst
 		pDWR->pRenderTarget->EndDraw();
 		SafeRelease(&pTextLayout);
 	}
-	return S_OK;
+	else
+		return false;
+	return true;
 }
 
-void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch, IDWriteTextFormat* pTextFormat, FontInfo* pFontInfo, int inColor)
+void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch, FontInfo* pFontInfo, int inColor, IDWriteTextFormat* pTextFormat)
 {
 	if (!(inColor & 0xff000000)) return;	// transparent, no need to draw
 	if (m_style.color_font )
