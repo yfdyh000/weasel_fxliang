@@ -202,101 +202,44 @@ void DirectWriteResources::_ParseFontFace(const std::wstring fontFaceStr,
 	fontFace = parsedStrV[0];
 
 	if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":thin", boost::wregex::icase)))
-	{
 		fontWeight = DWRITE_FONT_WEIGHT_THIN;
-		fontInfo.m_FontWeight = FONT_WEIGHT_THIN;
-	}
 	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":extra_light", boost::wregex::icase)))
-	{
 		fontWeight = DWRITE_FONT_WEIGHT_EXTRA_LIGHT;
-		fontInfo.m_FontWeight = FONT_WEIGHT_EXTRA_LIGHT;
-	}
 	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":ultra_light", boost::wregex::icase)))
-	{
 		fontWeight = DWRITE_FONT_WEIGHT_ULTRA_LIGHT;
-		fontInfo.m_FontWeight = FONT_WEIGHT_ULTRA_LIGHT;
-	}
 	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":light", boost::wregex::icase)))
-	{
 		fontWeight = DWRITE_FONT_WEIGHT_LIGHT;
-		fontInfo.m_FontWeight = FONT_WEIGHT_LIGHT;
-	}
 	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":semi_light", boost::wregex::icase)))
-	{
 		fontWeight = DWRITE_FONT_WEIGHT_SEMI_LIGHT;
-		fontInfo.m_FontWeight = FONT_WEIGHT_SEMI_LIGHT;
-	}
 	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":medium", boost::wregex::icase)))
-	{
 		fontWeight = DWRITE_FONT_WEIGHT_MEDIUM;
-		fontInfo.m_FontWeight = FONT_WEIGHT_MEDIUM;
-	}
 	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":demi_bold", boost::wregex::icase)))
-	{
 		fontWeight = DWRITE_FONT_WEIGHT_DEMI_BOLD;
-		fontInfo.m_FontWeight = FONT_WEIGHT_DEMI_BOLD;
-	}
 	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":semi_bold", boost::wregex::icase)))
-	{
 		fontWeight = DWRITE_FONT_WEIGHT_SEMI_BOLD;
-		fontInfo.m_FontWeight = FONT_WEIGHT_SEMI_BOLD;
-	}
 	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":bold", boost::wregex::icase)))
-	{
 		fontWeight = DWRITE_FONT_WEIGHT_BOLD;
-		fontInfo.m_FontWeight = FONT_WEIGHT_BOLD;
-	}
 	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":extra_bold", boost::wregex::icase)))
-	{
 		fontWeight = DWRITE_FONT_WEIGHT_EXTRA_BOLD;
-		fontInfo.m_FontWeight = FONT_WEIGHT_EXTRA_BOLD;
-	}
 	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":ultra_bold", boost::wregex::icase)))
-	{
 		fontWeight = DWRITE_FONT_WEIGHT_ULTRA_BOLD;
-		fontInfo.m_FontWeight = FONT_WEIGHT_ULTRA_BOLD;
-	}
 	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":black", boost::wregex::icase)))
-	{
 		fontWeight = DWRITE_FONT_WEIGHT_BLACK;
-		fontInfo.m_FontWeight = FONT_WEIGHT_BLACK;
-	}
 	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":heavy", boost::wregex::icase)))
-	{
 		fontWeight = DWRITE_FONT_WEIGHT_HEAVY;
-		fontInfo.m_FontWeight = FONT_WEIGHT_HEAVY;
-	}
 	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":extra_black", boost::wregex::icase)))
-	{
 		fontWeight = DWRITE_FONT_WEIGHT_EXTRA_BLACK;
-		fontInfo.m_FontWeight = FONT_WEIGHT_EXTRA_BLACK;
-	}
 	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":ultra_black", boost::wregex::icase)))
-	{
 		fontWeight = DWRITE_FONT_WEIGHT_ULTRA_BLACK;
-		fontInfo.m_FontWeight = FONT_WEIGHT_ULTRA_BLACK;
-	}
 	else
-	{
 		fontWeight = DWRITE_FONT_WEIGHT_NORMAL;
-		fontInfo.m_FontWeight = FONT_WEIGHT_NORMAL;
-	}
 
 	if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":italic", boost::wregex::icase)))
-	{
 		fontStyle = DWRITE_FONT_STYLE_ITALIC;
-		fontInfo.m_FontStyle = FONT_STYLE_ITALIC;
-	}
 	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":oblique", boost::wregex::icase)))
-	{
 		fontStyle = DWRITE_FONT_STYLE_OBLIQUE;
-		fontInfo.m_FontStyle = FONT_STYLE_OBLIQUE;
-	}
 	else
-	{
 		fontStyle = DWRITE_FONT_STYLE_NORMAL;
-		fontInfo.m_FontStyle = FONT_STYLE_NORMAL;
-	}
 }
 
 void DirectWriteResources::_SetFontFallback(IDWriteTextFormat1* pTextFormat, std::vector<std::wstring> fontVector)
