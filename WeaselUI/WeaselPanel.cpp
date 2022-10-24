@@ -24,6 +24,7 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
 	m_ctx(ui.ctx()),
 	m_status(ui.status()),
 	m_style(ui.style()),
+	m_ostyle(ui.ostyle()),
 	m_candidateCount(0),
 	pDWR(NULL),
 	pFonts(NULL),
@@ -112,7 +113,7 @@ bool WeaselPanel::InitFontRes(void)
 		// prepare d2d1 resources
 		if(pDWR == NULL)
 			pDWR = new DirectWriteResources(m_style);
-		else if(pDWR->VerifyChanged(m_style))
+		else if((m_style != m_ostyle) || pDWR->VerifyChanged(m_style))
 			pDWR->InitResources(m_style);
 
 		if(pBrush == NULL)

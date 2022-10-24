@@ -161,6 +161,7 @@ void UI::Refresh()
 	if (pimpl_)
 	{
 		pimpl_->Refresh();
+		ostyle_ = style_;
 	}
 }
 

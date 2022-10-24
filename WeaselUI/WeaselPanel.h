@@ -64,6 +64,7 @@ private:
 	weasel::Context &m_ctx;
 	weasel::Status &m_status;
 	weasel::UIStyle &m_style;
+	weasel::UIStyle &m_ostyle;
 
 	CRect m_inputPos;
 
