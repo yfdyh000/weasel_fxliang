@@ -10,6 +10,7 @@
 
 // for IDI_ZH, IDI_EN
 #include <resource.h>
+#include <fstream>
 
 WeaselPanel::WeaselPanel(weasel::UI& ui)
 	: m_layout(NULL),
@@ -115,8 +116,15 @@ bool WeaselPanel::InitFontRes(void)
 		// prepare d2d1 resources
 		if(pDWR == NULL)
 			pDWR = new DirectWriteResources(m_style);
-		else if((m_ostyle != m_style) || pDWR->VerifyChanged(m_style))
+		//else if((m_ostyle != m_style) || pDWR->VerifyChanged(m_style))
+		//else if(pDWR->VerifyChanged(m_style))
+		else if((m_ostyle != m_style))
+		{
+			//std::ofstream o("log.txt", std::ios::app);
+			//o << "pDWR->InitResources(m_style) called" << std::endl;
+			//o.close();
 			pDWR->InitResources(m_style);
+		}
 
 		if(pBrush == NULL)
 			pDWR->pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(1.0, 1.0, 1.0, 1.0), &pBrush);
