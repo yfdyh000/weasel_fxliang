@@ -18,6 +18,7 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
 	m_style(ui.style()),
 	m_ostyle(ui.ostyle()),
 	m_candidateCount(0),
+	hide_candidates(false),
 	pDWR(NULL),
 	pFonts(NULL),
 	m_blurer(new GdiplusBlur()),
@@ -95,6 +96,15 @@ void WeaselPanel::Refresh()
 
 	_ResizeWindow();
 	_RepositionWindow();
+
+	// check if to hide candidates window
+	// if margin_x or margin_y negative, and not tip showing status, hide candidates window
+	bool show_tips = (!m_ctx.aux.empty() && m_ctx.cinfo.empty() && m_ctx.preedit.empty());
+	bool margin_negative = (m_style.margin_x < 0 || m_style.margin_y < 0);
+	// if show message, don't hide
+	hide_candidates = margin_negative && (!show_tips);
+	// if schema menu, don't hide
+	if (m_ctx.preedit.str == L"〔方案選單〕")	hide_candidates = false;
 	RedrawWindow();
 }
 
@@ -483,11 +493,6 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	CRect trc(rc);
 	
 	// background start
-	// check if to hide candidates window
-	// if margin_x or margin_y negative, and not tip showing status, hide candidates window
-	bool show_tips = (!m_ctx.aux.empty() && m_ctx.cinfo.empty() && m_ctx.preedit.empty());
-	bool margin_negative = (m_style.margin_x < 0 || m_style.margin_y < 0);
-	bool hide_candidates = margin_negative && (!show_tips);
 	if(!hide_candidates)
 	{
 		trc.DeflateRect(m_layout->offsetX - m_style.border / 2, m_layout->offsetY - m_style.border / 2);

@@ -82,6 +82,7 @@ private:
 	// if hemispherical_dome has been trigged
 	bool m_hemispherical_dome = false;
 
+	bool hide_candidates;
 	// for multi font_face & font_point
 	GdiplusBlur* m_blurer;
 	DirectWriteResources* pDWR;
