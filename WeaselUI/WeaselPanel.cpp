@@ -97,10 +97,7 @@ void WeaselPanel::Refresh()
 	if(!hide_candidates)
 	{ 
 		CDCHandle dc = GetDC();
-		if (m_style.color_font)
-			m_layout->DoLayout(dc, pDWR);
-		else
-			m_layout->DoLayout(dc, pFonts);
+		m_layout->DoLayout(dc, pFonts, pDWR);
 		ReleaseDC(dc);
 		_ResizeWindow();
 		_RepositionWindow();
