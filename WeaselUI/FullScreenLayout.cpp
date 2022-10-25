@@ -35,7 +35,7 @@ void FullScreenLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts)
 		}
 	}
 
-	int step = 32;
+	int step = 256;
 	do {
 		m_layout->DoLayout(dc, pFonts);
 	}
@@ -87,7 +87,7 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 		}
 	}
 
-	int step = 32;
+	int step = 256;
 	do {
 		m_layout->DoLayout(dc, pDWR);
 	}

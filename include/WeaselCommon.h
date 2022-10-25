@@ -69,7 +69,7 @@ namespace weasel
 		{
 			if (str != txt.str || (attributes.size() != txt.attributes.size()))
 				return false;
-			for (int i = 0; i < attributes.size(); i++)
+			for (size_t i = 0; i < attributes.size(); i++)
 			{
 				if ((attributes[i] != txt.attributes[i]))
 					return false;
@@ -80,7 +80,7 @@ namespace weasel
 		{
 			if (str != txt.str || (attributes.size() != txt.attributes.size()))
 				return true;
-			for (int i = 0; i < attributes.size(); i++)
+			for (size_t i = 0; i < attributes.size(); i++)
 			{
 				if ((attributes[i] != txt.attributes[i]))
 					return true;
@@ -138,7 +138,7 @@ namespace weasel
 		bool notequal(std::vector<Text> txtSrc, std::vector<Text> txtDst)
 		{
 			if (txtSrc.size() != txtDst.size()) return true;
-			for (int i = 0; i < txtSrc.size(); i++)
+			for (size_t i = 0; i < txtSrc.size(); i++)
 			{
 				if (txtSrc[i] != txtDst[i])
 					return true;

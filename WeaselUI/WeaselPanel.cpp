@@ -86,27 +86,26 @@ void WeaselPanel::_CreateLayout()
 void WeaselPanel::Refresh()
 {
 	m_candidateCount = m_ctx.cinfo.candies.size();
-	_CreateLayout();
-
-	CDCHandle dc = GetDC();
-	if (m_style.color_font)
-		m_layout->DoLayout(dc, pDWR);
-	else
-		m_layout->DoLayout(dc, pFonts);
-	ReleaseDC(dc);
-
-	_ResizeWindow();
-	_RepositionWindow();
-
 	// check if to hide candidates window
-	// if margin_x or margin_y negative, and not tip showing status, hide candidates window
+	// if margin_x or margin_y negative, and not tip showing status,  and not schema menu ,hide candidates window
 	bool show_tips = (!m_ctx.aux.empty() && m_ctx.cinfo.empty() && m_ctx.preedit.empty());
 	bool margin_negative = (m_style.margin_x < 0 || m_style.margin_y < 0);
-	// if show message, don't hide
-	hide_candidates = margin_negative && (!show_tips);
-	// if schema menu, don't hide
-	if (m_ctx.preedit.str == L"〔方案選單〕")	hide_candidates = false;
-	RedrawWindow();
+	hide_candidates = margin_negative && (!show_tips) && (m_ctx.preedit.str != L"〔方案選單〕");
+
+	_CreateLayout();
+
+	if(!hide_candidates)
+	{ 
+		CDCHandle dc = GetDC();
+		if (m_style.color_font)
+			m_layout->DoLayout(dc, pDWR);
+		else
+			m_layout->DoLayout(dc, pFonts);
+		ReleaseDC(dc);
+		_ResizeWindow();
+		_RepositionWindow();
+		RedrawWindow();
+	}
 }
 
 bool WeaselPanel::InitFontRes(void)
@@ -116,9 +115,7 @@ bool WeaselPanel::InitFontRes(void)
 		// prepare d2d1 resources
 		if(pDWR == NULL)
 			pDWR = new DirectWriteResources(m_style);
-		//else if((m_ostyle != m_style) || pDWR->VerifyChanged(m_style))
-		//else if(pDWR->VerifyChanged(m_style))
-		else if((m_ostyle != m_style))
+		else if(m_ostyle != m_style)
 		{
 			//std::ofstream o("log.txt", std::ios::app);
 			//o << "pDWR->InitResources(m_style) called" << std::endl;
@@ -337,7 +334,10 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 					}
 				}
 			}
-			bgPath = new GraphicsRoundRectPath(rc, m_style.round_corner_ex - (min(m_style.margin_x, m_style.margin_y) - m_style.hilite_padding) - m_style.border / 2 + 1, rtl, rtr, rbr, rbl);
+			//bgPath = new GraphicsRoundRectPath(rc, m_style.round_corner_ex - (min(m_style.margin_x, m_style.margin_y) - m_style.hilite_padding) - m_style.border / 2 + 1, rtl, rtr, rbr, rbl);
+			int real_margin_x = (abs(m_style.margin_x) > m_style.hilite_padding) ? abs(m_style.margin_x) : m_style.hilite_padding;
+			int real_margin_y = (abs(m_style.margin_y) > m_style.hilite_padding) ? abs(m_style.margin_y) : m_style.hilite_padding;
+			bgPath = new GraphicsRoundRectPath(rc, m_style.round_corner_ex - (min(real_margin_x, real_margin_y) - m_style.hilite_padding) - m_style.border / 2 + 1, rtl, rtr, rbr, rbl);
 		}
 		else
 			bgPath = new GraphicsRoundRectPath(rc, radius);
@@ -488,7 +488,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 //draw client area
 void WeaselPanel::DoPaint(CDCHandle dc)
 {
-	if(!m_ctx) return;
+	if (m_ctx.empty()) return;
 	CRect rc;
 	GetClientRect(&rc);
 
@@ -501,7 +501,6 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	CRect trc(rc);
 	
 	// background start
-	if(!hide_candidates)
 	{
 		trc.DeflateRect(m_layout->offsetX - m_style.border / 2, m_layout->offsetY - m_style.border / 2);
 		bgRc = trc;
@@ -527,16 +526,13 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	// draw auxiliary string
 	drawn |= _DrawPreedit(m_ctx.aux, memDC, m_layout->GetAuxiliaryRect());
 
-	if (!hide_candidates)
-	{
-		// draw preedit string
-		if (!m_layout->IsInlinePreedit())
-			drawn |= _DrawPreedit(m_ctx.preedit, memDC, m_layout->GetPreeditRect());
+	// draw preedit string
+	if (!m_layout->IsInlinePreedit())
+		drawn |= _DrawPreedit(m_ctx.preedit, memDC, m_layout->GetPreeditRect());
 
-		// draw candidates
-		drawn |= _DrawCandidates(memDC);
+	// draw candidates
+	drawn |= _DrawCandidates(memDC);
 
-	}
 	// status icon (I guess Metro IME stole my idea :)
 	if (m_layout->ShouldDisplayStatusIcon())
 	{
@@ -551,8 +547,8 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	/* Nothing drawn, hide candidate window */
 	if (!drawn)
 		ShowWindow(SW_HIDE);
-
-	_LayerUpdate(rc, memDC);
+	else
+		_LayerUpdate(rc, memDC);
 	::DeleteDC(memDC);
 	::DeleteObject(memBitmap);
 }
@@ -846,7 +842,6 @@ void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR 
 		if (pFontInfo->m_FontPoint <= 0) return;
 		CFont font;
 		CSize size;
-		HRESULT hr;
 		long height = -MulDiv(pFontInfo->m_FontPoint, dc.GetDeviceCaps(LOGPIXELSY), 72);
 		dc.SetTextColor(inColor & 0x00ffffff);
 		font.CreateFontW(height, 0, 0, 0, pFontInfo->m_FontWeight, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, pFontInfo->m_FontFace.c_str());

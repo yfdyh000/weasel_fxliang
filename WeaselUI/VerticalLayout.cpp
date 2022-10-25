@@ -16,7 +16,9 @@ void VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts)
 	CSize size;
 	//const int space = size.cx / 4;
 	const int space = _style.hilite_spacing;
-	int width = 0, height = abs(_style.margin_y);
+	int real_margin_x = (abs(_style.margin_x) > _style.hilite_padding) ? abs(_style.margin_x) : _style.hilite_padding;
+	int real_margin_y = (abs(_style.margin_y) > _style.hilite_padding) ? abs(_style.margin_y) : _style.hilite_padding;
+	int width = 0, height = real_margin_y;
 	CFont labelFont, textFont, commentFont;
 	CFontHandle oldFont;
 	long hlabel = -MulDiv(pFonts->m_LabelFont.m_FontPoint, dc.GetDeviceCaps(LOGPIXELSY), 72);
@@ -31,9 +33,9 @@ void VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts)
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
 	{
 		size = GetPreeditSize(dc);
-		_preeditRect.SetRect(abs(_style.margin_x), height, abs(_style.margin_x) + size.cx, height + size.cy);
+		_preeditRect.SetRect(real_margin_x, height, real_margin_x + size.cx, height + size.cy);
 		_preeditRect.OffsetRect(offsetX, offsetY);
-		width = max(width, abs(_style.margin_x) + size.cx + abs(_style.margin_x));
+		width = max(width, real_margin_x + size.cx + real_margin_x);
 		height += size.cy + _style.spacing;
 	}
 
@@ -41,9 +43,9 @@ void VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts)
 	if (!_context.aux.str.empty())
 	{
 		size = GetAuxSize(dc);
-		_auxiliaryRect.SetRect(abs(_style.margin_x), height, abs(_style.margin_x) + size.cx, height + size.cy);
+		_auxiliaryRect.SetRect(real_margin_x, height, real_margin_x + size.cx, height + size.cy);
 		_auxiliaryRect.OffsetRect(offsetX, offsetY);
-		width = max(width, abs(_style.margin_x) + size.cx + abs(_style.margin_x));
+		width = max(width, real_margin_x + size.cx + real_margin_x);
 		height += size.cy + _style.spacing;
 	}
 
@@ -56,7 +58,7 @@ void VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts)
 		if (i > 0 )
 			height += _style.candidate_spacing;
 
-		int w = abs(_style.margin_x), h = 0;
+		int w = real_margin_x, h = 0;
 		int candidate_width = 0, comment_width = 0;
 		/* Label */
 		oldFont = dc.SelectFont(labelFont);
@@ -82,7 +84,7 @@ void VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts)
 		if (!comments.at(i).str.empty() && pFonts->m_CommentFont.m_FontPoint > 0)
 		{
 			w += space;
-			comment_shift_width = max(comment_shift_width, w - abs(_style.margin_x));
+			comment_shift_width = max(comment_shift_width, w - real_margin_x);
 
 			const std::wstring& comment = comments.at(i).str;
 			GetTextExtentDCMultiline(dc, comment, comment.length(), &size);
@@ -116,11 +118,11 @@ void VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts)
 	dc.SelectFont(oldFont);
 	/* comments are left-aligned to the right of the longest candidate who has a comment */
 	int max_content_width = max(max_candidate_width, comment_shift_width + max_comment_width);
-	width = max(width, max_content_width + 2 * abs(_style.margin_x));
+	width = max(width, max_content_width + 2 * real_margin_x);
 
 	/* Align comments */
 	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
-		_candidateCommentRects[i].OffsetRect(abs(_style.margin_x) + comment_shift_width, 0);
+		_candidateCommentRects[i].OffsetRect(real_margin_x + comment_shift_width, 0);
 
 	if (candidates.size())
 		height += _style.spacing;
@@ -128,7 +130,7 @@ void VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts)
 	/* Trim the last spacing */
 	if (height > 0)
 		height -= _style.spacing;
-	height += abs(_style.margin_y);
+	height += real_margin_y;
 
 	if (!_context.preedit.str.empty() && !candidates.empty())
 	{
@@ -155,7 +157,7 @@ void VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts)
 			hlTop = min(hlTop, _candidateCommentRects[i].top);
 			hlBot = max(hlBot, _candidateCommentRects[i].bottom);
 		}
-		_candidateRects[i].SetRect(abs(_style.margin_x) + offsetX, hlTop, width - abs(_style.margin_x) + offsetX, hlBot);
+		_candidateRects[i].SetRect(real_margin_x + offsetX, hlTop, width - real_margin_x + offsetX, hlBot);
 	}
 	_highlightRect = _candidateRects[id];
 
@@ -175,15 +177,17 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 	//dc.GetTextExtent(L"\x4e2d", 1, &size);
 	//const int space = size.cx / 4;
 	const int space = _style.hilite_spacing;
-	int width = 0, height = abs(_style.margin_y);
+	int real_margin_x = (abs(_style.margin_x) > _style.hilite_padding) ? abs(_style.margin_x) : _style.hilite_padding;
+	int real_margin_y = (abs(_style.margin_y) > _style.hilite_padding) ? abs(_style.margin_y) : _style.hilite_padding;
+	int width = 0, height = real_margin_y;
 
 	/* Preedit */
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
 	{
 		size = GetPreeditSize(dc, pDWR->pTextFormat, pDWR->pDWFactory);
-		_preeditRect.SetRect(abs(_style.margin_x), height, abs(_style.margin_x) + size.cx, height + size.cy);
+		_preeditRect.SetRect(real_margin_x, height, real_margin_x + size.cx, height + size.cy);
 		_preeditRect.OffsetRect(offsetX, offsetY);
-		width = max(width, abs(_style.margin_x) + size.cx + abs(_style.margin_x));
+		width = max(width, real_margin_x + size.cx + real_margin_x);
 		height += size.cy + _style.spacing;
 	}
 
@@ -191,9 +195,9 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 	if (!_context.aux.str.empty())
 	{
 		size = GetAuxSize(dc, pDWR->pTextFormat, pDWR->pDWFactory);
-		_auxiliaryRect.SetRect(abs(_style.margin_x), height, abs(_style.margin_x) + size.cx, height + size.cy);
+		_auxiliaryRect.SetRect(real_margin_x, height, real_margin_x + size.cx, height + size.cy);
 		_auxiliaryRect.OffsetRect(offsetX, offsetY);
-		width = max(width, abs(_style.margin_x) + size.cx + abs(_style.margin_x));
+		width = max(width, real_margin_x + size.cx + real_margin_x);
 		height += size.cy + _style.spacing;
 	}
 
@@ -206,7 +210,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 		if (i > 0 )
 			height += _style.candidate_spacing;
 
-		int w = abs(_style.margin_x), h = 0;
+		int w = real_margin_x, h = 0;
 		int candidate_width = 0, comment_width = 0;
 		/* Label */
 		std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
@@ -229,7 +233,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 		if (!comments.at(i).str.empty() && pDWR->pCommentTextFormat != NULL)
 		{
 			w += space;
-			comment_shift_width = max(comment_shift_width, w - abs(_style.margin_x));
+			comment_shift_width = max(comment_shift_width, w - real_margin_x);
 
 			const std::wstring& comment = comments.at(i).str;
 			GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat, pDWR->pDWFactory, &size);
@@ -265,11 +269,11 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 
 	/* comments are left-aligned to the right of the longest candidate who has a comment */
 	int max_content_width = max(max_candidate_width, comment_shift_width + max_comment_width);
-	width = max(width, max_content_width + 2 * abs(_style.margin_x));
+	width = max(width, max_content_width + 2 * real_margin_x);
 
 	/* Align comments */
 	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
-		_candidateCommentRects[i].OffsetRect(abs(_style.margin_x) + comment_shift_width, 0);
+		_candidateCommentRects[i].OffsetRect(real_margin_x + comment_shift_width, 0);
 
 	if (candidates.size())
 		height += _style.spacing;
@@ -277,7 +281,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 	/* Trim the last spacing */
 	if (height > 0)
 		height -= _style.spacing;
-	height += abs(_style.margin_y);
+	height += real_margin_y;
 
 	if (!_context.preedit.str.empty() && !candidates.empty())
 	{
@@ -304,7 +308,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 			hlTop = min(hlTop, _candidateCommentRects[i].top);
 			hlBot = max(hlBot, _candidateCommentRects[i].bottom);
 		}
-		_candidateRects[i].SetRect(abs(_style.margin_x) + offsetX, hlTop, width - abs(_style.margin_x) + offsetX, hlBot);
+		_candidateRects[i].SetRect(real_margin_x + offsetX, hlTop, width - real_margin_x + offsetX, hlBot);
 	}
 	_highlightRect = _candidateRects[id];
 }

@@ -221,6 +221,8 @@ void StandardLayout::UpdateStatusIconLayout(int* width, int* height)
 	// rule 1. status icon is middle-aligned with preedit text or auxiliary text, whichever comes first
 	// rule 2. there is a spacing between preedit/aux text and the status icon
 	// rule 3. status icon is right aligned in WeaselPanel, when [margin_x + width(preedit/aux) + spacing + width(icon) + margin_x] < style.min_width
+	int real_margin_x = (abs(_style.margin_x) > _style.hilite_padding) ? abs(_style.margin_x) : _style.hilite_padding;
+	int real_margin_y = (abs(_style.margin_y) > _style.hilite_padding) ? abs(_style.margin_y) : _style.hilite_padding;
 	if (ShouldDisplayStatusIcon())
 	{
 		int left = 0, middle = 0;
@@ -236,10 +238,10 @@ void StandardLayout::UpdateStatusIconLayout(int* width, int* height)
 		}
 		if (left && middle)
 		{
-			int right_alignment = *width - abs(_style.margin_x) - STATUS_ICON_SIZE;
+			int right_alignment = *width - real_margin_x - STATUS_ICON_SIZE;
 			if (left > right_alignment)
 			{
-				*width = left + STATUS_ICON_SIZE + abs(_style.margin_x);
+				*width = left + STATUS_ICON_SIZE + real_margin_x;
 			}
 			else
 			{
