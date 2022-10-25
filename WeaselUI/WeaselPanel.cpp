@@ -85,7 +85,7 @@ void WeaselPanel::_CreateLayout()
 //更新界面
 void WeaselPanel::Refresh()
 {
-	m_candidateCount = m_ctx.cinfo.candies.size();
+	m_candidateCount = (BYTE)m_ctx.cinfo.candies.size();
 	// check if to hide candidates window
 	// if margin_x or margin_y negative, and not tip showing status,  and not schema menu ,hide candidates window
 	bool show_tips = (!m_ctx.aux.empty() && m_ctx.cinfo.empty() && m_ctx.preedit.empty());
@@ -127,8 +127,8 @@ bool WeaselPanel::InitFontRes(void)
 	{
 		delete pFonts;
 		pFonts = new GDIFonts(m_style);
-		return (pFonts != NULL) && (m_style.color_font ? pDWR != NULL : 1);
 	}
+	return (pFonts != NULL) && (m_style.color_font ? pDWR != NULL : 1);
 }
 
 bool WeaselPanel::_IsHighlightOverCandidateWindow(CRect rc, CRect bg, Gdiplus::Graphics* g)
@@ -437,7 +437,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 		else if (i == candidates.size() - 1)
 			bkType = LAST_CAND;
 		CRect rect;
-		rect = m_layout->GetCandidateRect(i);
+		rect = m_layout->GetCandidateRect((int)i);
 		rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 		int txtColor, txtLabelColor, txtCommentColor;
 		if (i == m_ctx.cinfo.highlighted)
@@ -455,15 +455,15 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 			txtCommentColor = m_style.comment_text_color;
 		}
 		// Draw label
-		std::wstring label = m_layout->GetLabelText(labels, i, m_style.label_text_format.c_str());
-		rect = m_layout->GetCandidateLabelRect(i);
+		std::wstring label = m_layout->GetLabelText(labels, (int)i, m_style.label_text_format.c_str());
+		rect = m_layout->GetCandidateLabelRect((int)i);
 		if (m_style.color_font)	txtFormat = pDWR->pLabelTextFormat;
 		else txtFormat = NULL;
 		_TextOut(dc, rect.left, rect.top, rect, label.c_str(), label.length(), &pFonts->m_LabelFont, txtLabelColor, txtFormat);
 
 		// Draw text
 		std::wstring text = candidates.at(i).str;
-		rect = m_layout->GetCandidateTextRect(i);
+		rect = m_layout->GetCandidateTextRect((int)i);
 		if (m_style.color_font)	txtFormat = pDWR->pTextFormat;
 		else txtFormat = NULL;
 		_TextOut(dc, rect.left, rect.top, rect, text.c_str(), text.length(), &pFonts->m_TextFont, txtColor, txtFormat);
@@ -472,7 +472,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 		std::wstring comment = comments.at(i).str;
 		if (!comment.empty())
 		{
-			rect = m_layout->GetCandidateCommentRect(i);
+			rect = m_layout->GetCandidateCommentRect((int)i);
 			if (m_style.color_font)	txtFormat = pDWR->pCommentTextFormat;
 			else txtFormat = NULL;
 			_TextOut(dc, rect.left, rect.top, rect, comment.c_str(), comment.length(), &pFonts->m_CommentFont, txtCommentColor, txtFormat);
@@ -623,13 +623,13 @@ void WeaselPanel::_RepositionWindow(bool adj)
 		else
 		{
 			if (m_style.shadow_offset_x >= 0)
-				x -= m_style.shadow_offset_x + 1.5 * m_style.shadow_radius;
+				x -= m_style.shadow_offset_x + (int)(1.5 * m_style.shadow_radius);
 			else
 				x -= m_style.shadow_radius / 2;
 			if (adj)
 			{
 				if (m_style.shadow_offset_y >= 0)
-					y -= m_style.shadow_offset_y + 1.5 * m_style.shadow_radius;
+					y -= m_style.shadow_offset_y + (int)(1.5 * m_style.shadow_radius);
 				else
 					y -= m_style.shadow_radius / 2;
 			}
@@ -684,7 +684,7 @@ static inline void PreMutiplyBits(void* pvBits, const BITMAPINFOHEADER& BMIH, co
 	}
 }
 
-static HBITMAP _CreateAlphaTextBitmap(LPCWSTR inText, const CFont& inFont, COLORREF inColor, int cch)
+static HBITMAP _CreateAlphaTextBitmap(LPCWSTR inText, const CFont& inFont, COLORREF inColor, size_t cch)
 {
 	HDC hTextDC = CreateCompatibleDC(NULL);
 	HFONT hOldFont = (HFONT)SelectObject(hTextDC, inFont);
@@ -790,7 +790,7 @@ static HRESULT _TextOutWithFallback(CDCHandle dc, int x, int y, CRect const rc, 
 	return hr;
 }
 
-bool WeaselPanel::_TextOutWithFallbackDW (CDCHandle dc, CRect const rc, std::wstring psz, int cch, COLORREF gdiColor, IDWriteTextFormat* pTextFormat)
+bool WeaselPanel::_TextOutWithFallbackDW (CDCHandle dc, CRect const rc, std::wstring psz, size_t cch, COLORREF gdiColor, IDWriteTextFormat* pTextFormat)
 {
 	float r = (float)(GetRValue(gdiColor))/255.0f;
 	float g = (float)(GetGValue(gdiColor))/255.0f;
@@ -803,9 +803,9 @@ bool WeaselPanel::_TextOutWithFallbackDW (CDCHandle dc, CRect const rc, std::wst
 		IDWriteTextLayout* pTextLayout = NULL;
 		if (pTextFormat == NULL)
 			pTextFormat = pDWR->pTextFormat;
-		pDWR->pDWFactory->CreateTextLayout( psz.c_str(), psz.size(), pTextFormat, rc.Width(), rc.Height(), &pTextLayout);
-		float offsetx = 0;
-		float offsety = 0;
+		pDWR->pDWFactory->CreateTextLayout( psz.c_str(), (UINT32)psz.size(), pTextFormat, (float)rc.Width(), (float)rc.Height(), &pTextLayout);
+		float offsetx = 0.0f;
+		float offsety = 0.0f;
 		// offsetx for font glyph over left
 		DWRITE_OVERHANG_METRICS omt;
 		pTextLayout->GetOverhangMetrics(&omt);
@@ -826,7 +826,7 @@ bool WeaselPanel::_TextOutWithFallbackDW (CDCHandle dc, CRect const rc, std::wst
 	return true;
 }
 
-void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch, FontInfo* pFontInfo, int inColor, IDWriteTextFormat* pTextFormat)
+void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, size_t cch, FontInfo* pFontInfo, int inColor, IDWriteTextFormat* pTextFormat)
 {
 	if (!(inColor & 0xff000000)) return;	// transparent, no need to draw
 	if (m_style.color_font )
@@ -853,8 +853,8 @@ void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR 
 		for (auto line : lines)
 		{
 			// calc line size, for y offset calc
-			dc.GetTextExtent(line.c_str(), line.length(), &size);
-			if (FAILED(_TextOutWithFallback(dc, x, y+offset, rc, line.c_str(), line.length(), font, inColor, alpha))) 
+			dc.GetTextExtent(line.c_str(), (int)line.length(), &size);
+			if (FAILED(_TextOutWithFallback(dc, x, y+offset, rc, line.c_str(), (int)line.length(), font, inColor, alpha))) 
 			{
 				HBITMAP MyBMP = _CreateAlphaTextBitmap(psz, font, dc.GetTextColor(), cch);
 				if (MyBMP)
