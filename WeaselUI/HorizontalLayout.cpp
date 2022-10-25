@@ -34,7 +34,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts )
 	oldFont = dc.SelectFont(textFont);
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
 	{
-		size = GetPreeditSize(dc);
+		size = GetPreeditSize(dc, _context.preedit);
 		_preeditRect.SetRect(real_margin_x, height, real_margin_x + size.cx, height + size.cy);
 		_preeditRect.OffsetRect(offsetX, offsetY);
 		width = max(width, real_margin_x + size.cx + real_margin_x);
@@ -44,7 +44,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts )
 	/* Auxiliary */
 	if (!_context.aux.str.empty())
 	{
-		size = GetAuxSize(dc);
+		size = GetPreeditSize(dc, _context.aux);
 		_auxiliaryRect.SetRect(real_margin_x, height, real_margin_x + size.cx, height + size.cy);
 		_auxiliaryRect.OffsetRect(offsetX, offsetY);
 		width = max(width, real_margin_x + size.cx + real_margin_x);
@@ -177,7 +177,7 @@ void weasel::HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 	/* Preedit */
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
 	{
-		size = GetPreeditSize(dc, pDWR->pTextFormat, pDWR->pDWFactory);
+		size = GetPreeditSize(dc, _context.preedit, pDWR->pTextFormat, pDWR->pDWFactory);
 		_preeditRect.SetRect(real_margin_x, height, real_margin_x + size.cx, height + size.cy);
 		_preeditRect.OffsetRect(offsetX, offsetY);
 		width = max(width, real_margin_x + size.cx + real_margin_x);
@@ -187,7 +187,7 @@ void weasel::HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 	/* Auxiliary */
 	if (!_context.aux.str.empty())
 	{
-		size = GetAuxSize(dc, pDWR->pTextFormat, pDWR->pDWFactory);
+		size = GetPreeditSize(dc, _context.aux, pDWR->pTextFormat, pDWR->pDWFactory);
 		_auxiliaryRect.SetRect(real_margin_x, height, real_margin_x + size.cx, height + size.cy);
 		_auxiliaryRect.OffsetRect(offsetX, offsetY);
 		width = max(width, real_margin_x + size.cx + real_margin_x);

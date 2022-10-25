@@ -98,43 +98,17 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, int nCount, 
 	SafeRelease(&pTextLayout);
 }
 
-CSize StandardLayout::GetAuxSize(CDCHandle dc) const
+CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDWriteTextFormat* pTextFormat, IDWriteFactory* pDWFactory) const
 {
-	const std::wstring &preedit = _context.aux.str;
-	const std::vector<weasel::TextAttribute> &attrs = _context.aux.attributes;
+	const std::wstring& preedit = text.str;
+	const std::vector<weasel::TextAttribute> &attrs = text.attributes;
 	CSize size(0, 0);
 	if (!preedit.empty())
 	{
-		GetTextExtentDCMultiline(dc, preedit, preedit.length(), &size);
-		for (size_t i = 0; i < attrs.size(); i++)
-		{
-			if (attrs[i].type == weasel::HIGHLIGHTED)
-			{
-				const weasel::TextRange &range = attrs[i].range;
-				if (range.start < range.end)
-				{
-					if (range.start > 0)
-						size.cx += _style.hilite_spacing;
-					else
-						size.cx += _style.hilite_padding;
-					if (range.end < static_cast<int>(preedit.length()))
-						size.cx += _style.hilite_spacing;
-					else
-						size.cx += _style.hilite_padding;
-				}
-			}
-		}
-	}
-	return size;
-}
-CSize StandardLayout::GetPreeditSize(CDCHandle dc) const
-{
-	const std::wstring &preedit = _context.preedit.str;
-	const std::vector<weasel::TextAttribute> &attrs = _context.preedit.attributes;
-	CSize size(0, 0);
-	if (!preedit.empty())
-	{
-		GetTextExtentDCMultiline(dc, preedit, preedit.length(), &size);
+		if(pTextFormat == NULL && pDWFactory == NULL)
+			GetTextExtentDCMultiline(dc, preedit, preedit.length(), &size);
+		else
+			GetTextSizeDW(preedit, preedit.length(), pTextFormat, pDWFactory, &size);
 		for (size_t i = 0; i < attrs.size(); i++)
 		{
 			if (attrs[i].type == weasel::HIGHLIGHTED)
@@ -157,65 +131,6 @@ CSize StandardLayout::GetPreeditSize(CDCHandle dc) const
 	return size;
 }
 
-CSize StandardLayout::GetPreeditSize(CDCHandle dc, IDWriteTextFormat* pTextFormat, IDWriteFactory* pDWFactory) const
-{
-	const std::wstring &preedit = _context.preedit.str;
-	const std::vector<weasel::TextAttribute> &attrs = _context.preedit.attributes;
-	CSize size(0, 0);
-	if (!preedit.empty())
-	{
-		GetTextSizeDW(preedit, preedit.length(), pTextFormat, pDWFactory, &size);
-		for (size_t i = 0; i < attrs.size(); i++)
-		{
-			if (attrs[i].type == weasel::HIGHLIGHTED)
-			{
-				const weasel::TextRange &range = attrs[i].range;
-				if (range.start < range.end)
-				{
-					if (range.start > 0)
-						size.cx += _style.hilite_spacing;
-					else
-						size.cx += _style.hilite_padding;
-					if (range.end < static_cast<int>(preedit.length()))
-						size.cx += _style.hilite_spacing;
-					else
-						size.cx += _style.hilite_padding;
-				}
-			}
-		}
-	}
-	return size;
-}
-
-CSize StandardLayout::GetAuxSize(CDCHandle dc, IDWriteTextFormat* pTextFormat, IDWriteFactory* pDWFactory) const
-{
-	const std::wstring &preedit = _context.aux.str;
-	const std::vector<weasel::TextAttribute> &attrs = _context.preedit.attributes;
-	CSize size(0, 0);
-	if (!preedit.empty())
-	{
-		GetTextSizeDW(preedit, preedit.length(), pTextFormat, pDWFactory, &size);
-		for (size_t i = 0; i < attrs.size(); i++)
-		{
-			if (attrs[i].type == weasel::HIGHLIGHTED)
-			{
-				const weasel::TextRange &range = attrs[i].range;
-				if (range.start < range.end)
-				{
-					if (range.start > 0)
-						size.cx += _style.hilite_spacing;
-					else
-						size.cx += _style.hilite_padding;
-					if (range.end < static_cast<int>(preedit.length()))
-						size.cx += _style.hilite_spacing;
-					else
-						size.cx += _style.hilite_padding;
-				}
-			}
-		}
-	}
-	return size;
-}
 void StandardLayout::UpdateStatusIconLayout(int* width, int* height)
 {
 	// rule 1. status icon is middle-aligned with preedit text or auxiliary text, whichever comes first

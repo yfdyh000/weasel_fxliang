@@ -32,16 +32,14 @@ namespace weasel
 		virtual bool IsInlinePreedit() const;
 		virtual bool ShouldDisplayStatusIcon() const;
 
-		void GetTextExtentDCMultiline(CDCHandle dc, std::wstring wszString, int nCount, LPSIZE lpSize) const;
 		std::wstring StandardLayout::ConvertCRLF(std::wstring strString, std::wstring strCRLF) const;
+		void GetTextExtentDCMultiline(CDCHandle dc, std::wstring wszString, int nCount, LPSIZE lpSize) const;
 		void GetTextSizeDW(const std::wstring text, int nCount, IDWriteTextFormat* pTextFormat, IDWriteFactory* pDWFactory, LPSIZE lpSize) const;
 
 	protected:
 		/* Utility functions */
-		CSize GetPreeditSize(CDCHandle dc) const;
-		CSize GetAuxSize(CDCHandle dc) const;
-		CSize GetPreeditSize(CDCHandle dc, IDWriteTextFormat* pTextFormat, IDWriteFactory* pDWFactory) const;
-		CSize GetAuxSize(CDCHandle dc, IDWriteTextFormat* pTextFormat, IDWriteFactory* pDWFactory) const;
+		CSize GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDWriteTextFormat* pTextFormat = NULL, IDWriteFactory* pDWFactory = NULL) const;
+
 		void UpdateStatusIconLayout(int* width, int* height);
 
 		CSize _contentSize;
