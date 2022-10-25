@@ -21,7 +21,7 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
 	m_candidateCount(0),
 	hide_candidates(false),
 	pDWR(NULL),
-	pFonts(NULL),
+	pFonts(new GDIFonts(ui.style())),
 	m_blurer(new GdiplusBlur()),
 	pBrush(NULL),
 	_m_gdiplusToken(0)
@@ -123,6 +123,7 @@ bool WeaselPanel::InitFontRes(void)
 		if(pBrush == NULL)
 			pDWR->pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(1.0, 1.0, 1.0, 1.0), &pBrush);
 	}
+	if(pFonts == NULL || m_style != m_ostyle)
 	{
 		delete pFonts;
 		pFonts = new GDIFonts(m_style);
@@ -682,6 +683,7 @@ static inline void PreMutiplyBits(void* pvBits, const BITMAPINFOHEADER& BMIH, co
 		}
 	}
 }
+
 static HBITMAP _CreateAlphaTextBitmap(LPCWSTR inText, const CFont& inFont, COLORREF inColor, int cch)
 {
 	HDC hTextDC = CreateCompatibleDC(NULL);
@@ -734,7 +736,7 @@ static void _AlphaBlendBmpToDC(CDCHandle& dc, const int x, const int y, const BY
 	}
 }
 
-static HRESULT _TextOutWithFallback_ULW(CDCHandle dc, int x, int y, CRect const rc, LPCWSTR psz, int cch, const CFont& font, const COLORREF& inColor, BYTE alpha)
+static HRESULT _TextOutWithFallback(CDCHandle dc, int x, int y, CRect const rc, LPCWSTR psz, int cch, const CFont& font, const COLORREF& inColor, BYTE alpha)
 {
 	HDC hTextDC = CreateCompatibleDC(NULL);
 	HFONT hOldFont = (HFONT)SelectObject(hTextDC, font);
@@ -788,7 +790,7 @@ static HRESULT _TextOutWithFallback_ULW(CDCHandle dc, int x, int y, CRect const 
 	return hr;
 }
 
-bool WeaselPanel::_TextOutWithFallback_D2D (CDCHandle dc, CRect const rc, std::wstring psz, int cch, COLORREF gdiColor, IDWriteTextFormat* pTextFormat)
+bool WeaselPanel::_TextOutWithFallbackDW (CDCHandle dc, CRect const rc, std::wstring psz, int cch, COLORREF gdiColor, IDWriteTextFormat* pTextFormat)
 {
 	float r = (float)(GetRValue(gdiColor))/255.0f;
 	float g = (float)(GetGValue(gdiColor))/255.0f;
@@ -831,7 +833,7 @@ void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR 
 	{
 		// invalid text format, no need to draw 
 		if (pTextFormat == NULL)	return;
-		_TextOutWithFallback_D2D(dc, rc, psz, cch, inColor, pTextFormat);
+		_TextOutWithFallbackDW(dc, rc, psz, cch, inColor, pTextFormat);
 	}
 	else
 	{ 
@@ -852,7 +854,7 @@ void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR 
 		{
 			// calc line size, for y offset calc
 			dc.GetTextExtent(line.c_str(), line.length(), &size);
-			if (FAILED(_TextOutWithFallback_ULW(dc, x, y+offset, rc, line.c_str(), line.length(), font, inColor, alpha))) 
+			if (FAILED(_TextOutWithFallback(dc, x, y+offset, rc, line.c_str(), line.length(), font, inColor, alpha))) 
 			{
 				HBITMAP MyBMP = _CreateAlphaTextBitmap(psz, font, dc.GetTextColor(), cch);
 				if (MyBMP)
