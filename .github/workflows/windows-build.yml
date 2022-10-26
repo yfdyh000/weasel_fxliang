@@ -22,14 +22,10 @@ jobs:
         with:
           repository: ${{ inputs.repository }}
           submodules: recursive
-          
-      - name: Setup DevCmd
-        run: |
-          "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat"
 
       - name: Configure build environment
         run: |
-          copy env.vs2022.bat env.bat
+          copy env.vs2019.bat env.bat
           $git_ref_name = git describe --always
           echo "git_ref_name=$git_ref_name" >> $env:GITHUB_ENV
 
@@ -80,7 +76,9 @@ jobs:
       #  run: .\build.bat rime data 
       
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.1
+        uses: microsoft/setup-msbuild@v1.1.3
+          with:
+            vs-version: '[16.4,16.11)'
 
       - name: Build Weasel
         id: build_weasel
