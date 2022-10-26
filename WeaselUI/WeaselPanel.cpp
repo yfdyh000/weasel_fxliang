@@ -10,7 +10,6 @@
 
 // for IDI_ZH, IDI_EN
 #include <resource.h>
-#include <fstream>
 
 WeaselPanel::WeaselPanel(weasel::UI& ui)
 	: m_layout(NULL),
@@ -32,6 +31,7 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
 	m_iconFull.LoadIconW(IDI_FULL_SHAPE, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 	m_iconHalf.LoadIconW(IDI_HALF_SHAPE, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 	GdiplusStartup(&_m_gdiplusToken, &_m_gdiplusStartupInput, NULL);
+	m_ostyle = m_style;
 	InitFontRes();
 }
 
@@ -96,6 +96,7 @@ void WeaselPanel::Refresh()
 
 	if(!hide_candidates)
 	{ 
+		InitFontRes();
 		CDCHandle dc = GetDC();
 		m_layout->DoLayout(dc, pFonts, pDWR);
 		ReleaseDC(dc);
@@ -110,21 +111,20 @@ bool WeaselPanel::InitFontRes(void)
 	if (m_style.color_font)
 	{
 		// prepare d2d1 resources
-		if(pDWR == NULL)
+		if (pDWR == NULL)
 			pDWR = new DirectWriteResources(m_style);
 		else if(m_ostyle != m_style)
 		{
-			//std::ofstream o("log.txt", std::ios::app);
-			//o << "pDWR->InitResources(m_style) called" << std::endl;
-			//o.close();
 			pDWR->InitResources(m_style);
 		}
 
 		if(pBrush == NULL)
 			pDWR->pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(1.0, 1.0, 1.0, 1.0), &pBrush);
+		m_ostyle = m_style;
 	}
-	if(pFonts == NULL || m_style != m_ostyle)
+	else if((pFonts == NULL || m_style != m_ostyle))
 	{
+		m_ostyle = m_style;
 		delete pFonts;
 		pFonts = new GDIFonts(m_style);
 	}
@@ -568,7 +568,6 @@ void WeaselPanel::_LayerUpdate(const CRect& rc, CDCHandle dc)
 LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 	GetWindowRect(&m_inputPos);
-	InitFontRes();
 	Refresh();
 	return TRUE;
 }

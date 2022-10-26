@@ -13,7 +13,6 @@ public:
 
 	void Refresh() {
 		if (!panel.IsWindow()) return;
-		panel.InitFontRes();
 		if (timer)
 		{
 			Hide();
@@ -158,7 +157,6 @@ void UI::Refresh()
 	{
 		pimpl_->Refresh();
 	}
-	ostyle_ = style_;
 }
 
 void UI::UpdateInputPosition(RECT const& rc)
