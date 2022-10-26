@@ -23,8 +23,9 @@ jobs:
           repository: ${{ inputs.repository }}
           submodules: recursive
           
-      - name: Setup MSBuild.exe
-        uses: warrenbuckley/Setup-MSBuild@v1
+      - name: Setup DevCmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat"
 
       - name: Configure build environment
         run: |
