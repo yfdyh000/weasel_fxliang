@@ -1,10 +1,10 @@
 #pragma once
 #include <WeaselCommon.h>
 #include <WeaselUI.h>
-#include "Layout.h"
 #include <Usp10.h>
 #include <gdiplus.h>
 
+#include "Layout.h"
 #include "GdiplusBlur.h"
 
 #pragma comment(lib, "gdiplus.lib")
@@ -38,38 +38,41 @@ public:
 
 	LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-	LRESULT OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-	void CloseDialog(int nVal);
 
 	WeaselPanel(weasel::UI &ui);
 	~WeaselPanel();
 
 	void MoveTo(RECT const& rc);
 	void Refresh();
-
+	bool InitFontRes(void);
 	void DoPaint(CDCHandle dc);
 
 private:
 	void _CreateLayout();
 	void _ResizeWindow();
-	void _RepositionWindow();
+	void _RepositionWindow(bool adj = false);
 	bool _DrawPreedit(weasel::Text const& text, CDCHandle dc, CRect const& rc);
 	bool _DrawCandidates(CDCHandle dc);
-	void _HighlightTextEx(CDCHandle dc, CRect rc, COLORREF color, COLORREF shadowColor, int blurOffsetX, int blurOffsetY, int radius, BackType type );
-	void _TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, int cch, IDWriteTextFormat* pTextFormat, FontInfo* pFontInfo);
-	HRESULT _TextOutWithFallback_D2D(CDCHandle dc, CRect const rc, std::wstring psz, int cch, COLORREF gdiColor, IDWriteTextFormat* pTextFormat);
+	void _HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORREF shadowColor, int blurOffsetX, int blurOffsetY, int radius, BackType type );
+	void _TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, size_t cch, FontInfo* pFontInfo, int inColor, IDWriteTextFormat* pTextFormat = NULL);
+	bool _TextOutWithFallbackDW(CDCHandle dc, CRect const rc, std::wstring psz, size_t cch, COLORREF gdiColor, IDWriteTextFormat* pTextFormat);
 
 	bool _IsHighlightOverCandidateWindow(CRect rc, CRect bg, Gdiplus::Graphics* g);
+	void _LayerUpdate(const CRect& rc, CDCHandle dc);
 
 	weasel::Layout *m_layout;
 	weasel::Context &m_ctx;
 	weasel::Status &m_status;
 	weasel::UIStyle &m_style;
+	weasel::UIStyle &m_ostyle;
 
 	CRect m_inputPos;
+
 	CIcon m_iconDisabled;
 	CIcon m_iconEnabled;
 	CIcon m_iconAlpha;
+	CIcon m_iconFull;
+	CIcon m_iconHalf;
 	// for gdiplus drawings
 	Gdiplus::GdiplusStartupInput _m_gdiplusStartupInput;
 	ULONG_PTR _m_gdiplusToken;
@@ -79,21 +82,29 @@ private:
 	// if hemispherical_dome has been trigged
 	bool m_hemispherical_dome = false;
 
+	bool hide_candidates;
 	// for multi font_face & font_point
 	GdiplusBlur* m_blurer;
 	DirectWriteResources* pDWR;
 	GDIFonts* pFonts;
 
-	int offsetX;
-	int offsetY;
+	ID2D1SolidColorBrush* pBrush;
 };
 
 class GraphicsRoundRectPath : public Gdiplus::GraphicsPath
 {
 public:
-	GraphicsRoundRectPath();
-	GraphicsRoundRectPath(int left, int top, int width, int height, int cornerx, int cornery);
-	GraphicsRoundRectPath(const CRect rc, int corner);
+	GraphicsRoundRectPath() {};
+	GraphicsRoundRectPath(int left, int top, int width, int height, int cornerx, int cornery) : Gdiplus::GraphicsPath()
+	{
+		AddRoundRect(left, top, width, height, cornerx, cornery);
+	}
+	GraphicsRoundRectPath(const CRect rc, int corner)
+	{
+		if (corner > 0) AddRoundRect(rc.left, rc.top, rc.Width(), rc.Height(), corner, corner);
+		else AddRectangle(Gdiplus::Rect(rc.left, rc.top, rc.Width(), rc.Height()));
+	}
+
 	GraphicsRoundRectPath(const CRect rc, int corner, bool roundTopLeft, bool roundTopRight, bool roundBottomRight, bool roundBottomLeft);
 
 public:

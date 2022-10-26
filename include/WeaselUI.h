@@ -18,15 +18,10 @@ namespace weasel
 	class UI
 	{
 	public:
-		UI() : pimpl_(0)
-		{
-		}
+		UI() : pimpl_(0) { }
 
-		virtual ~UI()
-		{
-			if (pimpl_)
-				Destroy();
-		}
+		// implement in WeaselUI.cpp, avoiding C4150 warning
+		virtual ~UI();
 
 		// 创建输入法界面
 		bool Create(HWND parent);
@@ -53,6 +48,7 @@ namespace weasel
 		Context& ctx() { return ctx_; } 
 		Status& status() { return status_; } 
 		UIStyle& style() { return style_; }
+		UIStyle& ostyle() { return ostyle_; }
 
 	private:
 		UIImpl* pimpl_;
@@ -60,6 +56,7 @@ namespace weasel
 		Context ctx_;
 		Status status_;
 		UIStyle style_;
+		UIStyle ostyle_;
 	};
 
 }

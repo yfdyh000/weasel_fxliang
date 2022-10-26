@@ -64,6 +64,12 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, int nCount, 
 	D2D1_SIZE_F sz;
 	HRESULT hr = S_OK;
 	IDWriteTextLayout* pTextLayout = NULL;
+	if (pTextFormat == NULL)
+	{
+		lpSize->cx = 0;
+		lpSize->cy = 0;
+		return;
+	}
 
 	// 创建文本布局 
 	if (pTextFormat != NULL)
@@ -92,14 +98,17 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, int nCount, 
 	SafeRelease(&pTextLayout);
 }
 
-CSize StandardLayout::GetPreeditSize(CDCHandle dc) const
+CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDWriteTextFormat* pTextFormat, IDWriteFactory* pDWFactory) const
 {
-	const std::wstring &preedit = _context.preedit.str;
-	const std::vector<weasel::TextAttribute> &attrs = _context.preedit.attributes;
+	const std::wstring& preedit = text.str;
+	const std::vector<weasel::TextAttribute> &attrs = text.attributes;
 	CSize size(0, 0);
 	if (!preedit.empty())
 	{
-		GetTextExtentDCMultiline(dc, preedit, preedit.length(), &size);
+		if(pTextFormat == NULL && pDWFactory == NULL)
+			GetTextExtentDCMultiline(dc, preedit, preedit.length(), &size);
+		else
+			GetTextSizeDW(preedit, preedit.length(), pTextFormat, pDWFactory, &size);
 		for (size_t i = 0; i < attrs.size(); i++)
 		{
 			if (attrs[i].type == weasel::HIGHLIGHTED)
@@ -122,40 +131,13 @@ CSize StandardLayout::GetPreeditSize(CDCHandle dc) const
 	return size;
 }
 
-CSize StandardLayout::GetPreeditSize(CDCHandle dc, IDWriteTextFormat* pTextFormat, IDWriteFactory* pDWFactory) const
-{
-	const std::wstring &preedit = _context.preedit.str;
-	const std::vector<weasel::TextAttribute> &attrs = _context.preedit.attributes;
-	CSize size(0, 0);
-	if (!preedit.empty())
-	{
-		GetTextSizeDW(preedit, preedit.length(), pTextFormat, pDWFactory, &size);
-		for (size_t i = 0; i < attrs.size(); i++)
-		{
-			if (attrs[i].type == weasel::HIGHLIGHTED)
-			{
-				const weasel::TextRange &range = attrs[i].range;
-				if (range.start < range.end)
-				{
-					if (range.start > 0)
-						size.cx += _style.hilite_spacing;
-					else
-						size.cx += _style.hilite_padding;
-					if (range.end < static_cast<int>(preedit.length()))
-						size.cx += _style.hilite_spacing;
-					else
-						size.cx += _style.hilite_padding;
-				}
-			}
-		}
-	}
-	return size;
-}
 void StandardLayout::UpdateStatusIconLayout(int* width, int* height)
 {
 	// rule 1. status icon is middle-aligned with preedit text or auxiliary text, whichever comes first
 	// rule 2. there is a spacing between preedit/aux text and the status icon
 	// rule 3. status icon is right aligned in WeaselPanel, when [margin_x + width(preedit/aux) + spacing + width(icon) + margin_x] < style.min_width
+	int real_margin_x = (abs(_style.margin_x) > _style.hilite_padding) ? abs(_style.margin_x) : _style.hilite_padding;
+	int real_margin_y = (abs(_style.margin_y) > _style.hilite_padding) ? abs(_style.margin_y) : _style.hilite_padding;
 	if (ShouldDisplayStatusIcon())
 	{
 		int left = 0, middle = 0;
@@ -171,10 +153,10 @@ void StandardLayout::UpdateStatusIconLayout(int* width, int* height)
 		}
 		if (left && middle)
 		{
-			int right_alignment = *width - _style.margin_x - STATUS_ICON_SIZE;
+			int right_alignment = *width - real_margin_x - STATUS_ICON_SIZE;
 			if (left > right_alignment)
 			{
-				*width = left + STATUS_ICON_SIZE + _style.margin_x;
+				*width = left + STATUS_ICON_SIZE + real_margin_x;
 			}
 			else
 			{

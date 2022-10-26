@@ -26,6 +26,8 @@ DirectWriteResources::DirectWriteResources(const weasel::UIStyle& style) :
 		const D2D1_PIXEL_FORMAT format = D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED);
 		const D2D1_RENDER_TARGET_PROPERTIES properties = D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_DEFAULT, format);
 		pD2d1Factory->CreateDCRenderTarget(&properties, &pRenderTarget);
+		pRenderTarget->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE);
+		pRenderTarget->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
 	}
 	//get the dpi information
 	pD2d1Factory->GetDesktopDpi(&dpiScaleX_, &dpiScaleY_);
@@ -45,28 +47,21 @@ DirectWriteResources::~DirectWriteResources()
 	SafeRelease(&pD2d1Factory);
 }
 
-static void AddAMapping(IDWriteFontFallbackBuilder* pFontFallbackBuilder, const wchar_t* fname, const unsigned int start, const unsigned int end)
-{
-	DWRITE_UNICODE_RANGE rng;
-	rng.first = start;
-	rng.last = end;
-	pFontFallbackBuilder->AddMapping(&rng, 1, &fname, 1);
-}
-
-HRESULT DirectWriteResources::InitResources(wstring label_font_face, int label_font_point,
-	wstring font_face, int font_point,
-	wstring comment_font_face, int comment_font_point) 
+HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int label_font_point,
+	std::wstring font_face, int font_point,
+	std::wstring comment_font_face, int comment_font_point) 
 {
 	// prepare d2d1 resources
 
 	HRESULT hResult = S_OK;
-	vector<wstring> fontFaceStrVector;
+	std::vector<std::wstring> fontFaceStrVector;
 	// text font text format set up
-	split(fontFaceStrVector, font_face, is_any_of(L","));
-	wstring mainFontFace;
+	boost::algorithm::split(fontFaceStrVector, font_face, boost::algorithm::is_any_of(L","));
+	std::wstring mainFontFace;
 	DWRITE_FONT_WEIGHT fontWeight = DWRITE_FONT_WEIGHT_NORMAL;
 	DWRITE_FONT_STYLE fontStyle = DWRITE_FONT_STYLE_NORMAL;
-	_ParseFontFace(fontFaceStrVector[0], mainFontFace, fontWeight, fontStyle);
+	_ParseFontFace(fontFaceStrVector[0], mainFontFace, fontWeight, fontStyle, TextFontInfo);
+	TextFontInfo.m_FontPoint = font_point;
 	hResult = pDWFactory->CreateTextFormat(mainFontFace.c_str(), NULL,
 			fontWeight, fontStyle, DWRITE_FONT_STRETCH_NORMAL,
 			font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pTextFormat));
@@ -78,13 +73,14 @@ HRESULT DirectWriteResources::InitResources(wstring label_font_face, int label_f
 		if (fontFaceStrVector.size() > 1)
 			_SetFontFallback(pTextFormat, fontFaceStrVector);
 	}
-	fontFaceStrVector.swap(vector<wstring>());
+	fontFaceStrVector.swap(std::vector<std::wstring>());
 
 	// label font text format set up
-	split(fontFaceStrVector, label_font_face, is_any_of(L","));
+	boost::algorithm::split(fontFaceStrVector, label_font_face, boost::algorithm::is_any_of(L","));
 	fontWeight = DWRITE_FONT_WEIGHT_NORMAL;
 	fontStyle = DWRITE_FONT_STYLE_NORMAL;
-	_ParseFontFace(fontFaceStrVector[0], mainFontFace, fontWeight, fontStyle);
+	_ParseFontFace(fontFaceStrVector[0], mainFontFace, fontWeight, fontStyle, LabelTextFontInfo);
+	LabelTextFontInfo.m_FontPoint = label_font_point;
 	hResult = pDWFactory->CreateTextFormat(mainFontFace.c_str(), NULL,
 			fontWeight, fontStyle, DWRITE_FONT_STRETCH_NORMAL,
 			label_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pLabelTextFormat));
@@ -96,13 +92,14 @@ HRESULT DirectWriteResources::InitResources(wstring label_font_face, int label_f
 		if (fontFaceStrVector.size() > 1)
 			_SetFontFallback(pLabelTextFormat, fontFaceStrVector);
 	}
-	fontFaceStrVector.swap(vector<wstring>());
+	fontFaceStrVector.swap(std::vector<std::wstring>());
 
 	// comment font text format set up
-	split(fontFaceStrVector, comment_font_face, is_any_of(L","));
+	boost::algorithm::split(fontFaceStrVector, comment_font_face, boost::algorithm::is_any_of(L","));
 	fontWeight = DWRITE_FONT_WEIGHT_NORMAL;
 	fontStyle = DWRITE_FONT_STYLE_NORMAL;
-	_ParseFontFace(fontFaceStrVector[0], mainFontFace, fontWeight, fontStyle);
+	_ParseFontFace(fontFaceStrVector[0], mainFontFace, fontWeight, fontStyle, CommentTextFontInfo);
+	CommentTextFontInfo.m_FontPoint = comment_font_point;
 	hResult = pDWFactory->CreateTextFormat(mainFontFace.c_str(), NULL,
 			fontWeight, fontStyle, DWRITE_FONT_STRETCH_NORMAL,
 			comment_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pCommentTextFormat));
@@ -114,7 +111,7 @@ HRESULT DirectWriteResources::InitResources(wstring label_font_face, int label_f
 		if (fontFaceStrVector.size() > 1)
 			_SetFontFallback(pCommentTextFormat, fontFaceStrVector);
 	}
-	fontFaceStrVector.swap(vector<wstring>());
+	fontFaceStrVector.swap(std::vector<std::wstring>());
 	return hResult;
 }
 
@@ -123,14 +120,14 @@ HRESULT DirectWriteResources::InitResources(const UIStyle& style)
 	// prepare d2d1 resources
 	HRESULT hResult = S_OK;
 
-	vector<wstring> fontFaceStrVector;
+	std::vector<std::wstring> fontFaceStrVector;
 	// text font text format set up
-	split(fontFaceStrVector, style.font_face, is_any_of(L","));
-	wstring mainFontFace;
+	boost::algorithm::split(fontFaceStrVector, style.font_face, boost::algorithm::is_any_of(L","));
+	std::wstring mainFontFace;
 	DWRITE_FONT_WEIGHT fontWeight = DWRITE_FONT_WEIGHT_NORMAL;
 
 	DWRITE_FONT_STYLE fontStyle = DWRITE_FONT_STYLE_NORMAL;
-	_ParseFontFace(fontFaceStrVector[0], mainFontFace, fontWeight, fontStyle);
+	_ParseFontFace(fontFaceStrVector[0], mainFontFace, fontWeight, fontStyle, LabelTextFontInfo);
 	hResult = pDWFactory->CreateTextFormat(mainFontFace.c_str(), NULL,
 			fontWeight, fontStyle, DWRITE_FONT_STRETCH_NORMAL,
 			style.font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pTextFormat));
@@ -143,13 +140,13 @@ HRESULT DirectWriteResources::InitResources(const UIStyle& style)
 		if (fontFaceStrVector.size() > 1)
 			_SetFontFallback(pTextFormat, fontFaceStrVector);
 	}
-	fontFaceStrVector.swap(vector<wstring>());
+	fontFaceStrVector.swap(std::vector<std::wstring>());
 
 	// label font text format set up
-	split(fontFaceStrVector, style.label_font_face, is_any_of(L","));
+	boost::algorithm::split(fontFaceStrVector, style.label_font_face, boost::algorithm::is_any_of(L","));
 	fontWeight = DWRITE_FONT_WEIGHT_NORMAL;
 	fontStyle = DWRITE_FONT_STYLE_NORMAL;
-	_ParseFontFace(fontFaceStrVector[0], mainFontFace, fontWeight, fontStyle);
+	_ParseFontFace(fontFaceStrVector[0], mainFontFace, fontWeight, fontStyle, TextFontInfo);
 	hResult = pDWFactory->CreateTextFormat(mainFontFace.c_str(), NULL,
 			fontWeight, fontStyle, DWRITE_FONT_STRETCH_NORMAL,
 			style.label_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pLabelTextFormat));
@@ -161,13 +158,13 @@ HRESULT DirectWriteResources::InitResources(const UIStyle& style)
 		if (fontFaceStrVector.size() > 1)
 			_SetFontFallback(pLabelTextFormat, fontFaceStrVector);
 	}
-	fontFaceStrVector.swap(vector<wstring>());
+	fontFaceStrVector.swap(std::vector<std::wstring>());
 
 	// comment font text format set up
-	split(fontFaceStrVector, style.comment_font_face, is_any_of(L","));
+	boost::algorithm::split(fontFaceStrVector, style.comment_font_face, boost::algorithm::is_any_of(L","));
 	fontWeight = DWRITE_FONT_WEIGHT_NORMAL;
 	fontStyle = DWRITE_FONT_STYLE_NORMAL;
-	_ParseFontFace(fontFaceStrVector[0], mainFontFace, fontWeight, fontStyle);
+	_ParseFontFace(fontFaceStrVector[0], mainFontFace, fontWeight, fontStyle, CommentTextFontInfo);
 	hResult = pDWFactory->CreateTextFormat(mainFontFace.c_str(), NULL,
 			fontWeight, fontStyle, DWRITE_FONT_STRETCH_NORMAL,
 			style.comment_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pCommentTextFormat));
@@ -179,79 +176,84 @@ HRESULT DirectWriteResources::InitResources(const UIStyle& style)
 		if (fontFaceStrVector.size() > 1)
 			_SetFontFallback(pCommentTextFormat, fontFaceStrVector);
 	}
-	fontFaceStrVector.swap(vector<wstring>());
+	fontFaceStrVector.swap(std::vector<std::wstring>());
 
 	return hResult;
 }
-void DirectWriteResources::_ParseFontFace(const std::wstring fontFaceStr, std::wstring& fontFace, DWRITE_FONT_WEIGHT& fontWeight, DWRITE_FONT_STYLE& fontStyle)
+bool weasel::DirectWriteResources::VerifyChanged(const weasel::UIStyle& style)
 {
+	return (style.font_face != TextFontInfo.m_FontFace
+		|| style.font_point != TextFontInfo.m_FontPoint
+		|| style.label_font_face != LabelTextFontInfo.m_FontFace
+		|| style.label_font_point != LabelTextFontInfo.m_FontPoint
+		|| style.comment_font_face != CommentTextFontInfo.m_FontFace
+		|| style.comment_font_point != CommentTextFontInfo.m_FontPoint
+		|| pTextFormat->GetFontSize() != style.font_point * dpiScaleX_
+		|| pLabelTextFormat->GetFontSize() != style.label_font_point * dpiScaleX_
+		|| pCommentTextFormat->GetFontSize() != style.comment_font_point * dpiScaleX_);
+}
+void DirectWriteResources::_ParseFontFace(const std::wstring fontFaceStr,
+		std::wstring& fontFace, DWRITE_FONT_WEIGHT& fontWeight, DWRITE_FONT_STYLE& fontStyle,
+		FontInfo& fontInfo)
+{
+	fontInfo.m_FontFace = fontFaceStr;
 	std::vector<std::wstring> parsedStrV; 
 	boost::algorithm::split(parsedStrV, fontFaceStr, boost::algorithm::is_any_of(L":"));
 	fontFace = parsedStrV[0];
-	boost::wsmatch res;
-	boost::wregex regex  ( L":((THIN)|(EXTRA_LIGHT)|(ULTRA_LIGHT)|(LIGHT)|(SEMI_LIGHT)|(NORMAL)|(MEDIUM)|(DEMI_BOLD)|(SEMI_BOLD)|(BOLD)|(EXTRA_BOLD)|(ULTRA_BOLD)|(BLACK)|(HEAVY)|(EXTRA_BLACK)|(ULTRA_BLACK))" , boost::wregex::icase);
-	if (boost::regex_search(fontFaceStr, res, regex))
-	{
-		if (res[0] == L":THIN" || res[0] == L":thin")
-			fontWeight = DWRITE_FONT_WEIGHT_THIN;
-		else if (res[0] == L":EXTRA_LIGHT" || res[0] == L":extra_light")
-			fontWeight = DWRITE_FONT_WEIGHT_EXTRA_LIGHT;
-		else if (res[0] == L":ULTRA_LIGHT" || res[0] == L":ultra_light")
-			fontWeight = DWRITE_FONT_WEIGHT_ULTRA_LIGHT;
-		else if (res[0] == L":LIGHT" || res[0] == L":light")
-			fontWeight = DWRITE_FONT_WEIGHT_LIGHT;
-		else if (res[0] == L":SEMI_LIGHT" || res[0] == L":semi_light")
-			fontWeight = DWRITE_FONT_WEIGHT_SEMI_LIGHT;
-		else if (res[0] == L":MEDIUM" || res[0] == L":medium")
-			fontWeight = DWRITE_FONT_WEIGHT_MEDIUM;
-		else if (res[0] == L":DEMI_BOLD" || res[0] == L":demi_bold")
-			fontWeight = DWRITE_FONT_WEIGHT_DEMI_BOLD;
-		else if (res[0] == L":SEMI_BOLD" || res[0] == L":semi_bold")
-			fontWeight = DWRITE_FONT_WEIGHT_SEMI_BOLD;
-		else if (res[0] == L":BOLD" || res[0] == L":bold")
-			fontWeight = DWRITE_FONT_WEIGHT_BOLD;
-		else if (res[0] == L":EXTRA_BOLD" || res[0] == L":extra_bold")
-			fontWeight = DWRITE_FONT_WEIGHT_EXTRA_BOLD;
-		else if (res[0] == L":ULTRA_BOLD" || res[0] == L":ultra_bold")
-			fontWeight = DWRITE_FONT_WEIGHT_ULTRA_BOLD;
-		else if (res[0] == L":BLACK" || res[0] == L":black")
-			fontWeight = DWRITE_FONT_WEIGHT_BLACK;
-		else if (res[0] == L":HEAVY" || res[0] == L":heavy")
-			fontWeight = DWRITE_FONT_WEIGHT_HEAVY;
-		else if (res[0] == L":EXTRA_BLACK" || res[0] == L":extra_black")
-			fontWeight = DWRITE_FONT_WEIGHT_EXTRA_BLACK;
-		else if (res[0] == L":ULTRA_BLACK" || res[0] == L":ultra_black")
-			fontWeight = DWRITE_FONT_WEIGHT_ULTRA_BLACK;
-		else
-			fontWeight = DWRITE_FONT_WEIGHT_NORMAL;
-	}
+
+	if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":thin", boost::wregex::icase)))
+		fontWeight = DWRITE_FONT_WEIGHT_THIN;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":extra_light", boost::wregex::icase)))
+		fontWeight = DWRITE_FONT_WEIGHT_EXTRA_LIGHT;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":ultra_light", boost::wregex::icase)))
+		fontWeight = DWRITE_FONT_WEIGHT_ULTRA_LIGHT;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":light", boost::wregex::icase)))
+		fontWeight = DWRITE_FONT_WEIGHT_LIGHT;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":semi_light", boost::wregex::icase)))
+		fontWeight = DWRITE_FONT_WEIGHT_SEMI_LIGHT;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":medium", boost::wregex::icase)))
+		fontWeight = DWRITE_FONT_WEIGHT_MEDIUM;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":demi_bold", boost::wregex::icase)))
+		fontWeight = DWRITE_FONT_WEIGHT_DEMI_BOLD;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":semi_bold", boost::wregex::icase)))
+		fontWeight = DWRITE_FONT_WEIGHT_SEMI_BOLD;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":bold", boost::wregex::icase)))
+		fontWeight = DWRITE_FONT_WEIGHT_BOLD;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":extra_bold", boost::wregex::icase)))
+		fontWeight = DWRITE_FONT_WEIGHT_EXTRA_BOLD;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":ultra_bold", boost::wregex::icase)))
+		fontWeight = DWRITE_FONT_WEIGHT_ULTRA_BOLD;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":black", boost::wregex::icase)))
+		fontWeight = DWRITE_FONT_WEIGHT_BLACK;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":heavy", boost::wregex::icase)))
+		fontWeight = DWRITE_FONT_WEIGHT_HEAVY;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":extra_black", boost::wregex::icase)))
+		fontWeight = DWRITE_FONT_WEIGHT_EXTRA_BLACK;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":ultra_black", boost::wregex::icase)))
+		fontWeight = DWRITE_FONT_WEIGHT_ULTRA_BLACK;
 	else
 		fontWeight = DWRITE_FONT_WEIGHT_NORMAL;
-	boost::wsmatch res2;
-	boost::wregex reg2(L":((ITALIC)|(OBLIQUE))", boost::wregex::icase);
-	if (boost::regex_search(fontFaceStr, res2, reg2))
-	{
-		if (res2[0] == L":italic" || res2[0] == L"ITALIC")
-			fontStyle = DWRITE_FONT_STYLE_ITALIC;
-		else
-			fontStyle = DWRITE_FONT_STYLE_OBLIQUE;
-	}
+
+	if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":italic", boost::wregex::icase)))
+		fontStyle = DWRITE_FONT_STYLE_ITALIC;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":oblique", boost::wregex::icase)))
+		fontStyle = DWRITE_FONT_STYLE_OBLIQUE;
 	else
 		fontStyle = DWRITE_FONT_STYLE_NORMAL;
 }
 
-void DirectWriteResources::_SetFontFallback(IDWriteTextFormat1* pTextFormat, vector<wstring> fontVector)
+void DirectWriteResources::_SetFontFallback(IDWriteTextFormat1* pTextFormat, std::vector<std::wstring> fontVector)
 {
 	IDWriteFontFallback* pSysFallback;
 	pDWFactory->GetSystemFontFallback(&pSysFallback);
 	IDWriteFontFallback* pFontFallback = NULL;
 	IDWriteFontFallbackBuilder* pFontFallbackBuilder = NULL;
 	pDWFactory->CreateFontFallbackBuilder(&pFontFallbackBuilder);
-	vector<wstring> fallbackFontsVector;
+	std::vector<std::wstring> fallbackFontsVector;
 	for (UINT32 i = 1; i < fontVector.size(); i++)
 	{
-		split(fallbackFontsVector, fontVector[i], is_any_of(L":"));
-		wstring _fontFaceWstr, firstWstr, lastWstr;
+		boost::algorithm::split(fallbackFontsVector, fontVector[i], boost::algorithm::is_any_of(L":"));
+		std::wstring _fontFaceWstr, firstWstr, lastWstr;
 		if (fallbackFontsVector.size() == 3)
 		{
 			_fontFaceWstr = fallbackFontsVector[0];
@@ -278,19 +280,21 @@ void DirectWriteResources::_SetFontFallback(IDWriteTextFormat1* pTextFormat, vec
 		}
 		UINT first = 0, last = 0x10ffff;
 		try {
-			first = stoi(firstWstr.c_str(), 0, 16);
+			first = std::stoi(firstWstr.c_str(), 0, 16);
 		}
 		catch(...){
 			first = 0;
 		}
 		try {
-			last = stoi(lastWstr.c_str(), 0, 16);
+			last = std::stoi(lastWstr.c_str(), 0, 16);
 		}
 		catch(...){
 			first = 0x10ffff;
 		}
-		AddAMapping(pFontFallbackBuilder, _fontFaceWstr.c_str(), first, last);
-		fallbackFontsVector.swap(vector<wstring>());
+		DWRITE_UNICODE_RANGE range = { first, last };
+		const  WCHAR* familys = { _fontFaceWstr.c_str() };
+		pFontFallbackBuilder->AddMapping(&range, 1, &familys, 1);
+		fallbackFontsVector.swap(std::vector<std::wstring>());
 	}
 	pFontFallbackBuilder->AddMappings(pSysFallback);
 	pFontFallbackBuilder->CreateFontFallback(&pFontFallback);
@@ -301,23 +305,23 @@ void DirectWriteResources::_SetFontFallback(IDWriteTextFormat1* pTextFormat, vec
 }
 
 
-GDIFonts::GDIFonts(const UIStyle* style) 
+GDIFonts::GDIFonts(const UIStyle& style) 
 {
-	vector<wstring> fontFaceStrVector;
-	split(fontFaceStrVector, style->label_font_face, is_any_of(L","));
+	std::vector<std::wstring> fontFaceStrVector;
+	boost::algorithm::split(fontFaceStrVector, style.label_font_face, boost::algorithm::is_any_of(L","));
 	_ParseFontFace(fontFaceStrVector[0], m_LabelFont.m_FontFace, m_LabelFont.m_FontWeight);
-	m_LabelFont.m_FontPoint = style->label_font_point;
-	fontFaceStrVector.swap(vector<wstring>());
+	m_LabelFont.m_FontPoint = style.label_font_point;
+	fontFaceStrVector.swap(std::vector<std::wstring>());
 
-	split(fontFaceStrVector, style->font_face, is_any_of(L","));
+	boost::algorithm::split(fontFaceStrVector, style.font_face, boost::algorithm::is_any_of(L","));
 	_ParseFontFace(fontFaceStrVector[0], m_TextFont.m_FontFace, m_TextFont.m_FontWeight);
-	m_TextFont.m_FontPoint = style->font_point;
-	fontFaceStrVector.swap(vector<wstring>());
+	m_TextFont.m_FontPoint = style.font_point;
+	fontFaceStrVector.swap(std::vector<std::wstring>());
 
-	split(fontFaceStrVector, style->comment_font_face, is_any_of(L","));
+	boost::algorithm::split(fontFaceStrVector, style.comment_font_face, boost::algorithm::is_any_of(L","));
 	_ParseFontFace(fontFaceStrVector[0], m_CommentFont.m_FontFace, m_CommentFont.m_FontWeight);
-	m_CommentFont.m_FontPoint = style->comment_font_point;
-	fontFaceStrVector.swap(vector<wstring>());
+	m_CommentFont.m_FontPoint = style.comment_font_point;
+	fontFaceStrVector.swap(std::vector<std::wstring>());
 }
 
 void GDIFonts::_ParseFontFace(const std::wstring fontFaceStr, std::wstring& fontFace, int& fontWeight)
@@ -325,32 +329,24 @@ void GDIFonts::_ParseFontFace(const std::wstring fontFaceStr, std::wstring& font
 	std::vector<std::wstring> parsedStrV; 
 	boost::algorithm::split(parsedStrV, fontFaceStr, boost::algorithm::is_any_of(L":"));
 	fontFace = parsedStrV[0];
-	boost::wsmatch res;
-	boost::wregex regex  ( L":((THIN)|(EXTRA_LIGHT)|(ULTRA_LIGHT)|(LIGHT)|(SEMI_LIGHT)|(NORMAL)|(MEDIUM)|(DEMI_BOLD)|(SEMI_BOLD)|(BOLD)|(EXTRA_BOLD)|(ULTRA_BOLD)|(BLACK)|(HEAVY)|(EXTRA_BLACK)|(ULTRA_BLACK))" , boost::wregex::icase);
-	if (boost::regex_search(fontFaceStr, res, regex))
-	{
-		if (res[0] == L":THIN" || res[0] == L":thin")
-			fontWeight = FW_THIN;
-		else if ((res[0] == L":EXTRA_LIGHT" || res[0] == L":extra_light") || (res[0] == L":ULTRA_LIGHT" || res[0] == L":ultra_light"))
-			fontWeight = FW_EXTRALIGHT;
-		else if ((res[0] == L":LIGHT" || res[0] == L":light") ||(res[0] == L":SEMI_LIGHT" || res[0] == L":semi_light"))
-			fontWeight = FW_LIGHT;
-		else if (res[0] == L":MEDIUM" || res[0] == L":medium")
-			fontWeight = FW_MEDIUM;
-		else if ((res[0] == L":DEMI_BOLD" || res[0] == L":demi_bold") || (res[0] == L":SEMI_BOLD" || res[0] == L":semi_bold"))
-			fontWeight = FW_SEMIBOLD;
-		else if (res[0] == L":BOLD" || res[0] == L":bold")
-			fontWeight = FW_BOLD;
-		else if ((res[0] == L":EXTRA_BOLD" || res[0] == L":extra_bold") || (res[0] == L":ULTRA_BOLD" || res[0] == L":ultra_bold"))
-			fontWeight = FW_EXTRABOLD;
-		else if ((res[0] == L":BLACK" || res[0] == L":black") 
-			|| (res[0] == L":HEAVY" || res[0] == L":heavy") 
-			|| (res[0] == L":EXTRA_BLACK" || res[0] == L":extra_black") 
-			|| (res[0] == L":ULTRA_BLACK" || res[0] == L":ultra_black"))
-			fontWeight = FW_BLACK;
-		else
-			fontWeight = FW_NORMAL;
-	}
+	if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":thin", boost::wregex::icase)))
+		fontWeight = FW_THIN;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":(extra_light|ultra_light)", boost::wregex::icase)))
+		fontWeight = FW_EXTRALIGHT;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":(light|semi_light|demi_light)", boost::wregex::icase)))
+		fontWeight = FW_LIGHT;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":medium", boost::wregex::icase)))
+		fontWeight = FW_MEDIUM;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":bold", boost::wregex::icase)))
+		fontWeight = FW_BOLD;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":(semi_bold|demi_bold)", boost::wregex::icase)))
+		fontWeight = FW_SEMIBOLD;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":(extra_bold|ultra_bold)", boost::wregex::icase)))
+		fontWeight = FW_EXTRABOLD;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":(extra_black|ultra_black|heavy|black)", boost::wregex::icase)))
+		fontWeight = FW_BLACK;
+	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":normal", boost::wregex::icase)))
+		fontWeight = FW_NORMAL;
 	else
 		fontWeight = FW_DONTCARE;
 }
