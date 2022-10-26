@@ -17,8 +17,7 @@ namespace weasel
 
 		/* Layout */
 
-		virtual void DoLayout(CDCHandle dc, GDIFonts* pFonts = 0) = 0;
-		virtual void DoLayout(CDCHandle dc, DirectWriteResources* pDWR) = 0;
+		virtual void DoLayout(CDCHandle dc, GDIFonts* pFonts = NULL, DirectWriteResources* pDWR = NULL) = 0;
 		virtual CSize GetContentSize() const { return _contentSize; }
 		virtual CRect GetPreeditRect() const { return _preeditRect; }
 		virtual CRect GetAuxiliaryRect() const { return _auxiliaryRect; }
@@ -32,16 +31,14 @@ namespace weasel
 		virtual bool IsInlinePreedit() const;
 		virtual bool ShouldDisplayStatusIcon() const;
 
-		void GetTextExtentDCMultiline(CDCHandle dc, std::wstring wszString, int nCount, LPSIZE lpSize) const;
 		std::wstring StandardLayout::ConvertCRLF(std::wstring strString, std::wstring strCRLF) const;
+		void GetTextExtentDCMultiline(CDCHandle dc, std::wstring wszString, int nCount, LPSIZE lpSize) const;
 		void GetTextSizeDW(const std::wstring text, int nCount, IDWriteTextFormat* pTextFormat, IDWriteFactory* pDWFactory, LPSIZE lpSize) const;
 
 	protected:
 		/* Utility functions */
-		CSize GetPreeditSize(CDCHandle dc) const;
-		CSize GetAuxSize(CDCHandle dc) const;
-		CSize GetPreeditSize(CDCHandle dc, IDWriteTextFormat* pTextFormat, IDWriteFactory* pDWFactory) const;
-		CSize GetAuxSize(CDCHandle dc, IDWriteTextFormat* pTextFormat, IDWriteFactory* pDWFactory) const;
+		CSize GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDWriteTextFormat* pTextFormat = NULL, IDWriteFactory* pDWFactory = NULL) const;
+
 		void UpdateStatusIconLayout(int* width, int* height);
 
 		CSize _contentSize;

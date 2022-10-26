@@ -53,6 +53,7 @@ namespace weasel
 		Context& ctx() { return ctx_; } 
 		Status& status() { return status_; } 
 		UIStyle& style() { return style_; }
+		UIStyle& ostyle() { return ostyle_; }
 
 	private:
 		UIImpl* pimpl_;
@@ -60,6 +61,7 @@ namespace weasel
 		Context ctx_;
 		Status status_;
 		UIStyle style_;
+		UIStyle ostyle_;
 	};
 
 }

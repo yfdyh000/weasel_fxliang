@@ -9,29 +9,35 @@
 #include <boost/regex.hpp>
 
 using namespace weasel;
-using namespace boost::algorithm;
-using namespace std;
 
-template <class T> void SafeRelease(T** ppT)
-{
-	if (*ppT)
-	{
-		(*ppT)->Release();
-		*ppT = NULL;
-	}
-}
 
 namespace weasel
 {
+	template <class T> void SafeRelease(T** ppT)
+	{
+		if (*ppT)
+		{
+			(*ppT)->Release();
+			*ppT = NULL;
+		}
+	}
+	class FontInfo
+	{
+	public:
+		std::wstring m_FontFace;
+		int m_FontPoint;
+		int m_FontWeight;
+		int m_FontStyle;
+	};
 	class DirectWriteResources
 	{
 	public:
 		DirectWriteResources(const weasel::UIStyle& style);
 		~DirectWriteResources();
 
-		HRESULT InitResources(wstring label_font_face, int label_font_point,
-			wstring font_face, int font_point,
-			wstring comment_font_face, int comment_font_point);
+		HRESULT InitResources(std::wstring label_font_face, int label_font_point,
+			std::wstring font_face, int font_point,
+			std::wstring comment_font_face, int comment_font_point);
 		HRESULT InitResources(const UIStyle& style);
 		float dpiScaleX_, dpiScaleY_;
 		ID2D1Factory* pD2d1Factory;
@@ -40,22 +46,19 @@ namespace weasel
 		IDWriteTextFormat1* pTextFormat;
 		IDWriteTextFormat1* pLabelTextFormat;
 		IDWriteTextFormat1* pCommentTextFormat;
+		FontInfo TextFontInfo;
+		FontInfo LabelTextFontInfo;
+		FontInfo CommentTextFontInfo;
+		bool VerifyChanged(const weasel::UIStyle& style);
 	private:
-		void _ParseFontFace(const std::wstring fontFaceStr, std::wstring& fontFace, DWRITE_FONT_WEIGHT& fontWeight, DWRITE_FONT_STYLE& fontStyle);
-		void _SetFontFallback(IDWriteTextFormat1* pTextFormat, vector<wstring> fontVector);
-	};
-	class FontInfo
-	{
-	public:
-		wstring m_FontFace;
-		int m_FontPoint;
-		int m_FontWeight;
+		void _ParseFontFace(const std::wstring fontFaceStr, std::wstring& fontFace, DWRITE_FONT_WEIGHT& fontWeight, DWRITE_FONT_STYLE& fontStyle, FontInfo& fontInfo);
+		void _SetFontFallback(IDWriteTextFormat1* pTextFormat, std::vector<std::wstring> fontVector);
 	};
 	class GDIFonts
 	{
 	public:
 		~GDIFonts() {}
-		//GDIFonts(wstring labelFontFace, int labelFontPoint, wstring textFontFace, int textFontPoint, wstring commentFontFace, int commentFontPoint);
+		//GDIFonts(wstring labelFontFace, int labelFontPoint, std::wstring textFontFace, int textFontPoint, std::wstring commentFontFace, int commentFontPoint);
 		GDIFonts(const UIStyle& style);
 		void _ParseFontFace(const std::wstring fontFaceStr, std::wstring& fontFace, int& fontWeight);
 		FontInfo m_LabelFont;

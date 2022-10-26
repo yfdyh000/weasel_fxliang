@@ -13,7 +13,6 @@ public:
 
 	void Refresh() {
 		if (!panel.IsWindow()) return;
-		panel.InitFontRes();
 		if (timer)
 		{
 			Hide();
@@ -112,13 +111,9 @@ void UI::Destroy()
 {
 	if (pimpl_)
 	{
-		// clear ctx, refresh and destroy panel not delete it, avoiding re initialization font resources
-		pimpl_->panel.Clear();
-		pimpl_->panel.Refresh();
+		// destroy panel not delete it, avoiding re initialization font resources
 		if (pimpl_->panel.IsWindow())
 			pimpl_->panel.DestroyWindow();
-		//delete pimpl_;
-		//pimpl_ = 0;
 	}
 }
 

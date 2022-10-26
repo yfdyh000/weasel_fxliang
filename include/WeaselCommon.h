@@ -69,7 +69,7 @@ namespace weasel
 		{
 			if (str != txt.str || (attributes.size() != txt.attributes.size()))
 				return false;
-			for (int i = 0; i < attributes.size(); i++)
+			for (size_t i = 0; i < attributes.size(); i++)
 			{
 				if ((attributes[i] != txt.attributes[i]))
 					return false;
@@ -80,7 +80,7 @@ namespace weasel
 		{
 			if (str != txt.str || (attributes.size() != txt.attributes.size()))
 				return true;
-			for (int i = 0; i < attributes.size(); i++)
+			for (size_t i = 0; i < attributes.size(); i++)
 			{
 				if ((attributes[i] != txt.attributes[i]))
 					return true;
@@ -138,7 +138,7 @@ namespace weasel
 		bool notequal(std::vector<Text> txtSrc, std::vector<Text> txtDst)
 		{
 			if (txtSrc.size() != txtDst.size()) return true;
-			for (int i = 0; i < txtSrc.size(); i++)
+			for (size_t i = 0; i < txtSrc.size(); i++)
 			{
 				if (txtSrc[i] != txtDst[i])
 					return true;
@@ -261,7 +261,6 @@ namespace weasel
 		int label_font_point;
 		int comment_font_point;
 		bool inline_preedit;
-		bool hide_candidates_when_single;
 		bool color_font;
 		bool display_tray_icon;
 		std::wstring label_text_format;
@@ -308,7 +307,6 @@ namespace weasel
 			label_font_point(0),
 			comment_font_point(0),
 			inline_preedit(false),
-			hide_candidates_when_single(false),
 			align_type(ALIGN_BOTTOM),
 			preedit_type(COMPOSITION),
 			color_font(0),
@@ -347,6 +345,55 @@ namespace weasel
 			hilited_label_text_color(0),
 			hilited_comment_text_color(0),
 			client_caps(0) {}
+		bool operator!=(const UIStyle& st)
+		{
+			return 
+				(align_type != st.align_type ||
+				 preedit_type != st.preedit_type ||
+				 layout_type != st.layout_type ||
+				 font_face != st.font_face ||
+				 label_font_face != st.label_font_face ||
+				 comment_font_face != st.comment_font_face ||
+				 font_point != st.font_point ||
+				 label_font_point != st.label_font_point ||
+				 comment_font_point != st.comment_font_point ||
+				 inline_preedit != st.inline_preedit ||
+				 color_font != st.color_font ||
+				 display_tray_icon != st.display_tray_icon ||
+				 label_text_format != st.label_text_format ||
+				 min_width != st.min_width ||
+				 min_height != st.min_height ||
+				 border != st.border ||
+				 margin_x != st.margin_x ||
+				 margin_y != st.margin_y ||
+				 spacing != st.spacing ||
+				 candidate_spacing != st.candidate_spacing ||
+				 hilite_spacing != st.hilite_spacing ||
+				 hilite_padding != st.hilite_padding ||
+				 round_corner != st.round_corner ||
+				 round_corner_ex != st.round_corner_ex ||
+				 shadow_radius != st.shadow_radius ||
+				 shadow_offset_x != st.shadow_offset_x ||
+				 shadow_offset_y != st.shadow_offset_y ||
+				 text_color != st.text_color ||
+				 candidate_text_color != st.candidate_text_color ||
+				 candidate_back_color != st.candidate_back_color ||
+				 candidate_shadow_color != st.candidate_shadow_color ||
+				 label_text_color != st.label_text_color ||
+				 comment_text_color != st.comment_text_color ||
+				 back_color != st.back_color ||
+				 shadow_color != st.shadow_color ||
+				 border_color != st.border_color ||
+				 hilited_text_color != st.hilited_text_color ||
+				 hilited_back_color != st.hilited_back_color ||
+				 hilited_shadow_color != st.hilited_shadow_color ||
+				 hilited_candidate_text_color != st.hilited_candidate_text_color ||
+				 hilited_candidate_back_color != st.hilited_candidate_back_color ||
+				 hilited_candidate_shadow_color != st.hilited_candidate_shadow_color ||
+				 hilited_label_text_color != st.hilited_label_text_color ||
+				 hilited_comment_text_color != st.hilited_comment_text_color ||
+				 client_caps != st.client_caps); 
+		}
 	};
 }
 namespace boost {
@@ -361,7 +408,6 @@ namespace boost {
 			ar & s.label_font_point;
 			ar & s.comment_font_point;
 			ar & s.inline_preedit;
-			ar & s.hide_candidates_when_single;
 			ar & s.align_type;
 			ar & s.color_font;
 			ar & s.preedit_type;
