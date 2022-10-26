@@ -10,6 +10,7 @@ public:
 
 	UIImpl(weasel::UI &ui)
 		: panel(ui), shown(false) {}
+	~UIImpl(){ }
 
 	void Refresh() {
 		if (!panel.IsWindow()) return;
@@ -172,4 +173,13 @@ void UI::Update(const Context &ctx, const Status &status)
 	ctx_ = ctx;
 	status_ = status;
 	Refresh();
+}
+
+UI::~UI()
+{
+	if (pimpl_)
+	{
+		Destroy();
+		delete pimpl_;
+	}
 }
