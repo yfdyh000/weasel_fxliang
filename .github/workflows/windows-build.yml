@@ -22,6 +22,9 @@ jobs:
         with:
           repository: ${{ inputs.repository }}
           submodules: recursive
+          
+      - name: Setup MSBuild.exe
+        uses: warrenbuckley/Setup-MSBuild@v1
 
       - name: Configure build environment
         run: |
