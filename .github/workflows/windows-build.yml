@@ -78,6 +78,9 @@ jobs:
       #  #run: .\build.bat test
       #  id: build_weasel
       #  run: .\build.bat rime data 
+      
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1.1
 
       - name: Build Weasel
         id: build_weasel
