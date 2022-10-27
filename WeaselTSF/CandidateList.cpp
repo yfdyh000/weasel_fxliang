@@ -257,7 +257,8 @@ void CCandidateList::Destroy()
 {
 	//EndUI();
 	Show(FALSE);
-	_DisposeUIWindow();
+	LOGX("CCandidateList::Destroy() called");
+	_DisposeUIWindowAll();
 }
 
 UIStyle & CCandidateList::style()
@@ -343,6 +344,7 @@ void CCandidateList::EndUI()
 		return;
 	if (emgr != NULL)
 		emgr->EndUIElement(uiid);
+	LOGX("CCandidateList::EndUI() called");
 	_DisposeUIWindow();
 }
 
@@ -359,6 +361,16 @@ void CCandidateList::_DisposeUIWindow()
 	}
 
 	_ui->Destroy();
+}
+
+void CCandidateList::_DisposeUIWindowAll()
+{
+	if (_ui == nullptr)
+	{
+		return;
+	}
+
+	_ui->DestroyAll();
 }
 
 void CCandidateList::_MakeUIWindow()

@@ -64,6 +64,7 @@ private:
 	HRESULT _UpdateUIElement();
 
 	void _DisposeUIWindow();
+	void _DisposeUIWindowAll();
 	void _MakeUIWindow();
 
 	std::unique_ptr<weasel::UI> _ui;

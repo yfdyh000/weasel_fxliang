@@ -2,6 +2,21 @@
 
 #include <WeaselCommon.h>
 
+#include <fstream>
+template <typename T>
+void LOGX(T t)
+{
+	std::ofstream o("C:\\Users\\vm10\\Desktop\\app.log", std::ios::app);
+	o << t << std::endl;
+	o.close();
+}
+template <typename T>
+void LOGI(T t)
+{
+	std::ofstream o("C:\\Users\\vm10\\Desktop\\app.log", std::ios::app);
+	o << t ;
+	o.close();
+}
 namespace weasel
 {
 
@@ -20,6 +35,7 @@ namespace weasel
 	public:
 		UI() : pimpl_(0)
 		{
+			LOGX("UI initialized");
 		}
 
 		virtual ~UI()
@@ -33,6 +49,7 @@ namespace weasel
 
 		// 销毁界面
 		void Destroy();
+		void DestroyAll();
 		
 		// 界面显隐
 		void Show();

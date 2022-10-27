@@ -551,6 +551,21 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	::DeleteObject(memBitmap);
 }
 
+void WeaselPanel::DestroyFontRes()
+{
+	LOGX("WeaselPanel::DestroyFontRes() called");
+	if (m_layout != NULL)
+		delete m_layout;
+	if (pDWR != NULL)
+		delete pDWR;
+	if (pFonts != NULL)
+		delete pFonts;
+	if (m_blurer != NULL)
+		delete m_blurer;
+	if (pBrush != NULL)
+		SafeRelease(&pBrush);
+}
+
 void WeaselPanel::_LayerUpdate(const CRect& rc, CDCHandle dc)
 {
 	HDC screenDC = ::GetDC(NULL);

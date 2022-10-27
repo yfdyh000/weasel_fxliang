@@ -10,7 +10,10 @@ public:
 
 	UIImpl(weasel::UI &ui)
 		: panel(ui), shown(false) {}
-
+	~UIImpl()
+	{
+		panel.DestroyFontRes();
+	}
 	void Refresh() {
 		if (!panel.IsWindow()) return;
 		if (timer)
@@ -109,11 +112,24 @@ bool UI::Create(HWND parent)
 
 void UI::Destroy()
 {
+	LOGX("UI::Destroy() called");
 	if (pimpl_)
 	{
 		// destroy panel not delete it, avoiding re initialization font resources
 		if (pimpl_->panel.IsWindow())
 			pimpl_->panel.DestroyWindow();
+	}
+}
+void UI::DestroyAll()
+{
+	LOGX("UI::DestroyAll() called");
+	if (pimpl_)
+	{
+		// destroy panel not delete it, avoiding re initialization font resources
+		if (pimpl_->panel.IsWindow())
+			pimpl_->panel.DestroyWindow();
+		delete pimpl_;
+		pimpl_ = 0;
 	}
 }
 
