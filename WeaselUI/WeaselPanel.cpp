@@ -131,6 +131,24 @@ bool WeaselPanel::InitFontRes(void)
 	return (pFonts != NULL) && (m_style.color_font ? pDWR != NULL : 1);
 }
 
+void WeaselPanel::DestroyFontRes()
+{
+	delete m_layout;
+	m_layout = NULL;
+
+	delete pDWR;
+	pDWR = NULL;
+
+	delete pFonts;
+	pFonts = NULL;
+
+	delete m_blurer;
+	m_blurer = NULL;
+
+	SafeRelease(&pBrush);
+	pBrush = NULL;
+}
+
 bool WeaselPanel::_IsHighlightOverCandidateWindow(CRect rc, CRect bg, Gdiplus::Graphics* g)
 {
 	GraphicsRoundRectPath bgPath(bg, m_style.round_corner_ex);

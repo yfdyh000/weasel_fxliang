@@ -46,6 +46,7 @@ public:
 	void Refresh();
 	bool InitFontRes(void);
 	void DoPaint(CDCHandle dc);
+	void DestroyFontRes();
 
 private:
 	void _CreateLayout();

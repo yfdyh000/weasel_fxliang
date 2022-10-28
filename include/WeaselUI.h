@@ -18,21 +18,21 @@ namespace weasel
 	class UI
 	{
 	public:
-		UI() : pimpl_(0)
-		{
-		}
+		UI() : pimpl_(0) { }
 
 		virtual ~UI()
 		{
 			if (pimpl_)
-				Destroy();
+				DestroyAll();
 		}
 
 		// 创建输入法界面
 		bool Create(HWND parent);
 
-		// 销毁界面
+		// 未退出应用，结束输入后，销毁界面
 		void Destroy();
+		// 退出应用后销毁界面及相应资源
+		void DestroyAll();
 		
 		// 界面显隐
 		void Show();
