@@ -63,7 +63,9 @@ private:
 	HWND _GetActiveWnd();
 	HRESULT _UpdateUIElement();
 
+	// for CCandidateList::EndUI(), after ending composition || WeaselTSF::_EndUI()
 	void _DisposeUIWindow();
+	// for CCandidateList::Destroy(), when inputing app exit
 	void _DisposeUIWindowAll();
 	void _MakeUIWindow();
 

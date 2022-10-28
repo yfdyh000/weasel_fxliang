@@ -257,7 +257,6 @@ void CCandidateList::Destroy()
 {
 	//EndUI();
 	Show(FALSE);
-	LOGX("CCandidateList::Destroy() called");
 	_DisposeUIWindowAll();
 }
 
@@ -344,7 +343,6 @@ void CCandidateList::EndUI()
 		return;
 	if (emgr != NULL)
 		emgr->EndUIElement(uiid);
-	LOGX("CCandidateList::EndUI() called");
 	_DisposeUIWindow();
 }
 
@@ -370,6 +368,7 @@ void CCandidateList::_DisposeUIWindowAll()
 		return;
 	}
 
+	// call _ui->DestroyAll() to clean resources
 	_ui->DestroyAll();
 }
 

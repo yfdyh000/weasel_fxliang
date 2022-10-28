@@ -131,6 +131,24 @@ bool WeaselPanel::InitFontRes(void)
 	return (pFonts != NULL) && (m_style.color_font ? pDWR != NULL : 1);
 }
 
+void WeaselPanel::DestroyFontRes()
+{
+	delete m_layout;
+	m_layout = NULL;
+
+	delete pDWR;
+	pDWR = NULL;
+
+	delete pFonts;
+	pFonts = NULL;
+
+	delete m_blurer;
+	m_blurer = NULL;
+
+	SafeRelease(&pBrush);
+	pBrush = NULL;
+}
+
 bool WeaselPanel::_IsHighlightOverCandidateWindow(CRect rc, CRect bg, Gdiplus::Graphics* g)
 {
 	GraphicsRoundRectPath bgPath(bg, m_style.round_corner_ex);
@@ -549,21 +567,6 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		_LayerUpdate(rc, memDC);
 	::DeleteDC(memDC);
 	::DeleteObject(memBitmap);
-}
-
-void WeaselPanel::DestroyFontRes()
-{
-	LOGX("WeaselPanel::DestroyFontRes() called");
-	if (m_layout != NULL)
-		delete m_layout;
-	if (pDWR != NULL)
-		delete pDWR;
-	if (pFonts != NULL)
-		delete pFonts;
-	if (m_blurer != NULL)
-		delete m_blurer;
-	if (pBrush != NULL)
-		SafeRelease(&pBrush);
 }
 
 void WeaselPanel::_LayerUpdate(const CRect& rc, CDCHandle dc)

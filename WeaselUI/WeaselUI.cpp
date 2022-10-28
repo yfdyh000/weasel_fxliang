@@ -12,6 +12,7 @@ public:
 		: panel(ui), shown(false) {}
 	~UIImpl()
 	{
+		// ensure destroy heap resources of panel
 		panel.DestroyFontRes();
 	}
 	void Refresh() {
@@ -110,9 +111,9 @@ bool UI::Create(HWND parent)
 	return true;
 }
 
+// for ending of composition
 void UI::Destroy()
 {
-	LOGX("UI::Destroy() called");
 	if (pimpl_)
 	{
 		// destroy panel not delete it, avoiding re initialization font resources
@@ -120,12 +121,11 @@ void UI::Destroy()
 			pimpl_->panel.DestroyWindow();
 	}
 }
+// for ending of app, destroy pimpl_
 void UI::DestroyAll()
 {
-	LOGX("UI::DestroyAll() called");
 	if (pimpl_)
 	{
-		// destroy panel not delete it, avoiding re initialization font resources
 		if (pimpl_->panel.IsWindow())
 			pimpl_->panel.DestroyWindow();
 		delete pimpl_;
