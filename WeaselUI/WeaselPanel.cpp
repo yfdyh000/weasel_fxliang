@@ -172,12 +172,7 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 	Gdiplus::Graphics g_back(dc);
 	g_back.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
 	// if current rc trigger hemispherical dome
-	bool current_hemispherical_dome_status = false;
-	bool notBackgroundNorOverBackground = (type != BACKGROUND && _IsHighlightOverCandidateWindow(rc, bgRc, &g_back));
-	if (notBackgroundNorOverBackground)
-		current_hemispherical_dome_status = _IsHighlightOverCandidateWindow(rc, bgRc, &g_back);
-	else
-		current_hemispherical_dome_status = false;
+	bool current_hemispherical_dome_status = (type != BACKGROUND && _IsHighlightOverCandidateWindow(rc, bgRc, &g_back));
 
 	// 必须shadow_color都是非完全透明色才做绘制, 全屏状态不绘制阴影保证响应速度
 	if (
@@ -233,7 +228,7 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 		Gdiplus::SolidBrush back_brush(back_color);
 		GraphicsRoundRectPath* hiliteBackPath;
 		// candidates only, and current candidate background out of window background
-		if (current_hemispherical_dome_status && type!= BACKGROUND && m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN && m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
+		if (current_hemispherical_dome_status && m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN && m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
 		{
 			// level 0: m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL
 			// level 1: m_style.inline_preedit 
