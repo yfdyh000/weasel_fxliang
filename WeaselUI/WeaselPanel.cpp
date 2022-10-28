@@ -169,33 +169,25 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 {
 	Gdiplus::Graphics gBack(dc);
 	gBack.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
-	bool rtl = false;
-	bool rtr = false;
-	bool rbr = false;
-	bool rbl = false;
 	// if current rc trigger hemispherical dome
-	bool hemispherical_dome = false;
-	if (type != NOT_CAND && _IsHighlightOverCandidateWindow(rc, bgRc, &gBack))
-	{
-		m_hemispherical_dome = true;
-		CRect trc = bgRc;
-		trc.InflateRect(1, 1);
-		if(_IsHighlightOverCandidateWindow(rc, trc, &gBack))
-			hemispherical_dome = true;
-	}
+	bool current_hemispherical_dome_status = false;
+	bool notBackgroundNorOverBackground = (type != BACKGROUND && _IsHighlightOverCandidateWindow(rc, bgRc, &gBack));
+	if (notBackgroundNorOverBackground)
+		current_hemispherical_dome_status = _IsHighlightOverCandidateWindow(rc, bgRc, &gBack);
 	else
-		hemispherical_dome = false;
+		current_hemispherical_dome_status = false;
 
 	// 必须shadow_color都是非完全透明色才做绘制, 全屏状态不绘制阴影保证响应速度
-	// 背景状态不需要检查m_hemispherical_dome，避免 MoveTo中的Invalide()影响主窗体阴影绘制
-	if ((!m_hemispherical_dome || type == NOT_CAND) && m_style.shadow_radius && (shadowColor & 0xff000000)
-		&& m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN
-		&& m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
+	if (
+			m_style.shadow_radius && (shadowColor & 0xff000000)
+			&& m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN
+			&& m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN
+	   )
 	{
 		CRect rect(
 			blurOffsetX + m_style.shadow_offset_x,
 			blurOffsetY + m_style.shadow_offset_y,
-			rc.Width() + blurOffsetX + m_style.shadow_offset_x,
+			rc.Width()  + blurOffsetX + m_style.shadow_offset_x,
 			rc.Height() + blurOffsetY + m_style.shadow_offset_y);
 		BYTE r = GetRValue(shadowColor);
 		BYTE g = GetGValue(shadowColor);
@@ -205,13 +197,14 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 		pBitmapDropShadow = new Gdiplus::Bitmap((INT)rc.Width() + blurOffsetX * 2, (INT)rc.Height() + blurOffsetY * 2, PixelFormat32bppARGB);
 		Gdiplus::Graphics gg(pBitmapDropShadow);
 		gg.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
-
+		// dropshadow, draw a roundrectangle to blur
 		if (m_style.shadow_offset_x != 0 || m_style.shadow_offset_y != 0)
 		{
 			GraphicsRoundRectPath path(rect, radius);
 			Gdiplus::SolidBrush br(brc);
 			gg.FillPath(&br, &path);
 		}
+		// round shadow, draw multilines as base round line
 		else
 		{
 			int pensize = 1;
@@ -233,128 +226,73 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 		gBack.DrawImage(pBitmapDropShadow, rc.left - blurOffsetX, rc.top - blurOffsetY);
 		delete pBitmapDropShadow;
 	}
+
 	if (color & 0xff000000)	// 必须back_color非完全透明才绘制
 	{
 		Gdiplus::Color back_color = Gdiplus::Color::MakeARGB((color >> 24), GetRValue(color), GetGValue(color), GetBValue(color));
 		Gdiplus::SolidBrush gBrBack(back_color);
 		GraphicsRoundRectPath* bgPath;
-		if (m_hemispherical_dome && type!= NOT_CAND && m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN && m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
+		// candidates only, and current candidate background out of window background
+		if (current_hemispherical_dome_status && type!= BACKGROUND && m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN && m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
 		{
-			if (m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL)
+			// level 0: m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL
+			// level 1: m_style.inline_preedit 
+			// level 2: BackType
+			// level 3: IsTopLeftNeedToRound, IsBottomLeftNeedToRound, IsTopRightNeedToRound, IsBottomRightNeedToRound
+			const bool is_to_round_corner[2][2][5][4] = 
 			{
-				if (m_style.inline_preedit)
+				// LAYOUT_VERTICAL
 				{
-					if (type == FIRST_CAND)
+					// not inline_preedit
 					{
-						rtl = true; rbl = true; rtr = false; rbr = false;
+						{current_hemispherical_dome_status, current_hemispherical_dome_status && (!m_candidateCount), false, false},		// TEXT
+						{false, false, false, false},		// FIRST_CAND
+						{false, false, false, false},	// MID_CAND
+						{false, true, false, true},		// LAST_CAND
+						{false, true, false, true},		// ONLY_CAND
 					}
-					else if (type == LAST_CAND)
+					,
+					// inline_preedit
 					{
-						rtr = true; rbr = true; rtl = false; rbl = false;
-					}
-					else if (type == MID_CAND)
-					{
-						rtl = rtr = rbr = rbl = false;
-					}
-					else if (type == ONLY_CAND)
-					{
-						rtl = rtr = rbr = rbl = true;
+						{true, true, true, true},		// TEXT
+						{true, false, true, false},		// FIRST_CAND
+						{false, false, false, false},	// MID_CAND
+						{false, true, false, true},		// LAST_CAND
+						{true, true, true, true},		// ONLY_CAND
 					}
 				}
-				else
+				,
+				// LAYOUT_HORIZONTAL
 				{
-					if (type == FIRST_CAND)
+					// not inline_preedit
 					{
-						rtl = false; rbl = true; rtr = false; rbr = false;
+						{current_hemispherical_dome_status, current_hemispherical_dome_status && (!m_candidateCount), false, false},		// TEXT
+						{false, true, false, false},		// FIRST_CAND
+						{false, false, false, false},	// MID_CAND
+						{false, false, false, true},		// LAST_CAND
+						{false, true, false, true},		// ONLY_CAND
 					}
-					else if (type == LAST_CAND)
+					,
+					// inline_preedit
 					{
-						rtr = false; rbr = true; rtl = false; rbl = false;
-					}
-					else if (type == MID_CAND)
-					{
-						rtl = rtr = rbr = rbl = false;
-					}
-					else if (type == TEXT)
-					{
-						if (m_candidateCount == 0)
-						{
-							rtl = rbl = hemispherical_dome;
-							rtr = rbr = false;
-						}
-						else
-						{
-							rtl = hemispherical_dome;
-							rtr = rbr = rbl = false;
-						}
-					}
-					else if (type == ONLY_CAND)
-					{
-						rtl = rtr = false;
-						rbr = rbl = true;
+						{true, true, true, true},		// TEXT
+						{true, true, false, false},		// FIRST_CAND
+						{false, false, false, false},	// MID_CAND
+						{false, false, true, true},		// LAST_CAND
+						{true, true, true, true},		// ONLY_CAND
 					}
 				}
-			}
-			else
-			{
-				if (m_style.inline_preedit)
-				{
-					if (type == FIRST_CAND)
-					{
-						rtl = true; rbl = false; rtr = true; rbr = false;
-					}
-					else if (type == LAST_CAND)
-					{
-						rtr = false; rbr = true; rtl = false; rbl = true;
-					}
-					else if (type == MID_CAND)
-					{
-						rtl = rtr = rbr = rbl = false;
-					}
-					else if (type == ONLY_CAND)
-					{
-						rtl = rtr = rbr = rbl = true;
-					}
-				}
-				else
-				{
-					if (type == FIRST_CAND)
-					{
-						rtl = rtr = rbr = rbl = false;
-					}
-					else if (type == LAST_CAND)
-					{
-						rtr = false; rbr = true; rtl = false; rbl = true;
-					}
-					else if (type == MID_CAND)
-					{
-						rtl = rtr = rbr = rbl = false;
-					}
-					else if (type == TEXT)
-					{
-						if(m_candidateCount == 0)
-						{
-							rtl = rbl = hemispherical_dome;
-							rtr = rbr = false;
-						}
-						else
-						{
-							rtl = hemispherical_dome;
-							rtr = rbr = rbl = false;
-						}
-					}
-					else if (type == ONLY_CAND)
-					{
-						rtl = rtr = false;
-						rbl = rbr = true;
-					}
-				}
-			}
-			//bgPath = new GraphicsRoundRectPath(rc, m_style.round_corner_ex - (min(m_style.margin_x, m_style.margin_y) - m_style.hilite_padding) - m_style.border / 2 + 1, rtl, rtr, rbr, rbl);
+			};
+			bool IsTopLeftNeedToRound		= is_to_round_corner[m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][m_style.inline_preedit][type][0];
+			bool IsBottomLeftNeedToRound	= is_to_round_corner[m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][m_style.inline_preedit][type][1];
+			bool IsTopRightNeedToRound		= is_to_round_corner[m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][m_style.inline_preedit][type][2];
+			bool IsBottomRightNeedToRound	= is_to_round_corner[m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][m_style.inline_preedit][type][3];
 			int real_margin_x = (abs(m_style.margin_x) > m_style.hilite_padding) ? abs(m_style.margin_x) : m_style.hilite_padding;
 			int real_margin_y = (abs(m_style.margin_y) > m_style.hilite_padding) ? abs(m_style.margin_y) : m_style.hilite_padding;
-			bgPath = new GraphicsRoundRectPath(rc, m_style.round_corner_ex - (min(real_margin_x, real_margin_y) - m_style.hilite_padding) - m_style.border / 2 + 1, rtl, rtr, rbr, rbl);
+			bgPath = new GraphicsRoundRectPath(rc, m_style.round_corner_ex - (min(real_margin_x, real_margin_y) - m_style.hilite_padding) - m_style.border / 2 + 1,
+					IsTopLeftNeedToRound, IsTopRightNeedToRound, IsBottomRightNeedToRound, IsBottomLeftNeedToRound);
 		}
+		// background or current candidate background not out of window background
 		else
 			bgPath = new GraphicsRoundRectPath(rc, radius);
 		gBack.FillPath(&gBrBack, bgPath);
@@ -528,7 +466,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		Gdiplus::Pen gPenBorder(border_color, (Gdiplus::REAL)m_style.border);
 
 		trc.InflateRect(m_style.border / 2, m_style.border / 2);
-		_HighlightText(memDC, trc, m_style.back_color, m_style.shadow_color, m_layout->offsetX * 2, m_layout->offsetY * 2, m_style.round_corner_ex + m_style.border / 2, NOT_CAND);
+		_HighlightText(memDC, trc, m_style.back_color, m_style.shadow_color, m_layout->offsetX * 2, m_layout->offsetY * 2, m_style.round_corner_ex + m_style.border / 2, BACKGROUND);
 
 		Gdiplus::Graphics gBack(memDC);
 		gBack.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);

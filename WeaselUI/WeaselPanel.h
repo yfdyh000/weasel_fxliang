@@ -18,11 +18,11 @@ typedef CWinTraits<WS_POPUP|WS_CLIPSIBLINGS|WS_DISABLED, WS_EX_TOOLWINDOW|WS_EX_
 typedef enum _backType
 {
 	TEXT = 0,
-	FIRST_CAND,
-	MID_CAND,
-	LAST_CAND,
-	ONLY_CAND,
-	NOT_CAND	// background
+	FIRST_CAND = 1,
+	MID_CAND = 2,
+	LAST_CAND = 3,
+	ONLY_CAND = 4,
+	BACKGROUND = 5	// background
 }BackType;
 
 class WeaselPanel : 
@@ -80,15 +80,12 @@ private:
 	// for hemispherical dome
 	CRect bgRc;
 	BYTE m_candidateCount;
-	// if hemispherical_dome has been trigged
-	bool m_hemispherical_dome = false;
 
 	bool hide_candidates;
 	// for multi font_face & font_point
 	GdiplusBlur* m_blurer;
 	DirectWriteResources* pDWR;
 	GDIFonts* pFonts;
-
 	ID2D1SolidColorBrush* pBrush;
 };
 
