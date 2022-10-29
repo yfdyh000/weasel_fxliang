@@ -10,6 +10,7 @@
 
 // for IDI_ZH, IDI_EN
 #include <resource.h>
+#define PREPAREBITMAPINFOHEADER(width, height)	{40, width, height, 1, 32, BI_RGB, 0, 0, 0, 0, 0}
 
 WeaselPanel::WeaselPanel(weasel::UI& ui)
 	: m_layout(NULL),
@@ -38,16 +39,7 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
 WeaselPanel::~WeaselPanel()
 {
 	Gdiplus::GdiplusShutdown(_m_gdiplusToken);
-	if (m_layout != NULL)
-		delete m_layout;
-	if (pDWR != NULL)
-		delete pDWR;
-	if (pFonts != NULL)
-		delete pFonts;
-	if (m_blurer != NULL)
-		delete m_blurer;
-	if (pBrush != NULL)
-		SafeRelease(&pBrush);
+	CleanUp();
 }
 
 void WeaselPanel::_ResizeWindow()
@@ -130,7 +122,7 @@ bool WeaselPanel::InitFontRes(void)
 	return (pFonts != NULL) && (m_style.color_font ? pDWR != NULL : 1);
 }
 
-void WeaselPanel::DestroyFontRes()
+void WeaselPanel::CleanUp()
 {
 	delete m_layout;
 	m_layout = NULL;
@@ -175,8 +167,7 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 	bool current_hemispherical_dome_status = (type != BACKGROUND && _IsHighlightOverCandidateWindow(rc, bgRc, &g_back));
 
 	// 必须shadow_color都是非完全透明色才做绘制, 全屏状态不绘制阴影保证响应速度
-	if (
-			m_style.shadow_radius && (shadowColor & 0xff000000)
+	if ( m_style.shadow_radius && (shadowColor & 0xff000000)
 			&& m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN
 			&& m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN
 	   )
@@ -245,8 +236,7 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 						{false, false, false, false},	// MID_CAND
 						{false, true, false, true},		// LAST_CAND
 						{false, true, false, true},		// ONLY_CAND
-					}
-					,
+					} ,
 					// inline_preedit
 					{
 						{true, true, true, true},		// TEXT
@@ -255,8 +245,7 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 						{false, true, false, true},		// LAST_CAND
 						{true, true, true, true},		// ONLY_CAND
 					}
-				}
-				,
+				} ,
 				// LAYOUT_HORIZONTAL
 				{
 					// not inline_preedit
@@ -266,8 +255,7 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 						{false, false, false, false},	// MID_CAND
 						{false, false, false, true},		// LAST_CAND
 						{false, true, false, true},		// ONLY_CAND
-					}
-					,
+					} ,
 					// inline_preedit
 					{
 						{true, true, true, true},		// TEXT
@@ -453,16 +441,16 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 			bgRc = rc;
 			bgRc.DeflateRect(m_layout->offsetX + 1, m_layout->offsetY + 1);
 
-			trc.DeflateRect(m_layout->offsetX - m_style.border / 2, m_layout->offsetY - m_style.border / 2);
+			trc.DeflateRect(m_layout->offsetX - m_style.border, m_layout->offsetY - m_style.border);
+			_HighlightText(memDC, trc, m_style.back_color, m_style.shadow_color, m_layout->offsetX * 2, m_layout->offsetY * 2, m_style.round_corner_ex + m_style.border / 2, BACKGROUND);
+
+			trc.DeflateRect(m_style.border / 2, m_style.border / 2);
 			GraphicsRoundRectPath bgPath(trc, m_style.round_corner_ex);
+
+			Gdiplus::Graphics gBack(memDC);
 			int alpha = ((m_style.border_color >> 24) & 0xff);
 			Gdiplus::Color border_color = Gdiplus::Color::MakeARGB(alpha, GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
 			Gdiplus::Pen gPenBorder(border_color, (Gdiplus::REAL)m_style.border);
-
-			trc.InflateRect(m_style.border / 2, m_style.border / 2);
-			_HighlightText(memDC, trc, m_style.back_color, m_style.shadow_color, m_layout->offsetX * 2, m_layout->offsetY * 2, m_style.round_corner_ex + m_style.border / 2, BACKGROUND);
-
-			Gdiplus::Graphics gBack(memDC);
 			gBack.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
 			if (m_style.border)
 				gBack.DrawPath(&gPenBorder, &bgPath);
@@ -498,16 +486,16 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 
 void WeaselPanel::_LayerUpdate(const CRect& rc, CDCHandle dc)
 {
-	HDC screenDC = ::GetDC(NULL);
+	HDC ScreenDC = ::GetDC(NULL);
 	CRect rect;
 	GetWindowRect(&rect);
-	POINT ptSrc = { rect.left, rect.top };
-	POINT ptDest = { rc.left, rc.top };
+	POINT WindowPosAtScreen = { rect.left, rect.top };
+	POINT PointOriginal = { 0, 0 };
 	SIZE sz = { rc.Width(), rc.Height() };
 
 	BLENDFUNCTION bf = {AC_SRC_OVER, 0, 0XFF, AC_SRC_ALPHA};
-	UpdateLayeredWindow(m_hWnd, screenDC, &ptSrc, &sz, dc, &ptDest, RGB(0,0,0), &bf, ULW_ALPHA);
-	ReleaseDC(screenDC);
+	UpdateLayeredWindow(m_hWnd, ScreenDC, &WindowPosAtScreen, &sz, dc, &PointOriginal, RGB(0,0,0), &bf, ULW_ALPHA);
+	ReleaseDC(ScreenDC);
 }
 
 LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -566,17 +554,9 @@ void WeaselPanel::_RepositionWindow(bool adj)
 		// dropshadow
 		else
 		{
-			if (m_style.shadow_offset_x >= 0)
-				x -= m_style.shadow_offset_x + (int)(1.5 * m_style.shadow_radius);
-			else
-				x -= m_style.shadow_radius / 2;
+			x -= m_style.shadow_offset_x >= 0 ? m_style.shadow_offset_x + (int)(1.5 * m_style.shadow_radius) : m_style.shadow_radius / 2;
 			if (adj)
-			{
-				if (m_style.shadow_offset_y >= 0)
-					y -= m_style.shadow_offset_y + (int)(1.5 * m_style.shadow_radius);
-				else
-					y -= m_style.shadow_radius / 2;
-			}
+				y -= m_style.shadow_offset_y >= 0 ? m_style.shadow_offset_y + (int)(1.5 * m_style.shadow_radius) : m_style.shadow_radius / 2;
 		}
 	}
 	if (x > rcWorkArea.right)
@@ -595,19 +575,6 @@ void WeaselPanel::_RepositionWindow(bool adj)
 	SetWindowPos(HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE);
 }
 
-static inline BITMAPINFOHEADER PrepareBitmapInfoHeader(long biWidth, long biHeight)
-{
-	BITMAPINFOHEADER BMIH;
-	memset(&BMIH, 0x0, sizeof(BITMAPINFOHEADER));
-	BMIH.biSize = sizeof(BMIH);
-	BMIH.biWidth = biWidth;
-	BMIH.biHeight = biHeight;
-	BMIH.biPlanes = 1;
-	BMIH.biBitCount = 32;
-	BMIH.biCompression = BI_RGB;
-	return BMIH;
-}
-
 static inline void PreMutiplyBits(void* pvBits, const BITMAPINFOHEADER& BMIH, const COLORREF& inColor)
 {
 	BYTE* DataPtr = (BYTE*)pvBits;
@@ -615,10 +582,8 @@ static inline void PreMutiplyBits(void* pvBits, const BITMAPINFOHEADER& BMIH, co
 	BYTE FillG = GetGValue(inColor);
 	BYTE FillB = GetBValue(inColor);
 	BYTE ThisA;
-	for (int LoopY = 0; LoopY < BMIH.biHeight; LoopY++)
-	{
-		for (int LoopX = 0; LoopX < BMIH.biWidth; LoopX++)
-		{
+	for (int LoopY = 0; LoopY < BMIH.biHeight; LoopY++) {
+		for (int LoopX = 0; LoopX < BMIH.biWidth; LoopX++) {
 			ThisA = *DataPtr; // move alpha and premutiply with rgb
 			*DataPtr++ = (FillB * ThisA) >> 8;
 			*DataPtr++ = (FillG * ThisA) >> 8;
@@ -660,7 +625,7 @@ static HRESULT _CreateAlphaTextBitmapEx(CRect rc, LPCWSTR inText, const CFont& i
 	}
 	if (width > 0 && height > 0) {
 		void* pvBits = NULL;
-		BITMAPINFOHEADER BMIH = PrepareBitmapInfoHeader(width, height);
+		BITMAPINFOHEADER BMIH = PREPAREBITMAPINFOHEADER(width, height);
 		// create and select dib into dc
 		MyBMP = CreateDIBSection(hTextDC, (LPBITMAPINFO)&BMIH, 0, (LPVOID*)&pvBits, NULL, 0);
 		HBITMAP hOldBMP = (HBITMAP)SelectObject(hTextDC, MyBMP);
@@ -694,11 +659,7 @@ static void _AlphaBlendBmpToDC(CDCHandle& dc, const int x, const int y, const BY
 		BITMAP BMInf;
 		GetObject(MyBMP, sizeof(BITMAP), &BMInf);
 		// fill blend function and blend new text to window
-		BLENDFUNCTION bf;
-		bf.BlendOp = AC_SRC_OVER;
-		bf.BlendFlags = 0;
-		bf.SourceConstantAlpha = alpha;
-		bf.AlphaFormat = AC_SRC_ALPHA;
+		BLENDFUNCTION bf = { AC_SRC_OVER, 0, alpha, AC_SRC_ALPHA };
 		AlphaBlend(dc, x, y, BMInf.bmWidth, BMInf.bmHeight, hTempDC, 0, 0, BMInf.bmWidth, BMInf.bmHeight, bf);
 		// clean up
 		SelectObject(hTempDC, hOldBMP);
@@ -728,12 +689,10 @@ bool WeaselPanel::_TextOutWithFallbackDW (CDCHandle dc, CRect const rc, std::wst
 
 	if (NULL != pBrush && NULL != pDWR->pTextFormat) {
 		IDWriteTextLayout* pTextLayout = NULL;
-		if (pTextFormat == NULL)
-			pTextFormat = pDWR->pTextFormat;
 		pDWR->pDWFactory->CreateTextLayout( psz.c_str(), (UINT32)psz.size(), pTextFormat, (float)rc.Width(), (float)rc.Height(), &pTextLayout);
+		// offsetx for font glyph over left
 		float offsetx = 0.0f;
 		float offsety = 0.0f;
-		// offsetx for font glyph over left
 		DWRITE_OVERHANG_METRICS omt;
 		pTextLayout->GetOverhangMetrics(&omt);
 		if (omt.left > 0)
@@ -755,14 +714,12 @@ bool WeaselPanel::_TextOutWithFallbackDW (CDCHandle dc, CRect const rc, std::wst
 
 void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, size_t cch, FontInfo* pFontInfo, int inColor, IDWriteTextFormat* pTextFormat)
 {
-	if (!(inColor & 0xff000000)) return;	// transparent, no need to draw
+	if (!(inColor & 0xff000000) || (pFontInfo->m_FontPoint <= 0)) return;	// transparent, or font point invalid, no need to draw
 	if (m_style.color_font ) {
-		// invalid text format, no need to draw 
-		if (pTextFormat == NULL)	return;
+		if (pTextFormat == NULL)	return; // invalid text format, no need to draw
 		_TextOutWithFallbackDW(dc, rc, psz, cch, inColor, pTextFormat);
 	}
 	else { 
-		if (pFontInfo->m_FontPoint <= 0) return;	/* invalid font point, no need to draw */
 		CFont font;
 		CSize size;
 		long height = -MulDiv(pFontInfo->m_FontPoint, dc.GetDeviceCaps(LOGPIXELSY), 72);

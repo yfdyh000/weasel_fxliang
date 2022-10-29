@@ -13,7 +13,7 @@ public:
 	~UIImpl()
 	{
 		// ensure destroy heap resources of panel
-		panel.DestroyFontRes();
+		panel.CleanUp();
 	}
 	void Refresh() {
 		if (!panel.IsWindow()) return;
