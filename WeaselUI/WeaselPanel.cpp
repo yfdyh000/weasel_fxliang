@@ -156,7 +156,6 @@ bool WeaselPanel::_IsHighlightOverCandidateWindow(CRect rc, CRect bg, Gdiplus::G
 	delete tmpRegion;
 	tmpRegion = NULL;
 	return res;
-
 }
 
 void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORREF shadowColor, int blurOffsetX, int blurOffsetY, int radius, BackType type = TEXT)
@@ -164,13 +163,11 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 	Gdiplus::Graphics g_back(dc);
 	g_back.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
 	// if current rc trigger hemispherical dome
-	bool current_hemispherical_dome_status = (type != BACKGROUND && _IsHighlightOverCandidateWindow(rc, bgRc, &g_back));
-
+	CRect bgrc(rc);
+	bgrc.DeflateRect(m_style.border - 1, m_style.border - 1);
+	bool current_hemispherical_dome_status = (type != BACKGROUND && _IsHighlightOverCandidateWindow(rc, bgrc, &g_back));
 	// 必须shadow_color都是非完全透明色才做绘制, 全屏状态不绘制阴影保证响应速度
-	if ( m_style.shadow_radius && (shadowColor & 0xff000000)
-			&& m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN
-			&& m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN
-	   )
+	if ( m_style.shadow_radius && (shadowColor & 0xff000000) && m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN && m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN )
 	{
 		CRect rect(
 			blurOffsetX + m_style.shadow_offset_x,
@@ -188,19 +185,16 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 		Gdiplus::Graphics g_shadow(pBitmapDropShadow);
 		g_shadow.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
 		// dropshadow, draw a roundrectangle to blur
-		if (m_style.shadow_offset_x != 0 || m_style.shadow_offset_y != 0)
-		{
+		if (m_style.shadow_offset_x != 0 || m_style.shadow_offset_y != 0) {
 			GraphicsRoundRectPath shadow_path(rect, radius);
 			Gdiplus::SolidBrush shadow_brush(shadow_color);
 			g_shadow.FillPath(&shadow_brush, &shadow_path);
 		}
 		// round shadow, draw multilines as base round line
-		else
-		{
+		else {
 			int step = alpha / m_style.shadow_radius;
 			Gdiplus::Pen pen_shadow(shadow_color, (Gdiplus::REAL)1);
-			for (int i = 0; i < m_style.shadow_radius; i++)
-			{
+			for (int i = 0; i < m_style.shadow_radius; i++) {
 				GraphicsRoundRectPath round_path(rect, radius + 1 + i);
 				g_shadow.DrawPath(&pen_shadow, &round_path);
 				shadow_color = Gdiplus::Color::MakeARGB(alpha - i * step, r, g, b);
@@ -279,6 +273,15 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 		else
 			hiliteBackPath = new GraphicsRoundRectPath(rc, radius);
 		g_back.FillPath(&back_brush, hiliteBackPath);
+		if (type == BACKGROUND) {
+			rc.DeflateRect(m_style.border / 2, m_style.border / 2);
+			GraphicsRoundRectPath bgPath(rc, m_style.round_corner_ex);
+			int alpha = ((m_style.border_color >> 24) & 0xff);
+			Gdiplus::Color border_color = Gdiplus::Color::MakeARGB(alpha, GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
+			Gdiplus::Pen gPenBorder(border_color, (Gdiplus::REAL)m_style.border);
+			if (m_style.border)
+				g_back.DrawPath(&gPenBorder, &bgPath);
+		}
 		delete hiliteBackPath;
 	}
 }
@@ -434,28 +437,11 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	HBITMAP memBitmap = ::CreateCompatibleBitmap(hdc, rc.Width(), rc.Height());
 	::SelectObject(memDC, memBitmap);
 	ReleaseDC(hdc);
-	CRect trc(rc);
 	if (!hide_candidates) {
+		CRect trc(rc);
 		// background start
-		{
-			bgRc = rc;
-			bgRc.DeflateRect(m_layout->offsetX + 1, m_layout->offsetY + 1);
-
-			trc.DeflateRect(m_layout->offsetX - m_style.border, m_layout->offsetY - m_style.border);
-			_HighlightText(memDC, trc, m_style.back_color, m_style.shadow_color, m_layout->offsetX * 2, m_layout->offsetY * 2, m_style.round_corner_ex + m_style.border / 2, BACKGROUND);
-
-			trc.DeflateRect(m_style.border / 2, m_style.border / 2);
-			GraphicsRoundRectPath bgPath(trc, m_style.round_corner_ex);
-
-			Gdiplus::Graphics gBack(memDC);
-			int alpha = ((m_style.border_color >> 24) & 0xff);
-			Gdiplus::Color border_color = Gdiplus::Color::MakeARGB(alpha, GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
-			Gdiplus::Pen gPenBorder(border_color, (Gdiplus::REAL)m_style.border);
-			gBack.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
-			if (m_style.border)
-				gBack.DrawPath(&gPenBorder, &bgPath);
-			gBack.ReleaseHDC(memDC);
-		}
+		trc.DeflateRect(m_layout->offsetX - m_style.border, m_layout->offsetY - m_style.border);
+		_HighlightText(memDC, trc, m_style.back_color, m_style.shadow_color, m_layout->offsetX * 2, m_layout->offsetY * 2, m_style.round_corner_ex + m_style.border / 2, BACKGROUND);
 		// background end
 		bool drawn = false;
 		// draw auxiliary string
@@ -466,12 +452,10 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		// draw candidates
 		drawn |= _DrawCandidates(memDC);
 		// status icon (I guess Metro IME stole my idea :)
-		if (m_layout->ShouldDisplayStatusIcon())
-		{
+		if (m_layout->ShouldDisplayStatusIcon()) {
 			const CRect iconRect(m_layout->GetStatusIconRect());
 			CIcon& icon(m_status.disabled ? m_iconDisabled : m_status.ascii_mode ? m_iconAlpha :
-				((m_ctx.aux.str != L"全角" && m_ctx.aux.str != L"半角") ? m_iconEnabled : (m_status.full_shape ? m_iconFull : m_iconHalf))
-			);
+				((m_ctx.aux.str != L"全角" && m_ctx.aux.str != L"半角") ? m_iconEnabled : (m_status.full_shape ? m_iconFull : m_iconHalf)) );
 			memDC.DrawIconEx(iconRect.left, iconRect.top, icon, 0, 0);
 			drawn = true;
 		}
