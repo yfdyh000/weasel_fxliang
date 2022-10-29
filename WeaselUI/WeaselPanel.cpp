@@ -46,7 +46,10 @@ void WeaselPanel::_ResizeWindow()
 {
 	CDCHandle dc = GetDC();
 	CSize size = m_layout->GetContentSize();
-	SetWindowPos(NULL, 0, 0, size.cx, size.cy, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
+	if(size != m_osize) {
+		SetWindowPos(NULL, 0, 0, size.cx, size.cy, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
+		m_osize = size;
+	}
 	ReleaseDC(dc);
 }
 
@@ -95,8 +98,8 @@ void WeaselPanel::Refresh()
 		ReleaseDC(dc);
 		_ResizeWindow();
 		_RepositionWindow();
+		RedrawWindow();
 	}
-	RedrawWindow();
 }
 
 bool WeaselPanel::InitFontRes(void)
@@ -505,7 +508,6 @@ void WeaselPanel::_RepositionWindow(bool adj)
 		// round shadow
 		if (m_style.shadow_offset_x == 0 && m_style.shadow_offset_y == 0) {
 			x -= m_style.shadow_radius / 2;
-			// adjust y in MoveTo, not in Refresh, for flicker handling
 			if (adj)
 				y -= m_style.shadow_radius / 2;
 		}
@@ -529,6 +531,9 @@ void WeaselPanel::_RepositionWindow(bool adj)
 		y = rcWorkArea.top;
 	// memorize adjusted position (to avoid window bouncing on height change)
 	m_inputPos.bottom = y;
+	if (m_oinputPos.left == x && m_oinputPos.bottom == y) return;
+	m_oinputPos.left = x;
+	m_oinputPos.bottom = y;
 	SetWindowPos(HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE);
 }
 
@@ -671,12 +676,13 @@ bool WeaselPanel::_TextOutWithFallbackDW (CDCHandle dc, CRect const rc, std::wst
 
 void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, size_t cch, FontInfo* pFontInfo, int inColor, IDWriteTextFormat* pTextFormat)
 {
-	if (!(inColor & 0xff000000) || (pFontInfo->m_FontPoint <= 0)) return;	// transparent, or font point invalid, no need to draw
+	if (!(inColor & 0xff000000)) return;	// transparent, no need to draw
 	if (m_style.color_font ) {
 		if (pTextFormat == NULL)	return; // invalid text format, no need to draw
 		_TextOutWithFallbackDW(dc, rc, psz, cch, inColor, pTextFormat);
 	}
 	else { 
+		if(pFontInfo->m_FontPoint <= 0)	return;
 		CFont font;
 		CSize size;
 		long height = -MulDiv(pFontInfo->m_FontPoint, dc.GetDeviceCaps(LOGPIXELSY), 72);
