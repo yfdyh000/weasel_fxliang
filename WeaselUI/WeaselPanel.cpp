@@ -168,9 +168,7 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 	int blurMarginX = m_layout->offsetX * 2;
 	int blurMarginY = m_layout->offsetY * 2;
 	// if current rc trigger hemispherical dome
-	CRect bgrc(rc);
-	bgrc.DeflateRect(m_style.border - 1, m_style.border - 1);
-	bool current_hemispherical_dome_status = (type != BackType::BACKGROUND && _IsHighlightOverCandidateWindow(rc, bgrc, &g_back));
+	bool current_hemispherical_dome_status = (type != BackType::BACKGROUND && _IsHighlightOverCandidateWindow(rc, bgRc, &g_back));
 	// 必须shadow_color都是非完全透明色才做绘制, 全屏状态不绘制阴影保证响应速度
 	if ( m_style.shadow_radius && (shadowColor & 0xff000000) && m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN && m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN ) {
 		CRect rect(
@@ -421,6 +419,8 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	if (!hide_candidates) {
 		CRect trc(rc);
 		// background start
+		bgRc = rc;
+		bgRc.DeflateRect(m_layout->offsetX + 1, m_layout->offsetY + 1);
 		trc.DeflateRect(m_layout->offsetX - m_style.border, m_layout->offsetY - m_style.border);
 		_HighlightText(memDC, trc, m_style.back_color, m_style.shadow_color, m_style.round_corner_ex + m_style.border / 2, BackType::BACKGROUND);
 		// background end
