@@ -15,7 +15,7 @@ using namespace weasel;
 
 typedef CWinTraits<WS_POPUP|WS_CLIPSIBLINGS|WS_DISABLED, WS_EX_TOOLWINDOW|WS_EX_TOPMOST> CWeaselPanelTraits;
 
-typedef enum _backType
+enum class BackType
 {
 	TEXT = 0,
 	FIRST_CAND = 1,
@@ -23,7 +23,7 @@ typedef enum _backType
 	LAST_CAND = 3,
 	ONLY_CAND = 4,
 	BACKGROUND = 5	// background
-}BackType;
+};
 
 class WeaselPanel : 
 	public CWindowImpl<WeaselPanel, CWindow, CWeaselPanelTraits>,
@@ -54,7 +54,7 @@ private:
 	void _RepositionWindow(bool adj = false);
 	bool _DrawPreedit(weasel::Text const& text, CDCHandle dc, CRect const& rc);
 	bool _DrawCandidates(CDCHandle dc);
-	void _HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORREF shadowColor, int blurOffsetX, int blurOffsetY, int radius, BackType type );
+	void _HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORREF shadowColor, int radius, BackType type );
 	void _TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, size_t cch, FontInfo* pFontInfo, int inColor, IDWriteTextFormat* pTextFormat = NULL);
 	bool _TextOutWithFallbackDW(CDCHandle dc, CRect const rc, std::wstring psz, size_t cch, COLORREF gdiColor, IDWriteTextFormat* pTextFormat);
 
