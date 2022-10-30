@@ -276,7 +276,7 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 		delete hiliteBackPath;
 	}
 	if (type == BackType::BACKGROUND) {
-		rc.DeflateRect(m_style.border / 2, m_style.border / 2);
+		rc.DeflateRect(m_style.border / 2 - 1, m_style.border / 2 - 1);
 		GraphicsRoundRectPath bgPath(rc, m_style.round_corner_ex);
 		int alpha = ((m_style.border_color >> 24) & 0xff);
 		Gdiplus::Color border_color = Gdiplus::Color::MakeARGB(alpha, GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
@@ -421,7 +421,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		// background start
 		bgRc = rc;
 		bgRc.DeflateRect(m_layout->offsetX + 1, m_layout->offsetY + 1);
-		trc.DeflateRect(m_layout->offsetX - m_style.border, m_layout->offsetY - m_style.border);
+		trc.DeflateRect(m_layout->offsetX - m_style.border + 1, m_layout->offsetY - m_style.border + 1);
 		_HighlightText(memDC, trc, m_style.back_color, m_style.shadow_color, m_style.round_corner_ex + m_style.border / 2, BackType::BACKGROUND);
 		// background end
 		bool drawn = false;
@@ -677,10 +677,8 @@ bool WeaselPanel::_TextOutWithFallbackDW (CDCHandle dc, CRect const rc, std::wst
 void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, size_t cch, FontInfo* pFontInfo, int inColor, IDWriteTextFormat* pTextFormat)
 {
 	if (!(inColor & 0xff000000)) return;	// transparent, no need to draw
-	if (m_style.color_font ) {
-		if (pTextFormat == NULL)	return; // invalid text format, no need to draw
+	if (m_style.color_font )
 		_TextOutWithFallbackDW(dc, rc, psz, cch, inColor, pTextFormat);
-	}
 	else { 
 		if(pFontInfo->m_FontPoint <= 0)	return;
 		CFont font;
