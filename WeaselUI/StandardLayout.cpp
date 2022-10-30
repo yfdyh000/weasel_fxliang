@@ -167,6 +167,7 @@ void StandardLayout::UpdateStatusIconLayout(int* width, int* height)
 		else
 		{
 			_statusIconRect.SetRect(0, 0, STATUS_ICON_SIZE, STATUS_ICON_SIZE);
+			_statusIconRect.OffsetRect(offsetX, offsetY);
 			*width = *height = STATUS_ICON_SIZE;
 		}
 	}
