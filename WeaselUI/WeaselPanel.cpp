@@ -277,7 +277,7 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 		delete hiliteBackPath;
 	}
 	if (type == BackType::BACKGROUND) {
-		rc.DeflateRect(m_style.border / 2 - 1, m_style.border / 2 - 1);
+		rc.DeflateRect(m_style.border / 2 , m_style.border / 2 );
 		GraphicsRoundRectPath bgPath(rc, m_style.round_corner_ex);
 		int alpha = ((m_style.border_color >> 24) & 0xff);
 		Gdiplus::Color border_color = Gdiplus::Color::MakeARGB(alpha, GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
