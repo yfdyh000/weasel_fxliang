@@ -5,6 +5,7 @@
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/string.hpp>
 
+#define GDIPVER     0x0110  // Use more advanced GDI+ features
 #define WEASEL_IME_NAME L"小狼毫"
 #define WEASEL_REG_KEY L"Software\\Rime\\Weasel"
 #define RIME_REG_KEY L"Software\\Rime"
