@@ -718,6 +718,12 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	{
 		style.layout_type = horizontal ? weasel::UIStyle::LAYOUT_HORIZONTAL : weasel::UIStyle::LAYOUT_VERTICAL;
 	}
+	Bool capture_window = false;
+	if (RimeConfigGetBool(config, "style/capture_window", &capture_window) || initialize)
+	{
+		style.capture_window = capture_window;
+	}
+
 	Bool fullscreen = False;
 	if (RimeConfigGetBool(config, "style/fullscreen", &fullscreen) && fullscreen)
 	{

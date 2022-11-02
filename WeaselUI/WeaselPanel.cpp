@@ -486,6 +486,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 
 void WeaselPanel::CaptureWindow()
 {
+	if (!m_style.capture_window) return;
 	HDC ScreenDC = ::GetDC(NULL);
 	CRect rect;
 	GetWindowRect(&rect);
