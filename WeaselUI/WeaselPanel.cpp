@@ -402,10 +402,42 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 		}
 		drawn = true;
 	}
-
 	return drawn;
 }
 
+ 
+HBITMAP CopyDCToBitmap(HDC hDC, LPRECT lpRect)
+{
+	if (!hDC || !lpRect || IsRectEmpty(lpRect))
+		return NULL;
+	HDC hMemDC;
+	HBITMAP hBitmap, hOldBitmap;
+	int nX, nY, nX2, nY2;
+	int nWidth, nHeight;
+
+	nX = lpRect->left;
+	nY = lpRect->top;
+	nX2 = lpRect->right;
+	nY2 = lpRect->bottom;
+	nWidth = nX2 - nX;
+	nHeight = nY2 - nY;
+
+	hMemDC = CreateCompatibleDC(hDC);
+
+	hBitmap = CreateCompatibleBitmap(hDC, nWidth, nHeight);
+
+	hOldBitmap = (HBITMAP)SelectObject(hMemDC, hBitmap);
+
+	StretchBlt(hMemDC, 0, 0, nWidth, nHeight, hDC, nX, nY, nWidth, nHeight, SRCCOPY);
+
+	hBitmap = (HBITMAP)SelectObject(hMemDC, hOldBitmap);
+
+	DeleteDC(hMemDC);
+	DeleteObject(hOldBitmap);
+
+
+	return hBitmap;
+ }
 //draw client area
 void WeaselPanel::DoPaint(CDCHandle dc)
 {
@@ -463,6 +495,22 @@ void WeaselPanel::_LayerUpdate(const CRect& rc, CDCHandle dc)
 
 	BLENDFUNCTION bf = {AC_SRC_OVER, 0, 0XFF, AC_SRC_ALPHA};
 	UpdateLayeredWindow(m_hWnd, ScreenDC, &WindowPosAtScreen, &sz, dc, &PointOriginal, RGB(0,0,0), &bf, ULW_ALPHA);
+	// capture input window
+	if (OpenClipboard()) 
+	{
+		CRect recth;
+		recth = m_layout->GetHighlightRect();
+		recth.InflateRect(abs(m_style.margin_x), abs(m_style.margin_y));
+		recth.OffsetRect(WindowPosAtScreen);
+		RECT* rcWindow;
+		rcWindow = LPRECT(recth);
+		HBITMAP bmp = CopyDCToBitmap(ScreenDC, LPRECT(recth));
+		EmptyClipboard();
+		SetClipboardData(CF_BITMAP, bmp);
+		CloseClipboard();
+		DeleteObject(bmp);
+	}
+
 	ReleaseDC(ScreenDC);
 }
 
