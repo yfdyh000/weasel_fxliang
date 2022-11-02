@@ -118,7 +118,10 @@ void UI::Destroy()
 	{
 		// destroy panel not delete it, avoiding re initialization font resources
 		if (pimpl_->panel.IsWindow())
+		{
+			pimpl_->panel.CaptureWindow();
 			pimpl_->panel.DestroyWindow();
+		}
 	}
 }
 // for ending of app, destroy pimpl_

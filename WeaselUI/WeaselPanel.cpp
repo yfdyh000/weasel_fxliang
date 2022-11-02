@@ -143,6 +143,7 @@ void WeaselPanel::CleanUp()
 	pBrush = NULL;
 }
 
+
 bool WeaselPanel::_IsHighlightOverCandidateWindow(CRect rc, CRect bg, Gdiplus::Graphics* g)
 {
 	GraphicsRoundRectPath bgPath(bg, m_style.round_corner_ex);
@@ -405,7 +406,6 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 	return drawn;
 }
 
- 
 HBITMAP CopyDCToBitmap(HDC hDC, LPRECT lpRect)
 {
 	if (!hDC || !lpRect || IsRectEmpty(lpRect))
@@ -484,6 +484,23 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	::DeleteObject(memBitmap);
 }
 
+void WeaselPanel::CaptureWindow()
+{
+	HDC ScreenDC = ::GetDC(NULL);
+	CRect rect;
+	GetWindowRect(&rect);
+	POINT WindowPosAtScreen = { rect.left, rect.top };
+	// capture input window
+	if (OpenClipboard()) 
+	{
+		HBITMAP bmp = CopyDCToBitmap(ScreenDC, LPRECT(rect));
+		EmptyClipboard();
+		SetClipboardData(CF_BITMAP, bmp);
+		CloseClipboard();
+		DeleteObject(bmp);
+	}
+	ReleaseDC(ScreenDC);
+}
 void WeaselPanel::_LayerUpdate(const CRect& rc, CDCHandle dc)
 {
 	HDC ScreenDC = ::GetDC(NULL);
@@ -495,7 +512,7 @@ void WeaselPanel::_LayerUpdate(const CRect& rc, CDCHandle dc)
 
 	BLENDFUNCTION bf = {AC_SRC_OVER, 0, 0XFF, AC_SRC_ALPHA};
 	UpdateLayeredWindow(m_hWnd, ScreenDC, &WindowPosAtScreen, &sz, dc, &PointOriginal, RGB(0,0,0), &bf, ULW_ALPHA);
-	// capture input window
+	/* capture input window
 	if (OpenClipboard()) 
 	{
 		CRect recth;
@@ -504,13 +521,13 @@ void WeaselPanel::_LayerUpdate(const CRect& rc, CDCHandle dc)
 		recth.OffsetRect(WindowPosAtScreen);
 		RECT* rcWindow;
 		rcWindow = LPRECT(recth);
-		HBITMAP bmp = CopyDCToBitmap(ScreenDC, LPRECT(recth));
+		HBITMAP bmp = CopyDCToBitmap(ScreenDC, LPRECT(rect));
 		EmptyClipboard();
 		SetClipboardData(CF_BITMAP, bmp);
 		CloseClipboard();
 		DeleteObject(bmp);
 	}
-
+*/
 	ReleaseDC(ScreenDC);
 }
 

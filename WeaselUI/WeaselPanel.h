@@ -47,7 +47,7 @@ public:
 	bool InitFontRes(void);
 	void DoPaint(CDCHandle dc);
 	void CleanUp();
-
+	void CaptureWindow();
 private:
 	void _CreateLayout();
 	void _ResizeWindow();
