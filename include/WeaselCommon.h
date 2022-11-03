@@ -236,6 +236,12 @@ namespace weasel
 			COMPOSITION,
 			PREVIEW
 		};
+		enum CaptureType
+		{
+			NONE,
+			HIGHLIGHTED,
+			CANDIDATES
+		};
 		enum LayoutType
 		{
 			LAYOUT_VERTICAL = 0,
@@ -264,7 +270,7 @@ namespace weasel
 		bool inline_preedit;
 		bool color_font;
 		bool display_tray_icon;
-		bool capture_window;
+		CaptureType capture_type;
 		std::wstring label_text_format;
 		// layout
 		int min_width;
@@ -313,7 +319,7 @@ namespace weasel
 			preedit_type(COMPOSITION),
 			color_font(0),
 			display_tray_icon(false),
-			capture_window(false),
+			capture_type(UIStyle::CaptureType::NONE),
 			label_text_format(L"%s."),
 			layout_type(LAYOUT_VERTICAL),
 			min_width(0),
@@ -415,7 +421,7 @@ namespace boost {
 			ar & s.color_font;
 			ar & s.preedit_type;
 			ar & s.display_tray_icon;
-			ar & s.capture_window;
+			ar & s.capture_type;
 			ar & s.label_text_format;
 			// layout
 			ar & s.layout_type;

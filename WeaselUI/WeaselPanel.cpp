@@ -486,11 +486,17 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 
 void WeaselPanel::CaptureWindow()
 {
-	if (!m_style.capture_window) return;
+	if (m_style.capture_type == UIStyle::CaptureType::NONE)	return;
 	HDC ScreenDC = ::GetDC(NULL);
 	CRect rect;
 	GetWindowRect(&rect);
 	POINT WindowPosAtScreen = { rect.left, rect.top };
+	if(m_style.capture_type == UIStyle::CaptureType::HIGHLIGHTED)
+	{
+		rect = m_layout->GetHighlightRect();
+		rect.InflateRect(abs(m_style.margin_x), abs(m_style.margin_y));
+		rect.OffsetRect(WindowPosAtScreen);
+	}
 	// capture input window
 	if (OpenClipboard()) 
 	{

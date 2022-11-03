@@ -698,6 +698,17 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 		else if (!std::strcmp(preedit_type, "preview"))
 			style.preedit_type = weasel::UIStyle::PREVIEW;
 	}
+	char capture_type[20] = { 0 };
+	if (RimeConfigGetString(config, "style/capture_type", capture_type, sizeof(capture_type) - 1))
+	{
+		if (!std::strcmp(capture_type, "highlighted"))
+			style.capture_type = weasel::UIStyle::CaptureType::HIGHLIGHTED;
+		else if (!std::strcmp(capture_type, "candidates"))
+			style.capture_type = weasel::UIStyle::CaptureType::CANDIDATES;
+		else
+			style.capture_type = weasel::UIStyle::CaptureType::NONE;
+	}
+
 	char align_type[20] = { 0 };
 	if (RimeConfigGetString(config, "style/layout/align_type", align_type, sizeof(align_type) - 1))
 	{
@@ -717,11 +728,6 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	if (RimeConfigGetBool(config, "style/horizontal", &horizontal) || initialize)
 	{
 		style.layout_type = horizontal ? weasel::UIStyle::LAYOUT_HORIZONTAL : weasel::UIStyle::LAYOUT_VERTICAL;
-	}
-	Bool capture_window = false;
-	if (RimeConfigGetBool(config, "style/capture_window", &capture_window) || initialize)
-	{
-		style.capture_window = capture_window;
 	}
 
 	Bool fullscreen = False;
