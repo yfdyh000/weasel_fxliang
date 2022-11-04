@@ -15,6 +15,7 @@
 WeaselPanel::WeaselPanel(weasel::UI& ui)
 	: m_layout(NULL),
 	m_ctx(ui.ctx()),
+	m_octx(ui.octx()),
 	m_status(ui.status()),
 	m_style(ui.style()),
 	m_ostyle(ui.ostyle()),
@@ -80,9 +81,14 @@ void WeaselPanel::_CreateLayout()
 //更新界面
 void WeaselPanel::Refresh()
 {
+	// if context not changed, no need to refresh
+	if (m_ctx == m_octx)	return;
+	m_octx = m_ctx;
 	m_candidateCount = (BYTE)m_ctx.cinfo.candies.size();
 	// check if to hide candidates window
-	// if margin_x or margin_y negative, and not tip showing status,  and not schema menu ,hide candidates window
+	// if margin_x or margin_y negative, and not tip showing status,  and not schema menu, 
+	// or inline_preedit with no candidates, 
+	// hide candidates window
 	bool show_tips = (!m_ctx.aux.empty() && m_ctx.cinfo.empty() && m_ctx.preedit.empty());
 	bool margin_negative = (m_style.margin_x < 0 || m_style.margin_y < 0);
 	bool inline_no_candidates = m_style.inline_preedit && (!m_ctx.preedit.empty()) && m_ctx.cinfo.empty();
@@ -508,6 +514,7 @@ void WeaselPanel::CaptureWindow()
 	}
 	ReleaseDC(ScreenDC);
 }
+
 void WeaselPanel::_LayerUpdate(const CRect& rc, CDCHandle dc)
 {
 	HDC ScreenDC = ::GetDC(NULL);
@@ -519,22 +526,6 @@ void WeaselPanel::_LayerUpdate(const CRect& rc, CDCHandle dc)
 
 	BLENDFUNCTION bf = {AC_SRC_OVER, 0, 0XFF, AC_SRC_ALPHA};
 	UpdateLayeredWindow(m_hWnd, ScreenDC, &WindowPosAtScreen, &sz, dc, &PointOriginal, RGB(0,0,0), &bf, ULW_ALPHA);
-	/* capture input window
-	if (OpenClipboard()) 
-	{
-		CRect recth;
-		recth = m_layout->GetHighlightRect();
-		recth.InflateRect(abs(m_style.margin_x), abs(m_style.margin_y));
-		recth.OffsetRect(WindowPosAtScreen);
-		RECT* rcWindow;
-		rcWindow = LPRECT(recth);
-		HBITMAP bmp = CopyDCToBitmap(ScreenDC, LPRECT(rect));
-		EmptyClipboard();
-		SetClipboardData(CF_BITMAP, bmp);
-		CloseClipboard();
-		DeleteObject(bmp);
-	}
-*/
 	ReleaseDC(ScreenDC);
 }
 
