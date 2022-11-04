@@ -786,11 +786,11 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 		style.candidate_spacing = style.hilite_padding * 2;
 	if (style.hilite_padding > style.margin_x && style.margin_x >=0)		// if hilite_padiing over margin_x, increase margin_x
 		style.margin_x = style.hilite_padding;
-	else if (style.hilite_padding > style.margin_x && style.margin_x < 0)
+	else if (style.hilite_padding > -style.margin_x && style.margin_x < 0)
 		style.margin_x = -(style.hilite_padding);
 	if (style.hilite_padding > style.margin_y && style.margin_y >=0)		// if hilite_padiing over margin_y, increase margin_y
 		style.margin_y = style.hilite_padding;
-	else if (style.hilite_padding > style.margin_y && style.margin_y < 0)
+	else if (style.hilite_padding > -style.margin_y && style.margin_y < 0)
 		style.margin_y = -(style.hilite_padding);
 	// color scheme
 	if (initialize && RimeConfigGetString(config, "style/color_scheme", buffer, BUF_SIZE))

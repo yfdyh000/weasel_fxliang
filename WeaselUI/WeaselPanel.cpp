@@ -82,17 +82,20 @@ void WeaselPanel::_CreateLayout()
 void WeaselPanel::Refresh()
 {
 	// if context not changed, no need to refresh
-	if (m_ctx == m_octx)	return;
-	m_octx = m_ctx;
+	// when error message, m_ctx != m_octx
+	bool should_show_icon = (m_status.ascii_mode || !m_status.composing || !m_ctx.aux.empty());
+	if (m_ctx == m_octx && !should_show_icon)	return;
 	m_candidateCount = (BYTE)m_ctx.cinfo.candies.size();
 	// check if to hide candidates window
-	// if margin_x or margin_y negative, and not tip showing status,  and not schema menu, 
-	// or inline_preedit with no candidates, 
-	// hide candidates window
-	bool show_tips = (!m_ctx.aux.empty() && m_ctx.cinfo.empty() && m_ctx.preedit.empty());
+	bool show_tips = (!m_ctx.aux.empty() && m_ctx.cinfo.empty() && m_ctx.preedit.empty()) || (m_ctx.empty() && should_show_icon);
+	bool show_schema_menu = (m_ctx.preedit.str == L"〔方案選單〕");
 	bool margin_negative = (m_style.margin_x < 0 || m_style.margin_y < 0);
 	bool inline_no_candidates = m_style.inline_preedit && (!m_ctx.preedit.empty()) && m_ctx.cinfo.empty();
-	hide_candidates = (margin_negative && (!show_tips) && (m_ctx.preedit.str != L"〔方案選單〕")) || inline_no_candidates;
+	// when to hide_cadidates?
+	// 1. inline_no_candidates
+	// or
+	// 2. margin_negative, and not in show tips mode( ascii switching / half-full switching / simp-trad switching / error tips), and not in schema menu
+	hide_candidates = inline_no_candidates || (margin_negative && !show_tips && !show_schema_menu);
 
 	_CreateLayout();
 
@@ -148,7 +151,6 @@ void WeaselPanel::CleanUp()
 	SafeRelease(&pBrush);
 	pBrush = NULL;
 }
-
 
 bool WeaselPanel::_IsHighlightOverCandidateWindow(CRect rc, CRect bg, Gdiplus::Graphics* g)
 {
