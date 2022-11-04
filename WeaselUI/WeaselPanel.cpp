@@ -753,7 +753,11 @@ void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR 
 {
 	if (!(inColor & 0xff000000)) return;	// transparent, no need to draw
 	if (m_style.color_font )
+	{
+		if(pTextFormat == NULL)
+			return;
 		_TextOutWithFallbackDW(dc, rc, psz, cch, inColor, pTextFormat);
+	}
 	else { 
 		if(pFontInfo->m_FontPoint <= 0)	return;
 		CFont font;
