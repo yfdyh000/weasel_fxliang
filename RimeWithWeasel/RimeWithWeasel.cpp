@@ -34,6 +34,25 @@ static bool IsWindows8Point10OrGreaterEx()
 		return false;
 }
 
+static inline BOOL IsThemeLight()
+{
+	HKEY hKL;
+	LPCWSTR addr = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize";
+	LPCWSTR key = L"SystemUsesLightTheme";
+	DWORD dwType;
+	BYTE values[16];
+	DWORD dataLen;
+	LSTATUS ret = RegOpenKeyEx(HKEY_CURRENT_USER, addr, 0, KEY_READ, &hKL);
+	if (ret == ERROR_SUCCESS)
+	{
+		ret = RegQueryValueExW(hKL, key, 0, &dwType, values, &dataLen);
+		RegCloseKey(hKL);
+		return (values[0] != 0);
+	}
+	MessageBox(0, L"open reg failed, return false", L"", 0);
+	return FALSE;
+}
+
 int expand_ibus_modifier(int m)
 {
 	return (m & 0xff) | ((m & 0xff00) << 16);
@@ -793,7 +812,17 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	else if (style.hilite_padding > -style.margin_y && style.margin_y < 0)
 		style.margin_y = -(style.hilite_padding);
 	// color scheme
-	if (initialize && RimeConfigGetString(config, "style/color_scheme", buffer, BUF_SIZE))
+	bool light = IsThemeLight();
+	std::string scheme_type = "style/";
+		scheme_type += light ? "color_scheme": "color_scheme_dark";
+	std::string theme_prefix = light ? "style/color_theme" : "style/color_theme_dark";
+	bool sta = (initialize && RimeConfigGetString(config, scheme_type.c_str(), buffer, BUF_SIZE));
+	if (!sta)
+	{
+		memset(buffer, 0x0, BUF_SIZE);
+		sta = (initialize && RimeConfigGetString(config, "style/color_scheme", buffer, BUF_SIZE));
+	}
+	if(sta)
 	{
 		std::string prefix("preset_color_schemes/");
 		prefix += buffer;
