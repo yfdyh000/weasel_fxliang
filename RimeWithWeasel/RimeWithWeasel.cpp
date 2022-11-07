@@ -543,6 +543,21 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 						std::to_string(utf8towcslen(ctx.composition.preedit, ctx.composition.sel_end)) + '\n');
 				}
 				break;
+			case weasel::UIStyle::PREVIEW_ALL:
+				std::string topush = std::string("ctx.preedit=") + ctx.composition.preedit + "  [";
+				for (auto i = 0; i < ctx.menu.num_candidates; i++)
+				{
+					topush += " " + std::to_string(i+1) + "." + std::string(ctx.menu.candidates[i].text);
+				}
+				messages.push_back(topush + " ]\n");
+				//messages.push_back(std::string("ctx.preedit=") + ctx.composition.preedit + '\n');
+				if (ctx.composition.sel_start <= ctx.composition.sel_end)
+				{
+					messages.push_back(std::string("ctx.preedit.cursor=") +
+						std::to_string(utf8towcslen(ctx.composition.preedit, ctx.composition.sel_start)) + ',' +
+						std::to_string(utf8towcslen(ctx.composition.preedit, ctx.composition.sel_end)) + '\n');
+				}
+				break;
 			}
 		}
 		if (ctx.menu.num_candidates)
@@ -729,6 +744,8 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize, 
 			style.preedit_type = weasel::UIStyle::COMPOSITION;
 		else if (!std::strcmp(preedit_type, "preview"))
 			style.preedit_type = weasel::UIStyle::PREVIEW;
+		else if (!std::strcmp(preedit_type, "preview_all"))
+			style.preedit_type = weasel::UIStyle::PREVIEW_ALL;
 	}
 	char capture_type[20] = { 0 };
 	if (RimeConfigGetString(config, "style/capture_type", capture_type, sizeof(capture_type) - 1))

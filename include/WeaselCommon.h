@@ -234,7 +234,8 @@ namespace weasel
 		enum PreeditType
 		{
 			COMPOSITION,
-			PREVIEW
+			PREVIEW,
+			PREVIEW_ALL
 		};
 		enum CaptureType
 		{
