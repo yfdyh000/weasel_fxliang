@@ -501,7 +501,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 
 void WeaselPanel::CaptureWindow()
 {
-	if (m_style.capture_type == UIStyle::CaptureType::NONE)	return;
+	if (m_style.capture_type == UIStyle::CaptureType::NONE || hide_candidates)	return;
 	HDC ScreenDC = ::GetDC(NULL);
 	CRect rect;
 	GetWindowRect(&rect);

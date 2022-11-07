@@ -78,8 +78,9 @@ RimeWithWeaselHandler::~RimeWithWeaselHandler()
 {
 }
 
-void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize, bool is_light = true);
+void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize);
 void _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, bool is_light);
+void CopyColorScheme(weasel::UIStyle& style, weasel::UIStyle src);
 void _LoadAppOptions(RimeConfig* config, AppOptionsByAppName& app_options);
 
 void RimeWithWeaselHandler::_Setup()
@@ -120,11 +121,12 @@ void RimeWithWeaselHandler::Initialize()
 		if (m_ui)
 		{
 			bool is_light = IsThemeLight();
-			_UpdateUIStyle(&config, m_ui, true, is_light);
+			_UpdateUIStyle(&config, m_ui, true);
 			m_base_style = m_ui->style();
 			m_base_style_dark = m_base_style;
 			_UpdateUIStyleColor(&config, m_base_style, true);	// light theme
 			_UpdateUIStyleColor(&config, m_base_style_dark, false);	// dark theme
+			m_ui->style() = is_light ? m_base_style : m_base_style_dark;
 		}
 		_LoadAppOptions(&config, m_app_options);
 		RimeConfigClose(&config);
@@ -161,7 +163,13 @@ UINT RimeWithWeaselHandler::AddSession(LPWSTR buffer, EatLine eat)
 	_ReadClientInfo(session_id, buffer);
 
 	if (m_ui)
-		m_ui->style() = IsThemeLight() ? m_base_style : m_base_style_dark;
+	{
+		//m_ui->style() = IsThemeLight() ? m_base_style : m_base_style_dark;
+		if (IsThemeLight())
+			CopyColorScheme(m_ui->style(), m_base_style);
+		else
+			CopyColorScheme(m_ui->style(), m_base_style_dark);
+	}
 	// show session's welcome message :-) if any
 	if (eat) {
 		_Respond(session_id, eat);
@@ -437,9 +445,12 @@ void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(const std::string& schem
 	RimeConfig config;
 	if (!RimeSchemaOpen(schema_id.c_str(), &config))
 		return;
-	bool is_light = IsThemeLight();
-	m_ui->style() = is_light ? m_base_style :m_base_style_dark;
-	_UpdateUIStyle(&config, m_ui, false, is_light);
+	m_ui->style() = m_base_style;
+	_UpdateUIStyle(&config, m_ui, false);
+	if (IsThemeLight())
+		CopyColorScheme(m_ui->style(), m_base_style);
+	else
+		CopyColorScheme(m_ui->style(), m_base_style_dark);
 	RimeConfigClose(&config);
 }
 
@@ -677,7 +688,7 @@ static inline BOOL IsWinVersionGreaterThan(DWORD dwMajorVersion, DWORD dwMinorVe
 	);
 }
 
-static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize, bool is_light)
+static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 {
 	if (!ui) return;
 
@@ -842,7 +853,76 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize, 
 	else if (style.hilite_padding > -style.margin_y && style.margin_y < 0)
 		style.margin_y = -(style.hilite_padding);
 	// color scheme
-	_UpdateUIStyleColor(config, style, is_light);
+	bool is_light = IsThemeLight();
+	std::string color_pre = is_light ? "style/color_scheme" : "style/color_scheme_dark";
+	//if (initialize && RimeConfigGetString(config, "style/color_scheme", buffer, BUF_SIZE))
+	if (initialize && RimeConfigGetString(config, color_pre.c_str(), buffer, BUF_SIZE))
+	{
+		std::string prefix("preset_color_schemes/");
+		prefix += buffer;
+		RimeConfigGetColor32b(config, (prefix + "/back_color").c_str(), &style.back_color);
+		if (!RimeConfigGetColor32b(config, (prefix + "/shadow_color").c_str(), &style.shadow_color))
+		{
+			style.shadow_color = 0x00000000;
+		}
+		RimeConfigGetColor32b(config, (prefix + "/text_color").c_str(), &style.text_color);
+		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_text_color").c_str(), &style.candidate_text_color))
+		{
+			style.candidate_text_color = style.text_color;
+		}
+		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_back_color").c_str(), &style.candidate_back_color))
+		{
+			style.candidate_back_color = style.back_color;
+		}
+
+		if (!RimeConfigGetColor32b(config, (prefix + "/border_color").c_str(), &style.border_color))
+		{
+			style.border_color = style.text_color;
+		}
+		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_text_color").c_str(), &style.hilited_text_color))
+		{
+			style.hilited_text_color = style.text_color;
+		}
+		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_back_color").c_str(), &style.hilited_back_color))
+		{
+			style.hilited_back_color = style.back_color;
+		}
+		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_candidate_text_color").c_str(), &style.hilited_candidate_text_color))
+		{
+			style.hilited_candidate_text_color = style.hilited_text_color;
+		}
+		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_candidate_back_color").c_str(), &style.hilited_candidate_back_color))
+		{
+			style.hilited_candidate_back_color = style.hilited_back_color;
+		}
+		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_candidate_shadow_color").c_str(), &style.hilited_candidate_shadow_color))
+		{
+			style.hilited_candidate_shadow_color = 0x00000000;
+		}
+		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_shadow_color").c_str(), &style.hilited_shadow_color))
+		{
+			style.hilited_shadow_color = 0x00000000;
+		}
+		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_shadow_color").c_str(), &style.candidate_shadow_color))
+		{
+			style.candidate_shadow_color = 0x00000000;
+		}
+		if (!RimeConfigGetColor32b(config, (prefix + "/label_color").c_str(), &style.label_text_color))
+		{
+			style.label_text_color = blend_colors(style.candidate_text_color, style.back_color);
+		}
+		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_label_color").c_str(), &style.hilited_label_text_color))
+		{
+			style.hilited_label_text_color = blend_colors(style.hilited_candidate_text_color, style.hilited_candidate_back_color);
+		}
+		style.comment_text_color = style.label_text_color;
+		style.hilited_comment_text_color = style.hilited_label_text_color;
+		if (RimeConfigGetColor32b(config, (prefix + "/comment_text_color").c_str(), &style.comment_text_color))
+		{
+			style.hilited_comment_text_color = style.comment_text_color;
+		}
+		RimeConfigGetColor32b(config, (prefix + "/hilited_comment_text_color").c_str(), &style.hilited_comment_text_color);
+	}
 }
 
 static void _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, bool is_light)
@@ -921,6 +1001,27 @@ static void _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, bool
 		}
 		RimeConfigGetColor32b(config, (prefix + "/hilited_comment_text_color").c_str(), &style.hilited_comment_text_color);
 	}
+}
+
+static void CopyColorScheme(weasel::UIStyle& style, weasel::UIStyle src)
+{
+	style.text_color = src.text_color;
+	style.candidate_text_color = src.candidate_text_color;
+	style.candidate_back_color = src.candidate_back_color;
+	style.candidate_shadow_color = src.candidate_shadow_color;
+	style.label_text_color = src.label_text_color;
+	style.comment_text_color = src.comment_text_color;
+	style.back_color = src.back_color;
+	style.shadow_color = src.shadow_color;
+	style.border_color = src.border_color;
+	style.hilited_text_color = src.hilited_text_color;
+	style.hilited_back_color = src.hilited_back_color;
+	style.hilited_shadow_color = src.hilited_shadow_color;
+	style.hilited_candidate_text_color = src.hilited_candidate_text_color;
+	style.hilited_candidate_back_color = src.hilited_candidate_back_color;
+	style.hilited_candidate_shadow_color = src.hilited_candidate_shadow_color;
+	style.hilited_label_text_color = src.hilited_label_text_color;
+	style.hilited_comment_text_color = src.hilited_comment_text_color;
 }
 
 static void _LoadAppOptions(RimeConfig* config, AppOptionsByAppName& app_options)
