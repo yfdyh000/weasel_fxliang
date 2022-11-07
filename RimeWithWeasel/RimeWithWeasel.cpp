@@ -37,6 +37,10 @@ static bool IsWindows8Point10OrGreaterEx()
 
 static inline BOOL IsThemeLight()
 {
+	// only for windows 10 or greater, return false when lower version.
+	OSVERSIONINFOEXW ovi = { sizeof ovi };
+	GetVersionEx2((LPOSVERSIONINFOW)&ovi);
+	if (ovi.dwMajorVersion < 10) return false;
 	HKEY hKL;
 	LPCWSTR addr = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize";
 	//LPCWSTR key = L"SystemUsesLightTheme"; 
