@@ -15,6 +15,7 @@
 WeaselPanel::WeaselPanel(weasel::UI& ui)
 	: m_layout(NULL),
 	m_ctx(ui.ctx()),
+	m_octx(ui.octx()),
 	m_status(ui.status()),
 	m_style(ui.style()),
 	m_ostyle(ui.ostyle()),
@@ -80,13 +81,21 @@ void WeaselPanel::_CreateLayout()
 //更新界面
 void WeaselPanel::Refresh()
 {
+	// if context not changed, no need to refresh
+	// when error message, m_ctx != m_octx
+	bool should_show_icon = (m_status.ascii_mode || !m_status.composing || !m_ctx.aux.empty());
+	if (m_ctx == m_octx && !should_show_icon)	return;
 	m_candidateCount = (BYTE)m_ctx.cinfo.candies.size();
 	// check if to hide candidates window
-	// if margin_x or margin_y negative, and not tip showing status,  and not schema menu ,hide candidates window
-	bool show_tips = (!m_ctx.aux.empty() && m_ctx.cinfo.empty() && m_ctx.preedit.empty());
+	bool show_tips = (!m_ctx.aux.empty() && m_ctx.cinfo.empty() && m_ctx.preedit.empty()) || (m_ctx.empty() && should_show_icon);
+	bool show_schema_menu = (m_ctx.preedit.str == L"〔方案選單〕");
 	bool margin_negative = (m_style.margin_x < 0 || m_style.margin_y < 0);
 	bool inline_no_candidates = m_style.inline_preedit && (!m_ctx.preedit.empty()) && m_ctx.cinfo.empty();
-	hide_candidates = (margin_negative && (!show_tips) && (m_ctx.preedit.str != L"〔方案選單〕")) || inline_no_candidates;
+	// when to hide_cadidates?
+	// 1. inline_no_candidates
+	// or
+	// 2. margin_negative, and not in show tips mode( ascii switching / half-full switching / simp-trad switching / error tips), and not in schema menu
+	hide_candidates = inline_no_candidates || (margin_negative && !show_tips && !show_schema_menu);
 
 	_CreateLayout();
 
@@ -318,6 +327,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				oldFont.DeleteObject();
 			}
 			int x = rc.left;
+			int real_margin_y = (abs(m_style.margin_y) > m_style.hilite_padding) ? abs(m_style.margin_y) : m_style.hilite_padding;
 			if (range.start > 0) {
 				// zzz
 				std::wstring str_before(t.substr(0, range.start));
@@ -402,10 +412,41 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 		}
 		drawn = true;
 	}
-
 	return drawn;
 }
 
+HBITMAP CopyDCToBitmap(HDC hDC, LPRECT lpRect)
+{
+	if (!hDC || !lpRect || IsRectEmpty(lpRect))
+		return NULL;
+	HDC hMemDC;
+	HBITMAP hBitmap, hOldBitmap;
+	int nX, nY, nX2, nY2;
+	int nWidth, nHeight;
+
+	nX = lpRect->left;
+	nY = lpRect->top;
+	nX2 = lpRect->right;
+	nY2 = lpRect->bottom;
+	nWidth = nX2 - nX;
+	nHeight = nY2 - nY;
+
+	hMemDC = CreateCompatibleDC(hDC);
+
+	hBitmap = CreateCompatibleBitmap(hDC, nWidth, nHeight);
+
+	hOldBitmap = (HBITMAP)SelectObject(hMemDC, hBitmap);
+
+	StretchBlt(hMemDC, 0, 0, nWidth, nHeight, hDC, nX, nY, nWidth, nHeight, SRCCOPY);
+
+	hBitmap = (HBITMAP)SelectObject(hMemDC, hOldBitmap);
+
+	DeleteDC(hMemDC);
+	DeleteObject(hOldBitmap);
+
+
+	return hBitmap;
+ }
 //draw client area
 void WeaselPanel::DoPaint(CDCHandle dc)
 {
@@ -450,6 +491,31 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	_LayerUpdate(rc, memDC);
 	::DeleteDC(memDC);
 	::DeleteObject(memBitmap);
+}
+
+void WeaselPanel::CaptureWindow()
+{
+	if (m_style.capture_type == UIStyle::CaptureType::NONE || hide_candidates)	return;
+	HDC ScreenDC = ::GetDC(NULL);
+	CRect rect;
+	GetWindowRect(&rect);
+	POINT WindowPosAtScreen = { rect.left, rect.top };
+	if(m_style.capture_type == UIStyle::CaptureType::HIGHLIGHTED)
+	{
+		rect = m_layout->GetHighlightRect();
+		rect.InflateRect(abs(m_style.margin_x), abs(m_style.margin_y));
+		rect.OffsetRect(WindowPosAtScreen);
+	}
+	// capture input window
+	if (OpenClipboard()) 
+	{
+		HBITMAP bmp = CopyDCToBitmap(ScreenDC, LPRECT(rect));
+		EmptyClipboard();
+		SetClipboardData(CF_BITMAP, bmp);
+		CloseClipboard();
+		DeleteObject(bmp);
+	}
+	ReleaseDC(ScreenDC);
 }
 
 void WeaselPanel::_LayerUpdate(const CRect& rc, CDCHandle dc)
@@ -681,7 +747,11 @@ void WeaselPanel::_TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR 
 {
 	if (!(inColor & 0xff000000)) return;	// transparent, no need to draw
 	if (m_style.color_font )
+	{
+		if(pTextFormat == NULL)
+			return;
 		_TextOutWithFallbackDW(dc, rc, psz, cch, inColor, pTextFormat);
+	}
 	else { 
 		if(pFontInfo->m_FontPoint <= 0)	return;
 		CFont font;
