@@ -306,6 +306,7 @@ namespace weasel
 		int hilited_candidate_shadow_color;
 		int hilited_label_text_color;
 		int hilited_comment_text_color;
+		int hilited_mark_color;
 		// per client
 		int client_caps;
 
@@ -354,6 +355,7 @@ namespace weasel
 			hilited_candidate_shadow_color(0),
 			hilited_label_text_color(0),
 			hilited_comment_text_color(0),
+			hilited_mark_color(0),
 			client_caps(0) {}
 		bool operator!=(const UIStyle& st)
 		{
@@ -402,6 +404,7 @@ namespace weasel
 				 hilited_candidate_shadow_color != st.hilited_candidate_shadow_color ||
 				 hilited_label_text_color != st.hilited_label_text_color ||
 				 hilited_comment_text_color != st.hilited_comment_text_color ||
+				 hilited_mark_color != st.hilited_mark_color ||
 				 client_caps != st.client_caps); 
 		}
 	};
@@ -458,6 +461,7 @@ namespace boost {
 			ar & s.hilited_candidate_shadow_color;
 			ar & s.hilited_label_text_color;
 			ar & s.hilited_comment_text_color;
+			ar & s.hilited_mark_color;
 			// per client
 			ar & s.client_caps;
 		}

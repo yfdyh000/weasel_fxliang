@@ -1014,6 +1014,10 @@ static void _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, bool
 			style.hilited_comment_text_color = style.comment_text_color;
 		}
 		RimeConfigGetColor32b(config, (prefix + "/hilited_comment_text_color").c_str(), &style.hilited_comment_text_color);
+		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_mark_color").c_str(), &style.hilited_mark_color))
+		{
+			style.hilited_mark_color = style.hilited_candidate_back_color;
+		}
 	}
 }
 

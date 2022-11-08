@@ -170,7 +170,7 @@ bool WeaselPanel::_IsHighlightOverCandidateWindow(CRect rc, CRect bg, Gdiplus::G
 	return res;
 }
 
-void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORREF shadowColor, int radius, BackType type = BackType::TEXT)
+void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORREF shadowColor, int radius, BackType type = BackType::TEXT, bool highlighted = false)
 {
 	Gdiplus::Graphics g_back(dc);
 	g_back.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
@@ -285,6 +285,18 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 		g_back.FillPath(&back_brush, hiliteBackPath);
 		delete hiliteBackPath;
 	}
+	if (highlighted)
+	{
+		if (m_style.hilite_padding > 7) 
+		{
+			int topm = (rc.Height() - ((double)rc.Height() - (double)max(m_style.hilite_padding, m_style.round_corner) * 2)*0.7 ) / 2;
+			CRect hlRc(rc.left+3, rc.top + topm, rc.left + 7, rc.bottom - topm);
+			GraphicsRoundRectPath hlp(hlRc, 4);
+			Gdiplus::Color hlcl = Gdiplus::Color::MakeARGB(0xff, GetRValue(m_style.hilited_mark_color), GetGValue(m_style.hilited_mark_color), GetBValue(m_style.hilited_mark_color));
+			Gdiplus::SolidBrush hl_brush(hlcl);
+			g_back.FillPath(&hl_brush, &hlp);
+		}
+	}
 	if (type == BackType::BACKGROUND) {
 		rc.DeflateRect(m_style.border / 2 , m_style.border / 2 );
 		GraphicsRoundRectPath bgPath(rc, m_style.round_corner_ex);
@@ -387,7 +399,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 		int txtLabelColor = (i == m_ctx.cinfo.highlighted) ? m_style.hilited_label_text_color : m_style.label_text_color;
 		int txtCommentColor = (i == m_ctx.cinfo.highlighted) ? m_style.hilited_comment_text_color : m_style.comment_text_color;
 		if (i == m_ctx.cinfo.highlighted)
-			_HighlightText(dc, rect, m_style.hilited_candidate_back_color, m_style.hilited_candidate_shadow_color, m_style.round_corner, bkType);
+			_HighlightText(dc, rect, m_style.hilited_candidate_back_color, m_style.hilited_candidate_shadow_color, m_style.round_corner, bkType, true);
 		else
 			_HighlightText(dc, rect, m_style.candidate_back_color, m_style.candidate_shadow_color, m_style.round_corner, bkType);
 
