@@ -445,13 +445,27 @@ void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(const std::string& schem
 	RimeConfig config;
 	if (!RimeSchemaOpen(schema_id.c_str(), &config))
 		return;
-	m_ui->style() = m_base_style;
+	bool is_light = IsThemeLight();
+	RimeConfig configw = { NULL };
+	if (RimeConfigOpen("weasel", &configw))
+	{
+		if (m_ui)
+		{
+			_UpdateUIStyle(&configw, m_ui, true);
+			if (is_light)
+				m_base_style = m_ui->style();
+			else
+				m_base_style_dark = m_ui->style();
+		}
+		RimeConfigClose(&configw);
+	}
+	//m_ui->style() = m_base_style;
 	_UpdateUIStyle(&config, m_ui, false);
-	if (IsThemeLight())
+	RimeConfigClose(&config);
+	if (is_light)
 		CopyColorScheme(m_ui->style(), m_base_style);
 	else
 		CopyColorScheme(m_ui->style(), m_base_style_dark);
-	RimeConfigClose(&config);
 }
 
 bool RimeWithWeaselHandler::_ShowMessage(weasel::Context& ctx, weasel::Status& status) {
