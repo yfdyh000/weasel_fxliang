@@ -137,6 +137,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 	}
 	if(!_style.color_font)
 		dc.SelectFont(oldFont);
+	int newh = 0;
 	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
 	{
 		int ol = 0, ot = 0, oc = 0;
@@ -156,7 +157,11 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 		_candidateLabelRects[i].OffsetRect(0, ol);
 		_candidateTextRects[i].OffsetRect(0, ot);
 		_candidateCommentRects[i].OffsetRect(0, oc);
+		newh = min(newh, ol);
+		newh = min(newh, ot);
+		newh = min(newh, oc);
 	}
+	h -= newh;
 	w += real_margin_x;
 
 	/* Highlighted Candidate */
