@@ -86,6 +86,8 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWrit
 			height += _style.candidate_spacing;
 
 		int w = real_margin_x, h = 0;
+		if (_style.hilited_mark_color & 0xff000000)
+			w += MARK_GAP;
 		int candidate_width = 0, comment_width = 0;
 		/* Label */
 		std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());

@@ -79,6 +79,8 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 
 	/* Candidates */
 	int w = real_margin_x, h = 0;
+	if (_style.hilited_mark_color & 0xff000000)
+		w += MARK_GAP;
 	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
 	{
 		if (i > 0)
@@ -133,6 +135,8 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 			_candidateCommentRects[i].SetRect(w, height, w, height + size.cy);
 		}
 		_candidateCommentRects[i].OffsetRect(offsetX, offsetY);
+		if (_style.hilited_mark_color & 0xff000000)
+			w += MARK_GAP;
 	}
 	if(!_style.color_font)
 		dc.SelectFont(oldFont);
