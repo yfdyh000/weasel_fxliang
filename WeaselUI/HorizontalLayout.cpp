@@ -137,6 +137,8 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 	if(!_style.color_font)
 		dc.SelectFont(oldFont);
 	int newh = 0;
+	int mintop = _candidateTextRects[0].bottom;
+	int maxbot = _candidateTextRects[0].top;
 	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
 	{
 		int ol = 0, ot = 0, oc = 0;
@@ -156,6 +158,12 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 		_candidateLabelRects[i].OffsetRect(0, ol);
 		_candidateTextRects[i].OffsetRect(0, ot);
 		_candidateCommentRects[i].OffsetRect(0, oc);
+		mintop = min(mintop, _candidateLabelRects[i].top);
+		mintop = min(mintop, _candidateTextRects[i].top);
+		mintop = min(mintop, _candidateCommentRects[i].top);
+		maxbot = max(maxbot, _candidateLabelRects[i].bottom);
+		maxbot = max(maxbot, _candidateTextRects[i].bottom);
+		maxbot = max(maxbot, _candidateCommentRects[i].bottom);
 		newh = min(newh, ol);
 		newh = min(newh, ot);
 		newh = min(newh, oc);
@@ -180,6 +188,8 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 			hlTop = min(hlTop, _candidateCommentRects[i].top);
 			hlBot = max(hlBot, _candidateCommentRects[i].bottom);
 		}
+		hlTop = min(mintop, hlTop);
+		hlBot = max(maxbot, hlBot);
 		_candidateRects[i].SetRect(_candidateLabelRects[i].left, hlTop, _candidateCommentRects[i].right, hlBot);
 	}
 
