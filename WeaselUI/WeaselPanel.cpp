@@ -340,13 +340,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				std::wstring str_highlight(t.substr(range.start, range.end - range.start));
 				CRect rc_hi(x, rc.top, x + (selEnd.cx - selStart.cx), rc.bottom);
 				CRect rct = rc_hi;
-				if(rc_hi.Height() / 2 + real_margin_y < STATUS_ICON_SIZE / 2)
-				{
-					int real_paddingy = STATUS_ICON_SIZE / 2 - rc_hi.Height() / 2 + 1;
-					rc_hi.InflateRect(m_style.hilite_padding, real_paddingy);
-				}
-				else
-					rc_hi.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
+				rc_hi.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 				_HighlightText(dc, rc_hi, m_style.hilited_back_color, m_style.hilited_shadow_color, m_style.round_corner);
 				_TextOut(dc, x, rc.top, rct, str_highlight.c_str(), str_highlight.length(), &pFonts->m_TextFont, m_style.hilited_text_color, txtFormat);
 				x += (selEnd.cx - selStart.cx);

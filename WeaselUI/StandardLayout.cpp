@@ -162,7 +162,7 @@ void StandardLayout::UpdateStatusIconLayout(int* width, int* height)
 			{
 				left = right_alignment;
 			}
-			_statusIconRect.SetRect(left, middle - STATUS_ICON_SIZE / 2, left + STATUS_ICON_SIZE, middle + STATUS_ICON_SIZE / 2);
+			_statusIconRect.SetRect(left, middle - STATUS_ICON_SIZE / 2 + 1, left + STATUS_ICON_SIZE, middle + STATUS_ICON_SIZE / 2 + 1);
 		}
 		else
 		{

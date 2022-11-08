@@ -39,12 +39,11 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWrit
 			size = GetPreeditSize(dc, _context.preedit, pDWR->pTextFormat, pDWR->pDWFactory);
 		else
 			size = GetPreeditSize(dc, _context.preedit);
-		//_preeditRect.SetRect(real_margin_x, height, real_margin_x + size.cx, height + size.cy);
-		if(STATUS_ICON_SIZE/ 2 > (height + size.cy / 2))
+		if(STATUS_ICON_SIZE/ 2 >= (height + size.cy / 2) && ShouldDisplayStatusIcon())
 		{
-			_preeditRect.SetRect(real_margin_x, STATUS_ICON_SIZE / 2 -size.cy / 2 + 1, 
-					real_margin_x + size.cx, STATUS_ICON_SIZE / 2 + size.cy / 2 + 1);
-			height = STATUS_ICON_SIZE - _style.hilite_padding + _style.spacing + 1;
+			height += (STATUS_ICON_SIZE - size.cy) / 2;
+			_preeditRect.SetRect(real_margin_x, height, real_margin_x + size.cx, height + size.cy);
+			height += size.cy + (STATUS_ICON_SIZE - size.cy) / 2 + _style.spacing;
 		}
 		else
 		{
@@ -53,7 +52,6 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWrit
 		}
 		_preeditRect.OffsetRect(offsetX, offsetY);
 		width = max(width, real_margin_x + size.cx + real_margin_x);
-		//height += size.cy + _style.spacing;
 	}
 
 	/* Auxiliary */
@@ -63,12 +61,11 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWrit
 			size = GetPreeditSize(dc, _context.aux, pDWR->pTextFormat, pDWR->pDWFactory);
 		else
 			size = GetPreeditSize(dc, _context.aux);
-		//_auxiliaryRect.SetRect(real_margin_x, height, real_margin_x + size.cx, height + size.cy);
-		if(STATUS_ICON_SIZE/ 2 > (height + size.cy / 2))
+		if(STATUS_ICON_SIZE/ 2 >= (height + size.cy / 2) && ShouldDisplayStatusIcon())
 		{
-			_auxiliaryRect.SetRect(real_margin_x, STATUS_ICON_SIZE / 2 -size.cy / 2 + 1,
-					real_margin_x + size.cx, STATUS_ICON_SIZE / 2 + size.cy / 2 + 1);
-			height = STATUS_ICON_SIZE - _style.hilite_padding + _style.spacing + 1;
+			height += (STATUS_ICON_SIZE - size.cy) / 2 ;
+			_auxiliaryRect.SetRect(real_margin_x, height, real_margin_x + size.cx, height + size.cy);
+			height += size.cy + (STATUS_ICON_SIZE - size.cy) / 2 + _style.spacing;
 		}
 		else
 		{
@@ -77,7 +74,6 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWrit
 		}
 		_auxiliaryRect.OffsetRect(offsetX, offsetY);
 		width = max(width, real_margin_x + size.cx + real_margin_x);
-		//height += size.cy + _style.spacing;
 	}
 
 	/* Candidates */
