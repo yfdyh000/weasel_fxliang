@@ -12,6 +12,7 @@ app_options:
 style:
   color_font: false
   color_scheme: aqua
+  color_scheme_dark: lost_temple
   font_face: Microsoft YaHei
   label_font_face: Microsoft YaHei
   comment_font_face: Microsoft YaHei
