@@ -3,7 +3,7 @@
 #include <WeaselCommon.h>
 #include <WeaselUI.h>
 #include "fontClasses.h"
-#define MARK_WIDTH	6
+#define MARK_WIDTH	4
 #define MARK_GAP	(MARK_WIDTH + 4)
 namespace weasel
 {

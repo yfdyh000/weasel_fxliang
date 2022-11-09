@@ -469,7 +469,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	HBITMAP memBitmap = ::CreateCompatibleBitmap(hdc, rc.Width(), rc.Height());
 	::SelectObject(memDC, memBitmap);
 	ReleaseDC(hdc);
-	if (!hide_candidates) {
+	if (!hide_candidates && (!(m_style.inline_preedit && (m_ctx.cinfo.candies.size() == 0)))) {
 		CRect trc(rc);
 		// background start
 		if (!m_ctx.empty()) {
