@@ -7,6 +7,8 @@
 #include "VerticalLayout.h"
 #include "HorizontalLayout.h"
 #include "FullScreenLayout.h"
+#include "WindowCompositionAttribute.h"
+
 
 // for IDI_ZH, IDI_EN
 #include <resource.h>
@@ -458,6 +460,39 @@ HBITMAP CopyDCToBitmap(HDC hDC, LPRECT lpRect)
 
 	return hBitmap;
  }
+
+void WeaselPanel::_BlurBackground()
+{
+	CRect rc;
+	GetClientRect(&rc);
+	if (((m_style.shadow_color & 0xff000000) == 0) || m_style.shadow_radius == 0)
+	{
+		HMODULE hUser = GetModuleHandle(TEXT("user32.dll"));
+		if (hUser)
+		{
+			pfnSetWindowCompositionAttribute setWindowCompositionAttribute = (pfnSetWindowCompositionAttribute)GetProcAddress(hUser, "SetWindowCompositionAttribute");
+			if (setWindowCompositionAttribute)
+			{
+				//ACCENT_POLICY accent { ACCENT_ENABLE_ACRYLICBLURBEHIND,0, 0, 0 };
+				ACCENT_POLICY accent{ ACCENT_ENABLE_BLURBEHIND,0, 0, 0 };
+				// $AABBGGRR
+				accent.GradientColor = m_style.back_color;
+				//rc.DeflateRect(m_layout->offsetX - m_style.border + 1, m_layout->offsetY - m_style.border + 1);
+				SetWindowRgn(CreateRoundRectRgn(rc.left + 1, rc.top + 1, rc.right, rc.bottom, m_style.round_corner_ex + m_style.border/2, m_style.round_corner_ex + m_style.border/2), true);
+				//SetWindowRgn(CreateRoundRectRgn(rc.left, rc.top, rc.right, rc.bottom, m_style.round_corner_ex + m_style.border/ 2, m_style.round_corner_ex + m_style.border/ 2), true);
+				//SetWindowRgn(CreateRectRgn(rc.left, rc.top, rc.right, rc.bottom), true);
+				accent.AccentFlags = 0xff;   //喵喵喵?
+				WINDOWCOMPOSITIONATTRIBDATA data;
+				data.Attrib = WCA_ACCENT_POLICY;
+				data.pvData = &accent;
+				data.cbData = sizeof(accent);
+				setWindowCompositionAttribute(m_hWnd, &data);
+			}
+		}
+	}
+
+}
+
 //draw client area
 void WeaselPanel::DoPaint(CDCHandle dc)
 {
@@ -470,6 +505,10 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	::SelectObject(memDC, memBitmap);
 	ReleaseDC(hdc);
 	if (!hide_candidates && (!(m_style.inline_preedit && (m_ctx.cinfo.candies.size() == 0)))) {
+
+		//if (((m_style.shadow_color & 0xff000000) == 0) || m_style.shadow_radius == 0)
+		//	SetWindowRgn(CreateRoundRectRgn(rc.left + 1, rc.top + 1, rc.right, rc.bottom, m_style.round_corner_ex + m_style.border, m_style.round_corner_ex + m_style.border), true);
+		_BlurBackground();
 		CRect trc(rc);
 		// background start
 		if (!m_ctx.empty()) {
