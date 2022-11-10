@@ -7,8 +7,41 @@
 #include "VerticalLayout.h"
 #include "HorizontalLayout.h"
 #include "FullScreenLayout.h"
-#include "WindowCompositionAttribute.h"
 
+static inline BOOL GetVersionEx2(LPOSVERSIONINFOW lpVersionInformation)
+{
+	HMODULE hNtDll = GetModuleHandleW(L"NTDLL"); // 获取ntdll.dll的句柄
+	typedef NTSTATUS(NTAPI* tRtlGetVersion)(PRTL_OSVERSIONINFOW povi); // RtlGetVersion的原型
+	tRtlGetVersion pRtlGetVersion = NULL;
+	if (hNtDll)
+	{
+		pRtlGetVersion = (tRtlGetVersion)GetProcAddress(hNtDll, "RtlGetVersion"); // 获取RtlGetVersion地址
+	}
+	if (pRtlGetVersion)
+	{
+		return pRtlGetVersion((PRTL_OSVERSIONINFOW)lpVersionInformation) >= 0; // 调用RtlGetVersion
+	}
+	return FALSE;
+}
+
+static bool _IsWindows7()
+{
+	OSVERSIONINFOEXW ovi = { sizeof ovi };
+	GetVersionEx2((LPOSVERSIONINFOW)&ovi);
+	if ((ovi.dwMajorVersion == 6 && ovi.dwMinorVersion == 1))
+		return true;
+	else
+		return false;
+}
+static bool _IsWindows10OrGreater()
+{
+	OSVERSIONINFOEXW ovi = { sizeof ovi };
+	GetVersionEx2((LPOSVERSIONINFOW)&ovi);
+	if (ovi.dwMajorVersion >= 10)
+		return true;
+	else
+		return false;
+}
 
 // for IDI_ZH, IDI_EN
 #include <resource.h>
@@ -296,14 +329,13 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 		Gdiplus::SolidBrush hl_brush(hlcl);
 		g_back.FillPath(&hl_brush, &hlp);
 	}
-	if (type == BackType::BACKGROUND) {
+	if (type == BackType::BACKGROUND && m_style.border != 0 && ((m_style.border_color & 0xff000000) != 0)) {
 		rc.DeflateRect(m_style.border / 2 , m_style.border / 2 );
 		GraphicsRoundRectPath bgPath(rc, m_style.round_corner_ex);
 		int alpha = ((m_style.border_color >> 24) & 0xff);
 		Gdiplus::Color border_color = Gdiplus::Color::MakeARGB(alpha, GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
 		Gdiplus::Pen gPenBorder(border_color, (Gdiplus::REAL)m_style.border);
-		if (m_style.border)
-			g_back.DrawPath(&gPenBorder, &bgPath);
+		g_back.DrawPath(&gPenBorder, &bgPath);
 	}
 }
 
@@ -463,30 +495,25 @@ HBITMAP CopyDCToBitmap(HDC hDC, LPRECT lpRect)
 
 void WeaselPanel::_BlurBackground()
 {
-	CRect rc;
-	GetClientRect(&rc);
 	if (((m_style.shadow_color & 0xff000000) == 0) || m_style.shadow_radius == 0)
 	{
-		HMODULE hUser = GetModuleHandle(TEXT("user32.dll"));
-		if (hUser)
+		CRect rc;
+		GetClientRect(&rc);
+		if (_IsWindows10OrGreater())	// for windows 10 / 11
 		{
-			pfnSetWindowCompositionAttribute setWindowCompositionAttribute = (pfnSetWindowCompositionAttribute)GetProcAddress(hUser, "SetWindowCompositionAttribute");
-			if (setWindowCompositionAttribute)
+			HMODULE hUser = GetModuleHandle(TEXT("user32.dll"));
+			if (hUser)
 			{
-				//ACCENT_POLICY accent { ACCENT_ENABLE_ACRYLICBLURBEHIND,0, 0, 0 };
-				ACCENT_POLICY accent{ ACCENT_ENABLE_BLURBEHIND,0, 0, 0 };
-				// $AABBGGRR
-				accent.GradientColor = m_style.back_color;
-				//rc.DeflateRect(m_layout->offsetX - m_style.border + 1, m_layout->offsetY - m_style.border + 1);
-				SetWindowRgn(CreateRoundRectRgn(rc.left + 1, rc.top + 1, rc.right, rc.bottom, m_style.round_corner_ex + m_style.border/2, m_style.round_corner_ex + m_style.border/2), true);
-				//SetWindowRgn(CreateRoundRectRgn(rc.left, rc.top, rc.right, rc.bottom, m_style.round_corner_ex + m_style.border/ 2, m_style.round_corner_ex + m_style.border/ 2), true);
-				//SetWindowRgn(CreateRectRgn(rc.left, rc.top, rc.right, rc.bottom), true);
-				accent.AccentFlags = 0xff;   //喵喵喵?
-				WINDOWCOMPOSITIONATTRIBDATA data;
-				data.Attrib = WCA_ACCENT_POLICY;
-				data.pvData = &accent;
-				data.cbData = sizeof(accent);
-				setWindowCompositionAttribute(m_hWnd, &data);
+				pfnSetWindowCompositionAttribute setWindowCompositionAttribute = (pfnSetWindowCompositionAttribute)GetProcAddress(hUser, "SetWindowCompositionAttribute");
+				if (setWindowCompositionAttribute)
+				{
+					ACCENT_POLICY accent{ ACCENT_ENABLE_BLURBEHIND, 0xff, m_style.back_color, 0 };
+					SetWindowRgn(CreateRoundRectRgn(rc.left + 1, rc.top + 1, rc.right, rc.bottom,
+						m_style.round_corner_ex + m_style.border + 1, m_style.round_corner_ex + m_style.border + 1), false);
+					WINDOWCOMPOSITIONATTRIBDATA data = { WCA_ACCENT_POLICY, &accent, sizeof(accent) };
+					setWindowCompositionAttribute(m_hWnd, &data);
+				}
+				FreeLibrary(hUser);
 			}
 		}
 	}
@@ -506,8 +533,6 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	ReleaseDC(hdc);
 	if (!hide_candidates && (!(m_style.inline_preedit && (m_ctx.cinfo.candies.size() == 0)))) {
 
-		//if (((m_style.shadow_color & 0xff000000) == 0) || m_style.shadow_radius == 0)
-		//	SetWindowRgn(CreateRoundRectRgn(rc.left + 1, rc.top + 1, rc.right, rc.bottom, m_style.round_corner_ex + m_style.border, m_style.round_corner_ex + m_style.border), true);
 		_BlurBackground();
 		CRect trc(rc);
 		// background start
