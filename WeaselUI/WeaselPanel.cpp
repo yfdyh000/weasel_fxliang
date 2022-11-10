@@ -84,13 +84,13 @@ void WeaselPanel::Refresh()
 	// if context not changed, no need to refresh
 	// when error message, m_ctx != m_octx
 	bool should_show_icon = (m_status.ascii_mode || !m_status.composing || !m_ctx.aux.empty());
-	if (m_ctx == m_octx && !should_show_icon)	return;
+	//if (m_ctx == m_octx && !should_show_icon)	return;
 	m_candidateCount = (BYTE)m_ctx.cinfo.candies.size();
 	// check if to hide candidates window
 	bool show_tips = (!m_ctx.aux.empty() && m_ctx.cinfo.empty() && m_ctx.preedit.empty()) || (m_ctx.empty() && should_show_icon);
 	bool show_schema_menu = (m_ctx.preedit.str == L"〔方案選單〕");
 	bool margin_negative = (m_style.margin_x < 0 || m_style.margin_y < 0);
-	bool inline_no_candidates = m_style.inline_preedit && (!m_ctx.preedit.empty()) && m_ctx.cinfo.empty();
+	bool inline_no_candidates = m_style.inline_preedit && (m_ctx.cinfo.candies.size() == 0);
 	// when to hide_cadidates?
 	// 1. inline_no_candidates
 	// or
@@ -294,14 +294,13 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 		Gdiplus::SolidBrush hl_brush(hlcl);
 		g_back.FillPath(&hl_brush, &hlp);
 	}
-	if (type == BackType::BACKGROUND) {
+	if (type == BackType::BACKGROUND && m_style.border != 0 && (m_style.border_color & 0xff000000)) {
 		rc.DeflateRect(m_style.border / 2 , m_style.border / 2 );
 		GraphicsRoundRectPath bgPath(rc, m_style.round_corner_ex);
 		int alpha = ((m_style.border_color >> 24) & 0xff);
 		Gdiplus::Color border_color = Gdiplus::Color::MakeARGB(alpha, GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
 		Gdiplus::Pen gPenBorder(border_color, (Gdiplus::REAL)m_style.border);
-		if (m_style.border)
-			g_back.DrawPath(&gPenBorder, &bgPath);
+		g_back.DrawPath(&gPenBorder, &bgPath);
 	}
 }
 
@@ -469,7 +468,8 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	HBITMAP memBitmap = ::CreateCompatibleBitmap(hdc, rc.Width(), rc.Height());
 	::SelectObject(memDC, memBitmap);
 	ReleaseDC(hdc);
-	if (!hide_candidates && (!(m_style.inline_preedit && (m_ctx.cinfo.candies.size() == 0)))) {
+	if (!hide_candidates) //  && (!(m_style.inline_preedit && (m_ctx.cinfo.candies.size() == 0)))) {
+	{
 		CRect trc(rc);
 		// background start
 		if (!m_ctx.empty()) {
