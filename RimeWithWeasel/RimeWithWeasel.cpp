@@ -79,7 +79,7 @@ RimeWithWeaselHandler::~RimeWithWeaselHandler()
 }
 
 void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize);
-void _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, bool is_light);
+bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, bool is_light);
 void CopyColorScheme(weasel::UIStyle& style, weasel::UIStyle src);
 void _LoadAppOptions(RimeConfig* config, AppOptionsByAppName& app_options);
 
@@ -125,7 +125,8 @@ void RimeWithWeaselHandler::Initialize()
 			m_base_style = m_ui->style();
 			m_base_style_dark = m_base_style;
 			_UpdateUIStyleColor(&config, m_base_style, true);	// light theme
-			_UpdateUIStyleColor(&config, m_base_style_dark, false);	// dark theme
+			if (!_UpdateUIStyleColor(&config, m_base_style_dark, false))	// dark theme
+				m_base_style_dark = m_base_style;
 			m_ui->style() = is_light ? m_base_style : m_base_style_dark;
 		}
 		_LoadAppOptions(&config, m_app_options);
@@ -870,7 +871,10 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	bool is_light = IsThemeLight();
 	std::string color_pre = is_light ? "style/color_scheme" : "style/color_scheme_dark";
 	//if (initialize && RimeConfigGetString(config, "style/color_scheme", buffer, BUF_SIZE))
-	if (initialize && RimeConfigGetString(config, color_pre.c_str(), buffer, BUF_SIZE))
+	bool sta = RimeConfigGetString(config, color_pre.c_str(), buffer, BUF_SIZE);
+	if (!sta)
+		sta = RimeConfigGetString(config, "style/color_scheme", buffer, BUF_SIZE);
+	if (initialize && sta)
 	{
 		std::string prefix("preset_color_schemes/");
 		prefix += buffer;
@@ -939,7 +943,7 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	}
 }
 
-static void _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, bool is_light)
+static bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, bool is_light)
 {
 	const int BUF_SIZE = 2047;
 	char buffer[BUF_SIZE + 1];
@@ -1016,9 +1020,12 @@ static void _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, bool
 		RimeConfigGetColor32b(config, (prefix + "/hilited_comment_text_color").c_str(), &style.hilited_comment_text_color);
 		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_mark_color").c_str(), &style.hilited_mark_color))
 		{
-			style.hilited_mark_color = style.hilited_candidate_back_color;
+			// default transparent hilited_candidate_back_color
+			style.hilited_mark_color = style.hilited_candidate_back_color & 0x00ffffff;
 		}
+		return true;
 	}
+	return false;
 }
 
 static void CopyColorScheme(weasel::UIStyle& style, weasel::UIStyle src)
