@@ -417,8 +417,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 		CRect rect;
 		rect = m_layout->GetCandidateRect((int)i);
 		rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
-		if(m_style.hilited_mark_color >> 24)
-			rect.left -= MARK_GAP;
+		//if(m_style.hilited_mark_color >> 24) rect.left -= MARK_GAP;
 		int txtColor = (i == m_ctx.cinfo.highlighted) ? m_style.hilited_candidate_text_color : m_style.candidate_text_color;
 		int txtLabelColor = (i == m_ctx.cinfo.highlighted) ? m_style.hilited_label_text_color : m_style.label_text_color;
 		int txtCommentColor = (i == m_ctx.cinfo.highlighted) ? m_style.hilited_comment_text_color : m_style.comment_text_color;

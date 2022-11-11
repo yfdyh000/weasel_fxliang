@@ -205,7 +205,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWrit
 		}
 
 		int gap =  (_style.hilited_mark_color & 0xff000000) ? MARK_GAP :0;
-		_candidateRects[i].SetRect(real_margin_x + offsetX, hlTop, width - real_margin_x + offsetX + gap, hlBot);
+		_candidateRects[i].SetRect(real_margin_x + offsetX - gap, hlTop, width - real_margin_x + offsetX + gap, hlBot);
 	}
 	if (_style.hilited_mark_color & 0xff000000)
 		width -= MARK_GAP;

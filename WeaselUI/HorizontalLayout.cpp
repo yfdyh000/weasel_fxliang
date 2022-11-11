@@ -194,7 +194,8 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 		}
 		hlTop = min(mintop, hlTop);
 		hlBot = max(maxbot, hlBot);
-		_candidateRects[i].SetRect(_candidateLabelRects[i].left, hlTop, _candidateCommentRects[i].right, hlBot);
+		int gap = (_style.hilited_mark_color & 0xff000000)!=0 ? MARK_GAP : 0;
+		_candidateRects[i].SetRect(_candidateLabelRects[i].left - gap, hlTop, _candidateCommentRects[i].right, hlBot);
 	}
 
 	width = max(width, w);
