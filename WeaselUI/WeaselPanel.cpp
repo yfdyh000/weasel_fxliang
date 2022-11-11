@@ -116,16 +116,15 @@ void WeaselPanel::_CreateLayout()
 //更新界面
 void WeaselPanel::Refresh()
 {
-	// if context not changed, no need to refresh
-	// when error message, m_ctx != m_octx
 	bool should_show_icon = (m_status.ascii_mode || !m_status.composing || !m_ctx.aux.empty());
-	if (m_ctx == m_octx && !should_show_icon)	return;
 	m_candidateCount = (BYTE)m_ctx.cinfo.candies.size();
 	// check if to hide candidates window
+	// show tips status, two kind of situation: 1) only aux strings, don't care icon status; 2)only icon(ascii mode switching)
 	bool show_tips = (!m_ctx.aux.empty() && m_ctx.cinfo.empty() && m_ctx.preedit.empty()) || (m_ctx.empty() && should_show_icon);
-	bool show_schema_menu = (m_ctx.preedit.str == L"〔方案選單〕");
+	// show schema menu status: always preedit start with "〔方案選單〕"
+	bool show_schema_menu = boost::regex_search(m_ctx.preedit.str, boost::wsmatch(), boost::wregex(L"^〔方案選單〕", boost::wregex::icase));
 	bool margin_negative = (m_style.margin_x < 0 || m_style.margin_y < 0);
-	bool inline_no_candidates = m_style.inline_preedit && (!m_ctx.preedit.empty()) && m_ctx.cinfo.empty();
+	bool inline_no_candidates = m_style.inline_preedit && (m_ctx.cinfo.candies.size() == 0) && (!show_tips);
 	// when to hide_cadidates?
 	// 1. inline_no_candidates
 	// or
@@ -531,7 +530,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	HBITMAP memBitmap = ::CreateCompatibleBitmap(hdc, rc.Width(), rc.Height());
 	::SelectObject(memDC, memBitmap);
 	ReleaseDC(hdc);
-	if (!hide_candidates && (!(m_style.inline_preedit && (m_ctx.cinfo.candies.size() == 0)))) {
+	if (!hide_candidates) {
 
 		_BlurBackground();
 		CRect trc(rc);

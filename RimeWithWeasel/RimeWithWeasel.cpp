@@ -573,7 +573,8 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 				std::string topush = std::string("ctx.preedit=") + ctx.composition.preedit + "  [";
 				for (auto i = 0; i < ctx.menu.num_candidates; i++)
 				{
-					topush += " " + std::to_string(i+1) + "." + std::string(ctx.menu.candidates[i].text);
+					std::string prefix = (i != ctx.menu.highlighted_candidate_index) ? "" : "*";
+					topush += " " + prefix + std::to_string(i+1) + "." + std::string(ctx.menu.candidates[i].text);
 				}
 				messages.push_back(topush + " ]\n");
 				//messages.push_back(std::string("ctx.preedit=") + ctx.composition.preedit + '\n');
