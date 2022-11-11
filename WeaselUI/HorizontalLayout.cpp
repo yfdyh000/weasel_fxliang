@@ -135,7 +135,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 			_candidateCommentRects[i].SetRect(w, height, w, height + size.cy);
 		}
 		_candidateCommentRects[i].OffsetRect(offsetX, offsetY);
-		if (_style.hilited_mark_color & 0xff000000)
+		if (_style.hilited_mark_color & 0xff000000 && i < (candidates.size()-1))
 			w += MARK_GAP;
 	}
 	if(!_style.color_font)

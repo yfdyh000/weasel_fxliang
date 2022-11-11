@@ -18,6 +18,8 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWrit
 	const int space = _style.hilite_spacing;
 	int real_margin_x = (abs(_style.margin_x) > _style.hilite_padding) ? abs(_style.margin_x) : _style.hilite_padding;
 	int real_margin_y = (abs(_style.margin_y) > _style.hilite_padding) ? abs(_style.margin_y) : _style.hilite_padding;
+	if (_style.hilited_mark_color & 0xff000000)
+		real_margin_x += MARK_GAP;
 	int width = 0, height = real_margin_y;
 	CFont labelFont, textFont, commentFont;
 	CFontHandle oldFont;
@@ -86,8 +88,6 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWrit
 			height += _style.candidate_spacing;
 
 		int w = real_margin_x, h = 0;
-		if (_style.hilited_mark_color & 0xff000000)
-			w += MARK_GAP;
 		int candidate_width = 0, comment_width = 0;
 		/* Label */
 		std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
@@ -203,8 +203,12 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWrit
 			hlTop = min(hlTop, _candidateCommentRects[i].top);
 			hlBot = max(hlBot, _candidateCommentRects[i].bottom);
 		}
-		_candidateRects[i].SetRect(real_margin_x + offsetX, hlTop, width - real_margin_x + offsetX, hlBot);
+
+		int gap =  (_style.hilited_mark_color & 0xff000000) ? MARK_GAP :0;
+		_candidateRects[i].SetRect(real_margin_x + offsetX, hlTop, width - real_margin_x + offsetX + gap, hlBot);
 	}
+	if (_style.hilited_mark_color & 0xff000000)
+		width -= MARK_GAP;
 	_highlightRect = _candidateRects[id];
 
 	labelFont.DeleteObject();
