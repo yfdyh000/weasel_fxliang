@@ -270,6 +270,7 @@ namespace weasel
 		int comment_font_point;
 		bool inline_preedit;
 		bool color_font;
+		bool blur_window;
 		bool display_tray_icon;
 		CaptureType capture_type;
 		std::wstring label_text_format;
@@ -320,6 +321,7 @@ namespace weasel
 			align_type(ALIGN_BOTTOM),
 			preedit_type(COMPOSITION),
 			color_font(0),
+			blur_window(false),
 			display_tray_icon(false),
 			capture_type(UIStyle::CaptureType::NONE),
 			label_text_format(L"%s."),
@@ -371,6 +373,7 @@ namespace weasel
 				 comment_font_point != st.comment_font_point ||
 				 inline_preedit != st.inline_preedit ||
 				 color_font != st.color_font ||
+				 blur_window != st.blur_window ||
 				 display_tray_icon != st.display_tray_icon ||
 				 label_text_format != st.label_text_format ||
 				 min_width != st.min_width ||
@@ -423,6 +426,7 @@ namespace boost {
 			ar & s.inline_preedit;
 			ar & s.align_type;
 			ar & s.color_font;
+			ar & s.blur_window;
 			ar & s.preedit_type;
 			ar & s.display_tray_icon;
 			ar & s.capture_type;

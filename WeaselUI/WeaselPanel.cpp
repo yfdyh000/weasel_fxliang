@@ -541,7 +541,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 			ShowWindow(SW_HIDE);
 	}
 	_LayerUpdate(rc, memDC);
-	_BlurBackground(rc);
+	if(m_style.blur_window) _BlurBackground(rc);
 	::DeleteDC(memDC);
 	::DeleteObject(memBitmap);
 }

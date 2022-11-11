@@ -764,6 +764,12 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	// if system version lower than 8.1, disable color_font
 	style.color_font = style.color_font && IsWindows8Point10OrGreaterEx();
 
+	Bool blur_window = false;
+	if (RimeConfigGetBool(config, "style/blur_window", &blur_window) || initialize)
+	{
+		style.blur_window = !!blur_window;
+	}
+
 	char preedit_type[20] = { 0 };
 	if (RimeConfigGetString(config, "style/preedit_type", preedit_type, sizeof(preedit_type) - 1))
 	{
