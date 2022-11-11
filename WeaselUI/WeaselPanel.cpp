@@ -14,33 +14,18 @@ static inline BOOL GetVersionEx2(LPOSVERSIONINFOW lpVersionInformation)
 	typedef NTSTATUS(NTAPI* tRtlGetVersion)(PRTL_OSVERSIONINFOW povi); // RtlGetVersion的原型
 	tRtlGetVersion pRtlGetVersion = NULL;
 	if (hNtDll)
-	{
 		pRtlGetVersion = (tRtlGetVersion)GetProcAddress(hNtDll, "RtlGetVersion"); // 获取RtlGetVersion地址
-	}
 	if (pRtlGetVersion)
-	{
 		return pRtlGetVersion((PRTL_OSVERSIONINFOW)lpVersionInformation) >= 0; // 调用RtlGetVersion
-	}
 	return FALSE;
 }
 
-static bool _IsWindows7()
-{
-	OSVERSIONINFOEXW ovi = { sizeof ovi };
-	GetVersionEx2((LPOSVERSIONINFOW)&ovi);
-	if ((ovi.dwMajorVersion == 6 && ovi.dwMinorVersion == 1))
-		return true;
-	else
-		return false;
-}
 static bool _IsWindows10OrGreater()
 {
 	OSVERSIONINFOEXW ovi = { sizeof ovi };
-	GetVersionEx2((LPOSVERSIONINFOW)&ovi);
-	if (ovi.dwMajorVersion >= 10)
-		return true;
-	else
-		return false;
+	if (GetVersionEx2((LPOSVERSIONINFOW)&ovi))
+		return (ovi.dwMajorVersion >= 10);
+	return false;
 }
 
 // for IDI_ZH, IDI_EN
@@ -59,6 +44,9 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
 	pDWR(NULL),
 	pFonts(new GDIFonts(ui.style())),
 	m_blurer(new GdiplusBlur()),
+	accent({ ACCENT_ENABLE_BLURBEHIND, 0xff, (DWORD)((long long)m_style.back_color), 0 }),
+	data({ WCA_ACCENT_POLICY, &accent, sizeof(accent) }),
+	_isWindows10OrGreater(_IsWindows10OrGreater()),
 	pBrush(NULL),
 	_m_gdiplusToken(0)
 {
@@ -67,6 +55,9 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
 	m_iconAlpha.LoadIconW(IDI_EN, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 	m_iconFull.LoadIconW(IDI_FULL_SHAPE, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 	m_iconHalf.LoadIconW(IDI_HALF_SHAPE, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
+	hUser = GetModuleHandle(TEXT("user32.dll"));
+	if(hUser)
+		setWindowCompositionAttribute = (pfnSetWindowCompositionAttribute)GetProcAddress(hUser, "SetWindowCompositionAttribute");
 	GdiplusStartup(&_m_gdiplusToken, &_m_gdiplusStartupInput, NULL);
 	m_ostyle = m_style;
 	InitFontRes();
@@ -74,6 +65,7 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
 
 WeaselPanel::~WeaselPanel()
 {
+	FreeLibrary(hUser);
 	Gdiplus::GdiplusShutdown(_m_gdiplusToken);
 	CleanUp();
 }
@@ -492,31 +484,19 @@ HBITMAP CopyDCToBitmap(HDC hDC, LPRECT lpRect)
 	return hBitmap;
  }
 
-void WeaselPanel::_BlurBackground()
+void WeaselPanel::_BlurBackground(CRect& rc)
 {
-	if (((m_style.shadow_color & 0xff000000) == 0) || m_style.shadow_radius == 0)
+	if (setWindowCompositionAttribute != NULL 
+		&& (((m_style.shadow_color & 0xff000000) == 0) || m_style.shadow_radius == 0) 
+		&& (m_style.back_color >> 24) < 0xff
+		&& (m_style.back_color >> 24) > 0
+		&& _IsWindows10OrGreater)
 	{
-		CRect rc;
-		GetClientRect(&rc);
-		if (_IsWindows10OrGreater())	// for windows 10 / 11
-		{
-			HMODULE hUser = GetModuleHandle(TEXT("user32.dll"));
-			if (hUser)
-			{
-				pfnSetWindowCompositionAttribute setWindowCompositionAttribute = (pfnSetWindowCompositionAttribute)GetProcAddress(hUser, "SetWindowCompositionAttribute");
-				if (setWindowCompositionAttribute)
-				{
-					ACCENT_POLICY accent{ ACCENT_ENABLE_BLURBEHIND, 0xff, m_style.back_color, 0 };
-					SetWindowRgn(CreateRoundRectRgn(rc.left + 1, rc.top + 1, rc.right, rc.bottom,
-						m_style.round_corner_ex + m_style.border + 1, m_style.round_corner_ex + m_style.border + 1), false);
-					WINDOWCOMPOSITIONATTRIBDATA data = { WCA_ACCENT_POLICY, &accent, sizeof(accent) };
-					setWindowCompositionAttribute(m_hWnd, &data);
-				}
-				FreeLibrary(hUser);
-			}
-		}
+		rc.DeflateRect(1, 1);
+		SetWindowRgn(CreateRoundRectRgn(rc.left + 1, rc.top + 1, rc.right + 1, rc.bottom + 1,
+			m_style.round_corner_ex + m_style.border * 2, m_style.round_corner_ex + m_style.border * 2), true);
+		setWindowCompositionAttribute(m_hWnd, &data);
 	}
-
 }
 
 //draw client area
@@ -532,7 +512,6 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	ReleaseDC(hdc);
 	if (!hide_candidates) {
 
-		_BlurBackground();
 		CRect trc(rc);
 		// background start
 		if (!m_ctx.empty()) {
@@ -563,6 +542,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 			ShowWindow(SW_HIDE);
 	}
 	_LayerUpdate(rc, memDC);
+	_BlurBackground(rc);
 	::DeleteDC(memDC);
 	::DeleteObject(memBitmap);
 }

@@ -118,7 +118,7 @@ private:
 	void _HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORREF shadowColor, int radius, BackType type, bool highlighted);
 	void _TextOut(CDCHandle dc, int x, int y, CRect const& rc, LPCWSTR psz, size_t cch, FontInfo* pFontInfo, int inColor, IDWriteTextFormat* pTextFormat = NULL);
 	bool _TextOutWithFallbackDW(CDCHandle dc, CRect const rc, std::wstring psz, size_t cch, COLORREF gdiColor, IDWriteTextFormat* pTextFormat);
-	void _BlurBackground();
+	void _BlurBackground(CRect& rc);
 
 	bool _IsHighlightOverCandidateWindow(CRect rc, CRect bg, Gdiplus::Graphics* g);
 	void _LayerUpdate(const CRect& rc, CDCHandle dc);
@@ -152,6 +152,12 @@ private:
 	DirectWriteResources* pDWR;
 	GDIFonts* pFonts;
 	ID2D1SolidColorBrush* pBrush;
+	// for blur window
+	HMODULE hUser;
+	pfnSetWindowCompositionAttribute setWindowCompositionAttribute;
+	ACCENT_POLICY accent;
+	WINDOWCOMPOSITIONATTRIBDATA data;
+	bool _isWindows10OrGreater;
 };
 
 class GraphicsRoundRectPath : public Gdiplus::GraphicsPath
