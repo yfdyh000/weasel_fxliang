@@ -92,7 +92,7 @@ jobs:
           #bin include lib share
 
       - name: Upload artifacts
-        if: steps.build_weasel.outputs.cache-hit == 'true'
+        #if: steps.build_weasel.outputs.cache-hit == 'true'
         uses: actions/upload-artifact@v3
         with:
           path: |
