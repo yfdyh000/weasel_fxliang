@@ -80,7 +80,7 @@ jobs:
 
       - name: Build Weasel
         id: build_weasel
-        run: .\build.bat hant installer
+        run: .\build.bat data hant installer
 
 
       #- name: Create distributable
