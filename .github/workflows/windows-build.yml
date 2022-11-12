@@ -69,8 +69,8 @@ jobs:
         if: steps.cache-deps.outputs.cache-hit != 'true'
         run: .\build.bat deps
 
-      - name: Install Rime plugins
-        run: .\action-install-plugins-windows.bat
+      #- name: Install Rime plugins
+      #  run: .\action-install-plugins-windows.bat
 
       - name: Build Weasel
         id: build_weasel
