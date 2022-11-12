@@ -74,7 +74,10 @@ jobs:
 
       - name: Build Weasel
         id: build_weasel
-        run: .\build.bat data hant installer
+        run: |
+          .\build.bat data
+          .\build.bat hant
+          .\build.bat installer
 
       #- name: Create distributable
       #  if: steps.build_weasel.outputs.cache-hit == 'true'
